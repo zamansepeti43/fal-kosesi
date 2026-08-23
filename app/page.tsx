@@ -1,22 +1,140 @@
 "use client";
 
-import { useState } from "react";
-import { Camera, Coffee, Heart, Sparkles, Upload, WandSparkles } from "lucide-react";
+import { ChangeEvent, useRef, useState } from "react";
+import {
+  Camera,
+  ChevronRight,
+  Coffee,
+  Heart,
+  ImagePlus,
+  Sparkles,
+  Upload,
+  WalletCards,
+  BriefcaseBusiness,
+} from "lucide-react";
 
-const services = [
-  {icon:Coffee,title:"Kahve Falı",text:"Fincanındaki şekilleri ve izleri keşfet."},
-  {icon:Heart,title:"Aşk Falı",text:"Kalbinin merak ettiği sorulara odaklan."},
-  {icon:Sparkles,title:"Günlük Fal",text:"Bugünün enerjisini ve kısmetini öğren."},
+const categories = [
+  { icon: Heart, title: "Aşk", text: "Kalbinin merak ettikleri", tone: "Kalp, yol ve buluşma izlerini yorumla." },
+  { icon: WalletCards, title: "Kısmet", text: "Para ve bereket", tone: "Kısmet, fırsat ve hareketli dönemleri keşfet." },
+  { icon: BriefcaseBusiness, title: "İş", text: "Kariyer ve yeni kapılar", tone: "İş, değişim ve yeni başlangıçlara odaklan." },
 ];
 
-export default function Home(){
- const [file,setFile]=useState<File|null>(null);
- return <main className="starfield min-h-screen px-5 py-8 md:px-10">
-  <nav className="mx-auto flex max-w-6xl items-center justify-between"><div><div className="text-2xl font-bold tracking-wide">FAL <span className="gold">KÖŞESİ</span></div><div className="text-xs text-zinc-400">Fincanındaki sırlar burada.</div></div><button className="rounded-full border border-[#d7ad55]/30 px-4 py-2 text-sm text-zinc-200">Giriş Yap</button></nav>
-  <section className="mx-auto max-w-6xl py-16 text-center md:py-24"><div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full border border-[#d7ad55]/30 bg-[#171020] shadow-[0_0_70px_rgba(215,173,85,.14)]"><Coffee className="gold" size={34}/></div><p className="gold mb-3 text-sm font-medium uppercase tracking-[.3em]">☕ Yapay zekâ destekli kahve falı</p><h1 className="text-5xl font-semibold tracking-tight md:text-7xl">Fincanını getir.<br/><span className="gold">Falını keşfet.</span></h1><p className="mx-auto mt-6 max-w-2xl text-base leading-7 text-zinc-400 md:text-lg">Kahve fincanının fotoğraflarını yükle. Fal Köşesi, fincanındaki şekilleri yorumlayıp sana özel bir fal hazırlasın.</p>
-  <label className="glass mx-auto mt-10 flex max-w-xl cursor-pointer flex-col items-center rounded-3xl p-8 transition hover:border-[#d7ad55]/50"><div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-[#d7ad55]/10"><Upload className="gold"/></div><span className="text-lg font-medium">{file?file.name:"Fincan fotoğrafını yükle"}</span><span className="mt-2 text-sm text-zinc-500">Fincan + mümkünse tabak fotoğrafı</span><input type="file" accept="image/*" className="hidden" onChange={e=>setFile(e.target.files?.[0]??null)}/></label>
-  <button className="mt-5 inline-flex items-center gap-2 rounded-full bg-[#d7ad55] px-7 py-3.5 font-semibold text-[#140d17] shadow-[0_10px_40px_rgba(215,173,85,.18)] disabled:opacity-40" disabled={!file}><WandSparkles size={18}/> Falıma Bak</button></section>
-  <section className="mx-auto grid max-w-6xl gap-4 md:grid-cols-3">{services.map(({icon:Icon,title,text})=><div key={title} className="glass rounded-2xl p-6"><Icon className="gold mb-5" size={22}/><h2 className="text-lg font-semibold">{title}</h2><p className="mt-2 text-sm leading-6 text-zinc-400">{text}</p></div>)}</section>
-  <section className="mx-auto mt-12 max-w-6xl rounded-3xl border border-white/5 bg-white/[.025] p-7 text-center"><Camera className="gold mx-auto mb-3" size={24}/><p className="text-sm text-zinc-400">Daha iyi yorum için fincanın içini net, aydınlık ve mümkün olduğunca yakından çek.</p></section>
- </main>
+export default function Home() {
+  const [files, setFiles] = useState<File[]>([]);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  const addFiles = (event: ChangeEvent<HTMLInputElement>) => {
+    const selected = Array.from(event.target.files ?? []).filter((file) => file.type.startsWith("image/"));
+    setFiles(selected.slice(0, 3));
+  };
+
+  const openPicker = () => inputRef.current?.click();
+
+  return (
+    <main className="relative min-h-screen overflow-hidden">
+      <div className="mx-auto max-w-6xl px-5 pb-16 pt-7 md:px-8 md:pt-9">
+        <header className="flex items-center justify-between">
+          <div>
+            <div className="brand-title">
+              FAL <span>KÖŞESİ</span>
+            </div>
+            <div className="brand-subtitle">Fincanındaki sırlar burada.</div>
+          </div>
+          <button className="header-button" type="button">Giriş Yap</button>
+        </header>
+
+        <section className="hero-section">
+          <div className="hero-icon" aria-hidden="true">
+            <Coffee size={34} />
+          </div>
+          <div className="eyebrow"><Sparkles size={15} /> YAPAY ZEKÂ DESTEKLİ KAHVE FALI</div>
+          <h1>
+            Fincanını getir.
+            <br />
+            <span>Falını keşfet.</span>
+          </h1>
+          <p className="hero-copy">
+            Fincanının fotoğraflarını yükle. Fal Köşesi, fincanındaki izleri ve sembolleri yorumlayıp sana özel bir fal hazırlasın.
+          </p>
+
+          <section className="upload-card">
+            <div className="upload-head">
+              <div>
+                <div className="section-kicker">01 / FOTOĞRAFLAR</div>
+                <h2>Fincanını göster</h2>
+                <p>İç kısmı net görünsün. Mümkünse fincan ve tabağı ayrı fotoğraflarla ekle.</p>
+              </div>
+              <div className="upload-mini-icon"><Camera size={21} /></div>
+            </div>
+
+            <div className="upload-actions">
+              <button className="upload-dropzone" type="button" onClick={openPicker}>
+                <div className="upload-circle"><ImagePlus size={27} /></div>
+                <strong>{files.length ? `${files.length} fotoğraf seçildi` : "Fincan fotoğrafı ekle"}</strong>
+                <span>JPG, PNG veya WEBP · en fazla 3 fotoğraf</span>
+              </button>
+              <button className="camera-button" type="button" onClick={openPicker}>
+                <Upload size={17} /> Fotoğraf Seç
+              </button>
+              <input ref={inputRef} className="sr-only" type="file" accept="image/*" multiple onChange={addFiles} />
+            </div>
+
+            {files.length > 0 && (
+              <div className="selected-files" aria-live="polite">
+                {files.map((file) => (
+                  <div key={`${file.name}-${file.lastModified}`} className="file-chip">{file.name}</div>
+                ))}
+              </div>
+            )}
+
+            <button className="primary-cta" type="button" disabled={!files.length}>
+              <Sparkles size={18} /> Falımı Hazırla <ChevronRight size={17} />
+            </button>
+            <div className="privacy-note">Fotoğraflar yalnızca fal deneyimini hazırlamak için kullanılacaktır.</div>
+          </section>
+        </section>
+
+        <section className="how-section">
+          <div className="section-title-row">
+            <div>
+              <div className="section-kicker">02 / NASIL ÇALIŞIR?</div>
+              <h2>Fincandan hikâyeye.</h2>
+            </div>
+            <p>Üç adımda falını hazırla.</p>
+          </div>
+
+          <div className="steps-grid">
+            <article className="step-card"><span>01</span><h3>Fotoğrafını çek</h3><p>Fincanını temiz ve aydınlık bir kareyle göster.</p></article>
+            <article className="step-card"><span>02</span><h3>Merakını seç</h3><p>Aşk, kısmet, iş veya genel enerjiye odaklan.</p></article>
+            <article className="step-card"><span>03</span><h3>Falını oku</h3><p>Semboller ve izler üzerinden kişisel yorumunu keşfet.</p></article>
+          </div>
+        </section>
+
+        <section className="categories-section">
+          <div className="section-kicker">03 / FALININ ODAĞINI SEÇ</div>
+          <div className="categories-grid">
+            {categories.map(({ icon: Icon, title, text, tone }) => (
+              <article key={title} className="category-card">
+                <div className="category-icon"><Icon size={20} /></div>
+                <h3>{title}</h3>
+                <div className="category-text">{text}</div>
+                <p>{tone}</p>
+                <div className="category-arrow"><ChevronRight size={17} /></div>
+              </article>
+            ))}
+          </div>
+        </section>
+
+        <section className="trust-card">
+          <div className="trust-icon"><Coffee size={20} /></div>
+          <div>
+            <strong>İyi bir fal için küçük bir ipucu</strong>
+            <p>Fincanın içi net, kupanın tamamı kadraja yakın ve ışık mümkün olduğunca doğal olsun.</p>
+          </div>
+        </section>
+
+        <footer>FAL KÖŞESİ · Kahve, merak ve biraz da gizem.</footer>
+      </div>
+    </main>
+  );
 }
