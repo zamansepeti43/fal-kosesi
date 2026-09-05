@@ -1,0 +1,82 @@
+[
+  {
+    "id": 0,
+    "name": "The Fool",
+    "arcana": "Major Arcana",
+    "suit": null,
+    "meaning": "New beginnings, spontaneity, free spirit, and taking a leap of faith.",
+    "meaning_reverse": "Holding back, recklessness, taking unnecessary risks."
+  },
+  {
+    "id": 1,
+    "name": "The Magician",
+    "arcana": "Major Arcana",
+    "suit": null,
+    "meaning": "Manifestation, resourcefulness, power, and inspired action.",
+    "meaning_reverse": "Manipulation, poor planning, and untapped talents."
+  },
+  {
+    "id": 2,
+    "name": "The High Priestess",
+    "arcana": "Major Arcana",
+    "suit": null,
+    "meaning": "Intuition, sacred knowledge, divine feminine, and the subconscious mind.",
+    "meaning_reverse": "Secrets, disconnected from intuition, and silence."
+  },
+  {
+    "id": 3,
+    "name": "The Empress",
+    "arcana": "Major Arcana",
+    "suit": null,
+    "meaning": "Fertility, abundance, beauty, and nurturing.",
+    "meaning_reverse": "Creative block, dependence on others, and lack of growth."
+  },
+  {
+    "id": 4,
+    "name": "The Emperor",
+    "arcana": "Major Arcana",
+    "suit": null,
+    "meaning": "Authority, establishment, structure, and a father figure.",
+    "meaning_reverse": "Domination, excessive control, lack of discipline, and inflexibility."
+  },
+  {
+    "id": 5,
+    "name": "The Hierophant",
+    "arcana": "Major Arcana",
+    "suit": null,
+    "meaning": "Tradition, conformity, marriage, and spiritual guidance.",
+    "meaning_reverse": "Rebellion, conflict with traditions, and new ways of thinking."
+  },
+  {
+    "id": 6,
+    "name": "The Lovers",
+    "arcana": "Major Arcana",
+    "suit": null,
+    "meaning": "Love, harmony, relationships, and values alignment.",
+    "meaning_reverse": "Imbalance, misalignment of values, and isolation in love."
+  },
+  {
+    "id": 7,
+    "name": "The Chariot",
+    "arcana": "Major Arcana",
+    "suit": null,
+    "meaning": "Control, victory, willpower, and opposition.",
+    "meaning_reverse": "Lack of direction, aggression, and defeat."
+  },
+  {
+    "id": 8,
+    "name": "Strength",
+    "arcana": "Major Arcana",
+    "suit": null,
+    "meaning": "Inner strength, courage, compassion, and persuasion.",
+    "meaning_reverse": "Inner turmoil, low self-esteem, and lack of courage."
+  },
+  {
+    "id": 9,
+    "name": "The Hermit",
+    "arcana": "Major Arcana",
+    "suit": null,
+    "meaning": "Soul-searching, introspection, being alone, and seeking inner guidance.",
+    "meaning_reverse": "Isolation, loneliness, and withdrawal."
+  }
+]
