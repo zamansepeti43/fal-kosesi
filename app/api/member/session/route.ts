@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { encodeMemberSession, memberCookieOptions } from "@/lib/member-session";
-import { supabaseAdmin } from "@/lib/supabase/admin";
+import { requireDb } from "@/lib/neon/db";
+
+export const runtime = "nodejs";
 
 export async function POST(request: Request) {
   const body = (await request.json().catch(() => null)) as { email?: string; name?: string; phone?: string } | null;
@@ -10,15 +12,18 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Geçerli bir e-posta gerekli." }, { status: 400 });
   }
 
-  if (supabaseAdmin) {
-    const { error } = await supabaseAdmin.rpc("ensure_credit_profile", {
-      p_email: email,
-      p_name: body?.name?.trim() || null,
-      p_phone: body?.phone?.trim() || null,
-    });
-    if (error) {
-      return NextResponse.json({ error: "Kredi hesabı hazırlanamadı." }, { status: 503 });
-    }
+  try {
+    const sql = requireDb();
+    await sql`
+      select public.ensure_credit_profile(
+        ${email},
+        ${body?.name?.trim() || null},
+        ${body?.phone?.trim() || null}
+      ) as credits
+    `;
+  } catch (error) {
+    console.error("Member session database error:", error);
+    return NextResponse.json({ error: "Kredi hesabı hazırlanamadı." }, { status: 503 });
   }
 
   const response = NextResponse.json({ ok: true });
