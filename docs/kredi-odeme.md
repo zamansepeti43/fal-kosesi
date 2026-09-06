@@ -27,16 +27,25 @@ Yeni üye hesabına 50 hoş geldin kredisi tanımlanır.
 
 ## Canlı ödeme kurulumu
 
-Vercel production ortamına şu değişkenler eklenmelidir:
+Fal Köşesi artık veritabanı olarak Neon PostgreSQL kullanır. Supabase bu ödeme/kredi akışının parçası değildir.
+
+### Vercel Production ortamına
 
 - `NEXT_PUBLIC_SITE_URL=https://fal-kosesi.vercel.app`
 - `MEMBER_SESSION_SECRET=<uzun-rastgele-secret>`
+- `DATABASE_URL=<Neon pooled connection string>`
 - `IYZICO_API_KEY=<iyzico-api-key>`
 - `IYZICO_SECRET_KEY=<iyzico-secret-key>`
 - `IYZICO_API_URL=https://api.iyzipay.com`
-- `NEXT_PUBLIC_SUPABASE_URL=<Fal Köşesi Supabase URL>`
-- `SUPABASE_SERVICE_ROLE_KEY=<Fal Köşesi Supabase service role key>`
 
 Test ortamı için `IYZICO_API_URL=https://sandbox-api.iyzipay.com` kullanılabilir.
 
-Supabase tarafında `supabase/credits.sql` migration'ı çalıştırılmalıdır. Ödeme callback'i yalnızca iyzico'dan doğrulanan başarılı ve fraud kontrolünden geçen ödemelerde kredi verir; aynı ödeme ikinci kez kredi yazmaz.
+### Neon veritabanı kurulumu
+
+Neon SQL Editor içinde `neon/schema.sql` dosyası bir kez çalıştırılmalıdır. Bu dosya üyeler, kredi bakiyeleri, kredi hareketleri ve iyzico siparişleri için gerekli tabloları ve atomik PostgreSQL fonksiyonlarını oluşturur.
+
+Ödeme callback'i iyzico üzerinden ödeme durumunu yeniden doğrular; başarılı ve fraud kontrolünden geçen ödemelerde kredi verir. Aynı iyzico payment ID ikinci kez kredi yazmaz.
+
+### Güvenlik
+
+`DATABASE_URL`, `MEMBER_SESSION_SECRET`, `IYZICO_API_KEY` ve `IYZICO_SECRET_KEY` yalnızca Vercel Environment Variables içinde tutulmalıdır. Kaynak koda veya istemci tarafına yazılmamalıdır.
