@@ -1,80 +1,57 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
-import { ChevronRight, Crown, Sparkles, Shuffle, Wand2, Heart, BriefcaseBusiness } from "lucide-react";
-import { TAROT_SPREADS, TarotCard } from "@/types/tarot";
+import { useEffect, useMemo, useState } from "react";
+import { ChevronRight, Crown, Heart, BriefcaseBusiness, Sparkles, Wand2 } from "lucide-react";
+import { TarotCard } from "@/types/tarot";
 import { tarotCards } from "@/lib/tarot/cards";
 
-const getCard = (exclude: Set<string>): TarotCard => {
-  const available = tarotCards.filter((card) => !exclude.has(String(card.id)));
-  return available[Math.floor(Math.random() * available.length)] ?? tarotCards[0];
-};
-
-const spreadCopy: Record<string, string> = {
-  single: "Tek kart, şu anda hayatında en çok dikkat etmen gereken temayı gösterir.",
-  "three-card": "Üç kart birlikte geçmişteki izi, bugünkü enerjiyi ve önündeki olası yönü anlatır.",
-  love: "Aşk açılımı; senin enerjini, bağın dinamiğini ve ilişkinin önündeki temayı birlikte ele alır.",
-};
-
-const tarotSlugs: Record<string, string> = {
-  "00": "fool",
-  "01": "magician",
-  "02": "high-priestess",
-  "03": "empress",
-  "04": "emperor",
-  "05": "hierophant",
-  "06": "lovers",
-  "07": "chariot",
-  "08": "strength",
-  "09": "hermit",
-  "10": "wheel-of-fortune",
-  "11": "justice",
-  "12": "hanged-man",
-  "13": "death",
-  "14": "temperance",
-  "15": "devil",
-  "16": "tower",
-  "17": "star",
-  "18": "moon",
-  "19": "sun",
-  "20": "judgement",
-  "21": "world",
+const imageByCardId: Record<string, string> = {
+  "the-fool": "00-fool",
+  "the-magician": "01-magician",
+  "the-high-priestess": "02-high-priestess",
+  "the-empress": "03-empress",
+  "the-emperor": "04-emperor",
+  "the-hierophant": "05-hierophant",
+  "the-lovers": "06-lovers",
+  "the-chariot": "07-chariot",
+  strength: "08-strength",
+  "the-hermit": "09-hermit",
+  "wheel-of-fortune": "10-wheel-of-fortune",
+  justice: "11-justice",
+  "the-hanged-man": "12-hanged-man",
+  death: "13-death",
+  temperance: "14-temperance",
+  "the-devil": "15-devil",
+  "the-tower": "16-tower",
+  "the-star": "17-star",
+  "the-moon": "18-moon",
+  "the-sun": "19-sun",
+  judgement: "20-judgement",
+  "the-world": "21-world",
 };
 
 function getTarotImage(card: TarotCard) {
-  const id = String(card.id).padStart(2, "0");
-  const slug = tarotSlugs[id];
-  return slug ? `/fortune/tarot/${id}-${slug}.jpg` : "/fortune/tarot-spread.jpg";
+  const file = imageByCardId[card.id];
+  return file ? `/fortune/tarot/${file}.jpg` : "/fortune/tarot-spread.jpg";
 }
 
-function TarotCardVisual({ card, index, faceDown = false }: { card: TarotCard; index: number; faceDown?: boolean }) {
+function CardImage({ card, large = false }: { card: TarotCard; large?: boolean }) {
   return (
-    <div className="relative h-[190px] w-[122px] overflow-hidden rounded-[18px] border border-amber-200/60 bg-[#0e0a19] shadow-[0_18px_40px_rgba(0,0,0,.55),0_0_24px_rgba(168,85,247,.22)] sm:h-[220px] sm:w-[142px]">
-      {faceDown ? (
-        <div className="absolute inset-0 overflow-hidden bg-[radial-gradient(circle_at_center,rgba(245,158,11,.22),transparent_45%),linear-gradient(145deg,#100c25,#241044,#0b1025)]">
-          <div className="absolute inset-3 rounded-[13px] border border-amber-200/35" />
-          <div className="absolute inset-6 rounded-[10px] border border-violet-300/25 bg-[repeating-linear-gradient(45deg,rgba(245,158,11,.08)_0,rgba(245,158,11,.08)_2px,transparent_2px,transparent_8px)]" />
-          <div className="absolute inset-0 grid place-items-center text-4xl text-amber-200 drop-shadow-[0_0_18px_rgba(245,158,11,.45)]">✦</div>
-        </div>
-      ) : (
-        <>
-          <img src={getTarotImage(card)} alt={`${card.name} tarot kartı`} className="absolute inset-0 h-full w-full object-cover" loading="lazy" />
-          <div className="absolute inset-0 bg-gradient-to-t from-[#05040b]/75 via-transparent to-transparent" />
-          <div className="absolute left-2 top-2 rounded-full border border-white/20 bg-black/45 px-2 py-0.5 text-[8px] font-bold tracking-[.16em] text-amber-100 backdrop-blur-md">{String(index + 1).padStart(2, "0")}</div>
-          <div className="absolute bottom-2 left-2 right-2 rounded-lg border border-white/10 bg-black/50 px-2 py-1 text-center font-serif text-[10px] font-bold text-white backdrop-blur-md">{card.name}</div>
-        </>
-      )}
-    </div>
+    <img
+      src={getTarotImage(card)}
+      alt={`${card.name} tarot kartı`}
+      className={`h-full w-full object-cover ${large ? "object-center" : "object-center"}`}
+      draggable={false}
+    />
   );
 }
 
 export default function TarotClient() {
-  const [selectedSpread, setSelectedSpread] = useState("single");
   const [question, setQuestion] = useState("");
-  const [drawnCards, setDrawnCards] = useState<TarotCard[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [selectedCard, setSelectedCard] = useState<TarotCard | null>(null);
   const [name, setName] = useState("Dostum");
+  const [revealing, setRevealing] = useState(false);
 
   useEffect(() => {
     const raw = window.localStorage.getItem("fal-kosesi-profile");
@@ -83,56 +60,127 @@ export default function TarotClient() {
       const profile = JSON.parse(raw) as { name?: string };
       if (profile.name?.trim()) setName(profile.name.trim().split(" ")[0]);
     } catch {
-      // Keep the neutral greeting when profile data is unavailable.
+      // Keep fallback greeting.
     }
   }, []);
 
-  const draw = () => {
-    setLoading(true);
-    setTimeout(() => {
-      const spread = TAROT_SPREADS.find((item) => item.id === selectedSpread) ?? TAROT_SPREADS[0];
-      const used = new Set<string>();
-      const cards: TarotCard[] = [];
-      for (let i = 0; i < spread.cardCount; i++) {
-        const card = getCard(used);
-        used.add(String(card.id));
-        cards.push(card);
-      }
-      setDrawnCards(cards);
-      setLoading(false);
-    }, 800);
-  };
+  const deck = useMemo(() => tarotCards.slice(0, 22), []);
 
-  const personalizedText = () => {
-    const focus = question.trim() ? `“${question.trim()}” sorunun` : "bu dönemde zihnini meşgul eden konuların";
-    const names = drawnCards.map((card) => card.name).join(", ");
-    return `${name}, ${focus} için açılan ${names} kartları birlikte okunduğunda tek bir karttan daha güçlü bir hikâye ortaya çıkıyor. Kartların gerçek sembolizmi; geçmişten gelen etkinin bugün vereceğin kararı nasıl şekillendirdiğini, hangi duygunun seni tuttuğunu ve önündeki seçeneği nasıl değerlendirebileceğini düşünmen için bir ayna sunuyor. Bu yorumu kesin bir gelecek vaadi olarak değil, kendi kararlarını daha bilinçli tartarken kullanabileceğin sembolik bir rehber olarak değerlendir.`;
+  const chooseCard = (card: TarotCard) => {
+    if (revealing) return;
+    setSelectedCard(null);
+    setRevealing(true);
+    window.setTimeout(() => {
+      setSelectedCard(card);
+      setRevealing(false);
+    }, 650);
   };
 
   return (
-    <main className="min-h-screen overflow-x-hidden bg-[radial-gradient(circle_at_top,rgba(124,58,237,.25),transparent_34%),linear-gradient(180deg,#080817,#05050d)] px-4 py-5 text-white sm:py-8">
+    <main className="min-h-screen overflow-x-hidden bg-[radial-gradient(circle_at_top,rgba(124,58,237,.24),transparent_35%),linear-gradient(180deg,#080817,#05050d)] px-3 pb-8 pt-4 text-white sm:px-5 sm:pt-7">
       <div className="mx-auto max-w-5xl">
-        <header className="mb-5 flex items-center justify-between"><Link href="/" className="text-xs text-slate-300 sm:text-sm">← Ana sayfa</Link><div className="flex items-center gap-2 rounded-full border border-amber-200/15 bg-amber-200/5 px-3 py-1.5 text-[9px] font-bold uppercase tracking-[.2em] text-amber-200"><Crown className="h-3 w-3"/> Premium Tarot</div></header>
+        <header className="mb-4 flex items-center justify-between">
+          <Link href="/" className="text-xs text-slate-300 sm:text-sm">← Ana sayfa</Link>
+          <div className="flex items-center gap-2 rounded-full border border-amber-200/15 bg-amber-200/5 px-3 py-1.5 text-[9px] font-bold uppercase tracking-[.2em] text-amber-200">
+            <Crown className="h-3 w-3" /> Premium Tarot
+          </div>
+        </header>
 
-        {drawnCards.length === 0 ? (
-          <section className="rounded-[28px] border border-violet-300/15 bg-white/[.035] p-5 shadow-2xl backdrop-blur-xl sm:p-8">
-            <div className="overflow-hidden rounded-[24px] border border-amber-200/15 bg-black/20">
-              <div className="relative h-[190px] sm:h-[250px]"><img src="/fortune/tarot-spread.jpg" alt="Gerçek tarot kartları ve kristaller" className="h-full w-full object-cover"/><div className="absolute inset-0 bg-gradient-to-t from-[#080817] via-[#080817]/25 to-transparent"/><div className="absolute bottom-5 left-5 right-5"><p className="text-[9px] font-bold uppercase tracking-[.3em] text-amber-200">Rider-Waite arketipleri</p><h1 className="mt-1 font-serif text-3xl font-bold sm:text-4xl">Tarot Falı</h1></div></div>
-              <div className="p-5 sm:p-6"><p className="max-w-2xl text-sm leading-6 text-slate-300">Desteni seç. Sorunu yaz. Gerçek tarot kartlarının görselleriyle kartlarını aç ve yorumunu hayatındaki bağlamla birlikte oku.</p></div>
+        <section className="overflow-hidden rounded-[28px] border border-amber-200/15 bg-[radial-gradient(circle_at_80%_0%,rgba(245,158,11,.15),transparent_35%),rgba(17,12,29,.94)] shadow-2xl">
+          <div className="relative h-[175px] sm:h-[250px]">
+            <img src="/fortune/tarot-spread.jpg" alt="Gerçek tarot kartları" className="h-full w-full object-cover" />
+            <div className="absolute inset-0 bg-gradient-to-t from-[#080817] via-[#080817]/45 to-[#080817]/10" />
+            <div className="absolute bottom-5 left-5 right-5 sm:left-8 sm:right-8">
+              <p className="text-[9px] font-bold uppercase tracking-[.3em] text-amber-200">22 Büyük Arkana • Gerçek Kartlar</p>
+              <h1 className="mt-1 font-serif text-3xl font-bold sm:text-4xl">Tarot Falı</h1>
+              <p className="mt-1 max-w-2xl text-xs text-slate-300 sm:text-sm">Kartları yatay kaydır. İçinden gelen karta dokun. Seçtiğin kartı açıp anlamını ve sana özel mesajını birlikte okuyalım.</p>
+            </div>
+          </div>
+
+          <div className="p-4 sm:p-6">
+            <label className="mb-2 block text-sm font-semibold">Niyetin veya sorun</label>
+            <textarea
+              value={question}
+              onChange={(e) => setQuestion(e.target.value)}
+              rows={3}
+              placeholder="Örn: Aşk hayatımda önümde nasıl bir dönem var?"
+              className="w-full rounded-2xl border border-white/10 bg-black/25 px-4 py-3 text-sm text-white outline-none placeholder:text-slate-600 focus:border-amber-300/45"
+            />
+
+            <div className="mt-5 flex items-end justify-between gap-3">
+              <div>
+                <p className="text-[9px] font-bold uppercase tracking-[.25em] text-amber-200">Kartını seç</p>
+                <h2 className="mt-1 font-serif text-xl font-bold">İçinden gelen karta dokun ✦</h2>
+              </div>
+              <span className="rounded-full border border-white/10 bg-white/[.04] px-2.5 py-1 text-[9px] text-slate-400">22 kart</span>
             </div>
 
-            <div className="mt-6 grid gap-3 sm:grid-cols-3">{TAROT_SPREADS.map((spread) => <button key={spread.id} type="button" onClick={() => setSelectedSpread(spread.id)} className={`rounded-[22px] border p-4 text-left transition ${selectedSpread === spread.id ? "border-amber-300/50 bg-amber-300/[.08] shadow-[0_0_30px_rgba(245,158,11,.10)]" : "border-white/10 bg-white/[.025]"}`}><div className="mb-3 flex justify-center gap-[-8px]">{Array.from({ length: spread.cardCount }).map((_, i) => <div key={i} className="-mx-1 scale-75 first:ml-0"><TarotCardVisual card={tarotCards[i] ?? tarotCards[0]} index={i} faceDown/></div>)}</div><h2 className="font-serif text-lg font-bold">{spread.name}</h2><p className="mt-1 text-xs leading-5 text-slate-400">{spreadCopy[spread.id] ?? spread.description}</p></button>)}</div>
-            <div className="mt-5"><label className="mb-2 block text-sm font-semibold">Sorunu veya niyetini yaz</label><textarea value={question} onChange={(e) => setQuestion(e.target.value)} rows={4} placeholder="Örn: Hayatımda yeni bir ilişkiye yer açmalı mıyım?" className="w-full rounded-2xl border border-white/10 bg-black/20 px-4 py-3 text-sm text-white outline-none focus:border-violet-400"/><p className="mt-2 text-[10px] text-slate-500">Sorun ne kadar kişisel olursa yorum da o kadar kişisel bir bağlam kazanır.</p></div>
-            <button type="button" onClick={draw} disabled={loading} className="mt-5 flex w-full items-center justify-center gap-2 rounded-full bg-gradient-to-r from-amber-300 via-yellow-300 to-violet-400 px-6 py-3.5 text-sm font-black text-slate-950 shadow-[0_12px_30px_rgba(251,191,36,.22)] disabled:opacity-60">{loading ? <><Shuffle className="h-4 w-4 animate-spin"/> Kartların karılıyor...</> : <><Wand2 className="h-4 w-4"/> Kartlarımı Aç</>}</button>
+            <div className="mt-4 -mx-4 overflow-x-auto px-4 pb-4 scrollbar-thin scrollbar-track-transparent scrollbar-thumb-white/15 sm:-mx-6 sm:px-6">
+              <div className="flex w-max gap-3">
+                {deck.map((card, index) => (
+                  <button
+                    key={card.id}
+                    type="button"
+                    onClick={() => chooseCard(card)}
+                    className={`group relative w-[104px] shrink-0 overflow-hidden rounded-[16px] border bg-[#0c0916] text-left shadow-[0_12px_28px_rgba(0,0,0,.45)] transition duration-300 hover:-translate-y-1 hover:border-amber-300/70 focus:outline-none focus:ring-2 focus:ring-amber-300/60 sm:w-[126px] ${selectedCard?.id === card.id ? "border-amber-300 shadow-[0_0_30px_rgba(245,158,11,.28)]" : "border-white/10"}`}
+                  >
+                    <div className="relative aspect-[2/3] overflow-hidden">
+                      <CardImage card={card} />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
+                      <div className="absolute left-2 top-2 rounded-full border border-white/20 bg-black/50 px-1.5 py-0.5 text-[8px] font-bold text-amber-100 backdrop-blur">{String(index).padStart(2, "0")}</div>
+                      <div className="absolute bottom-2 left-2 right-2 font-serif text-[10px] font-bold leading-tight text-white sm:text-xs">{card.name}</div>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </div>
+            <p className="text-center text-[10px] text-slate-500">← Kaydır • 22 kartın tamamını gör • Bir karta dokun →</p>
+          </div>
+        </section>
+
+        {(revealing || selectedCard) && (
+          <section className="mt-4 rounded-[28px] border border-amber-200/20 bg-[radial-gradient(circle_at_50%_0%,rgba(245,158,11,.14),transparent_38%),rgba(18,13,31,.95)] p-5 shadow-2xl sm:p-7">
+            <div className="text-center">
+              <p className="text-[9px] font-bold uppercase tracking-[.3em] text-amber-200">{revealing ? "Kartın açılıyor…" : `${name}, seçtiğin kart`}</p>
+              {revealing ? (
+                <div className="mx-auto mt-5 h-[300px] w-[200px] animate-[pulse_1s_ease-in-out_infinite] rounded-[20px] border border-amber-200/40 bg-[radial-gradient(circle_at_center,rgba(245,158,11,.2),transparent_45%),linear-gradient(145deg,#100c25,#241044,#0b1025)] shadow-[0_25px_70px_rgba(0,0,0,.55)]"><div className="m-4 flex h-[268px] items-center justify-center rounded-[15px] border border-amber-200/25 text-5xl text-amber-200">✦</div></div>
+              ) : selectedCard ? (
+                <>
+                  <div className="mx-auto mt-5 w-[210px] overflow-hidden rounded-[20px] border-2 border-amber-200/60 bg-black shadow-[0_25px_70px_rgba(0,0,0,.6),0_0_35px_rgba(245,158,11,.16)] sm:w-[250px]">
+                    <div className="aspect-[2/3]"><CardImage card={selectedCard} large /></div>
+                  </div>
+                  <div className="mx-auto mt-4 max-w-2xl">
+                    <h2 className="font-serif text-3xl font-bold text-amber-100">{selectedCard.name}</h2>
+                    <p className="mt-1 text-[9px] font-bold uppercase tracking-[.22em] text-slate-500">{selectedCard.keywords.join(" • ")}</p>
+                    <p className="mt-4 text-sm leading-7 text-slate-200 sm:text-base sm:leading-8">{selectedCard.meaning}</p>
+                    {question.trim() && <p className="mt-3 rounded-2xl border border-violet-300/15 bg-violet-400/[.06] p-4 text-left text-sm leading-6 text-slate-300"><span className="font-semibold text-violet-200">Senin sorununa göre:</span> {name}, “{question.trim()}” sorunda bu kartın ana mesajı; aceleyle kesin bir sonuç aramak yerine kartın gösterdiği {selectedCard.keywords[0]} temasını kendi hayatındaki olaylarla karşılaştırman. Kartın sembolizmini bir kararın yerine değil, kararını düşünmek için bir ayna olarak kullan.</p>}
+                  </div>
+                </>
+              ) : null}
+            </div>
+
+            {selectedCard && !revealing && (
+              <div className="mt-5 grid gap-3 sm:grid-cols-2">
+                <article className="rounded-2xl border border-rose-300/10 bg-rose-400/[.05] p-4"><div className="flex items-center gap-2 text-sm font-bold text-rose-200"><Heart className="h-4 w-4"/> Aşk</div><p className="mt-2 text-xs leading-6 text-slate-300">{selectedCard.love}</p></article>
+                <article className="rounded-2xl border border-sky-300/10 bg-sky-400/[.05] p-4"><div className="flex items-center gap-2 text-sm font-bold text-sky-200"><BriefcaseBusiness className="h-4 w-4"/> İş & Kariyer</div><p className="mt-2 text-xs leading-6 text-slate-300">{selectedCard.career}</p></article>
+              </div>
+            )}
+
+            <div className="mt-5 flex flex-col gap-2 sm:flex-row">
+              <button type="button" onClick={() => setSelectedCard(null)} className="flex-1 rounded-full border border-white/10 bg-white/[.04] px-5 py-3 text-sm font-semibold">Başka Kart Seç</button>
+              <Link href="/fal/premium" className="flex flex-1 items-center justify-center gap-2 rounded-full bg-gradient-to-r from-amber-300 to-yellow-200 px-5 py-3 text-sm font-black text-slate-950"><Sparkles className="h-4 w-4"/> Premium Yorumu Gör</Link>
+            </div>
           </section>
-        ) : (
-          <>
-            <section className="rounded-[28px] border border-amber-200/20 bg-[radial-gradient(circle_at_85%_10%,rgba(245,158,11,.14),transparent_35%),rgba(20,14,35,.90)] p-5 shadow-2xl sm:p-8"><p className="text-[9px] font-bold uppercase tracking-[.28em] text-amber-200">{name} için açılım</p><h1 className="mt-2 font-serif text-3xl font-bold">Kartların bugün sana ne söylüyor? ✦</h1>{question && <p className="mt-2 text-sm text-slate-300">“{question}”</p>}<div className="mt-6 flex flex-wrap items-end justify-center gap-3 sm:gap-5">{drawnCards.map((card, index) => <div key={`${card.id}-${index}`} className="text-center"><TarotCardVisual card={card} index={index}/><p className="mt-2 text-[10px] uppercase tracking-[.18em] text-amber-200">{index + 1}. Kart</p></div>)}</div></section>
-            <section className="mt-4 rounded-[24px] border border-violet-300/15 bg-white/[.035] p-5 sm:p-7"><div className="flex items-center gap-2"><Sparkles className="h-5 w-5 text-amber-300"/><h2 className="font-serif text-xl font-bold">Kişisel Tarot Yorumu</h2></div><p className="mt-4 text-sm leading-7 text-slate-200 sm:text-base sm:leading-8">{personalizedText()}</p></section>
-            <section className="mt-4 grid gap-3 sm:grid-cols-2">{drawnCards.map((card, index) => <article key={`detail-${card.id}-${index}`} className="rounded-[22px] border border-white/[.08] bg-white/[.035] p-5"><div className="flex items-center justify-between gap-3"><div><h2 className="font-serif text-xl font-bold text-amber-100">{card.name}</h2><p className="mt-1 text-[9px] uppercase tracking-[.2em] text-slate-500">{card.keywords.join(" • ")}</p></div><img src={getTarotImage(card)} alt="" className="h-16 w-10 rounded-md object-cover opacity-90"/></div><p className="mt-3 text-sm leading-7 text-slate-300">{card.meaning}</p><div className="mt-4 grid gap-2 sm:grid-cols-2"><div className="rounded-xl bg-rose-400/[.05] p-3"><div className="flex items-center gap-1 text-xs font-semibold text-rose-200"><Heart className="h-3.5 w-3.5"/> Aşk</div><p className="mt-1 text-xs leading-5 text-slate-400">{card.love}</p></div><div className="rounded-xl bg-sky-400/[.05] p-3"><div className="flex items-center gap-1 text-xs font-semibold text-sky-200"><BriefcaseBusiness className="h-3.5 w-3.5"/> Kariyer</div><p className="mt-1 text-xs leading-5 text-slate-400">{card.career}</p></div></div></article>)}</section>
-            <div className="mt-5 flex gap-2"><button type="button" onClick={() => setDrawnCards([])} className="flex-1 rounded-full border border-white/10 bg-white/[.04] px-5 py-3 text-sm font-semibold">Yeni Açılım</button><Link href="/" className="flex flex-1 items-center justify-center gap-1 rounded-full bg-amber-300 px-5 py-3 text-sm font-black text-slate-950">Ana Sayfa <ChevronRight className="h-4 w-4"/></Link></div>
-          </>
         )}
+
+        {!selectedCard && !revealing && (
+          <section className="mt-4 rounded-2xl border border-violet-300/10 bg-white/[.025] p-4 text-center text-xs leading-6 text-slate-400">
+            <Wand2 className="mx-auto mb-2 h-5 w-5 text-violet-300" />
+            Acele etme. 22 kartı kaydır, sana en çok “göz kırpan” karta dokun. Kart açıldığında anlamını, aşk ve kariyer mesajını göreceksin.
+          </section>
+        )}
+
+        <div className="mt-5 flex justify-center"><Link href="/" className="flex items-center gap-1 text-xs text-slate-400">Ana sayfaya dön <ChevronRight className="h-3.5 w-3.5" /></Link></div>
       </div>
     </main>
   );
