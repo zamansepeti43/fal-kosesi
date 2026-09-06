@@ -150,7 +150,6 @@ export default function TarotClient() {
   const [revealed, setRevealed] = useState(false);
   const [liftedCardId, setLiftedCardId] = useState<string | null>(null);
   const [creditStatus, setCreditStatus] = useState<"idle" | "checking" | "ok" | "error">("idle");
-  const [creditStatus, setCreditStatus] = useState<"idle" | "checking" | "ok" | "error">("idle");
 
   const spread = useMemo(() => spreads.find((item) => item.id === spreadId) ?? spreads[1], [spreadId]);
   const positions = useMemo(() => getPositionLabels(spreadId), [spreadId]);
