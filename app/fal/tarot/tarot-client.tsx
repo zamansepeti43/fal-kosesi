@@ -81,7 +81,33 @@ function CardBack() {
 }
 
 function CardFront({ card }: { card: TarotCard }) {
-  return <img src={getTarotImage(card)} alt={`${card.name} tarot kartı`} className="h-full w-full object-cover" draggable={false} />;
+  const file = imageByCardId[String(card.id)] ?? "00-fool";
+  const number = file.slice(0, 2);
+  const summary = card.meaning.split(".")[0].trim();
+
+  return (
+    <div className="relative h-full w-full overflow-hidden rounded-[18px] bg-[#efe8d8] text-[#33291f] shadow-inner" draggable={false}>
+      <div className="absolute inset-[6px] rounded-[14px] border border-[#6d563d]/45" />
+      <div className="relative z-10 flex h-full flex-col p-2.5 sm:p-3">
+        <div className="flex items-center justify-between text-[7px] font-black uppercase tracking-[.18em] text-[#80684c]">
+          <span>#{number}</span>
+          <span>BÜYÜK ARKANA</span>
+        </div>
+        <div className="mx-auto mt-2 h-[53%] w-[78%] overflow-hidden rounded-full border-[3px] border-[#c5a86a]/80 bg-[#d8c8a9] shadow-[0_7px_18px_rgba(60,42,20,.22)]">
+          <img src={getTarotImage(card)} alt="" className="h-full w-full object-cover object-center" draggable={false} />
+        </div>
+        <div className="mt-2 text-center">
+          <h3 className="font-serif text-[14px] font-black leading-tight text-[#2d241c] sm:text-[16px]">{card.name}</h3>
+          <p className="mt-0.5 text-[7px] font-bold uppercase tracking-[.12em] text-[#9a7650]">{card.keywords.slice(0, 3).join(" • ")}</p>
+        </div>
+        <div className="mt-2 flex min-h-0 flex-1 gap-2 rounded-xl border border-[#8d765a]/20 bg-white/35 p-2">
+          <img src="/fortune/tarot-spread.jpg" alt="" className="h-10 w-8 shrink-0 rounded-md object-cover" draggable={false} />
+          <p className="line-clamp-5 text-[8px] font-medium leading-[1.45] text-[#5b4937] sm:text-[9px]">{summary}</p>
+        </div>
+        <div className="mt-1.5 text-center text-[6px] font-bold uppercase tracking-[.18em] text-[#9a7650]">Fal Köşesi • sembolik yorum</div>
+      </div>
+    </div>
+  );
 }
 
 function FlipCard({ card, revealed, small = false }: { card: TarotCard; revealed: boolean; small?: boolean }) {
@@ -89,7 +115,7 @@ function FlipCard({ card, revealed, small = false }: { card: TarotCard; revealed
     <div className={`${small ? "w-[105px] sm:w-[125px]" : "w-[205px] sm:w-[245px]"} [perspective:1200px]`}>
       <div className="relative aspect-[2/3] w-full transition-transform duration-700 [transform-style:preserve-3d]" style={{ transform: `rotateY(${revealed ? 180 : 0}deg)` }}>
         <div className="absolute inset-0 overflow-hidden rounded-[18px] border border-amber-200/50 bg-black shadow-[0_22px_60px_rgba(0,0,0,.55),0_0_30px_rgba(245,158,11,.15)] [backface-visibility:hidden]"><CardBack /></div>
-        <div className="absolute inset-0 overflow-hidden rounded-[18px] border border-amber-200/70 bg-black shadow-[0_22px_60px_rgba(0,0,0,.55),0_0_30px_rgba(245,158,11,.18)] [backface-visibility:hidden] [transform:rotateY(180deg)]"><CardFront card={card} /></div>
+        <div className="absolute inset-0 overflow-hidden rounded-[18px] border border-amber-200/70 bg-[#efe8d8] shadow-[0_22px_60px_rgba(0,0,0,.55),0_0_30px_rgba(245,158,11,.18)] [backface-visibility:hidden] [transform:rotateY(180deg)]"><CardFront card={card} /></div>
       </div>
     </div>
   );
@@ -201,14 +227,14 @@ export default function TarotClient() {
             </div></div>
             <p className="text-center text-[10px] text-slate-500">← Kaydır • Kartların yüzü kapalı • İçinden gelen karta dokun →</p>
 
-            {selectedCards.length > 0 && <div className="mt-5 rounded-2xl border border-amber-200/10 bg-black/15 p-3"><div className="mb-3 flex items-center justify-between"><p className="text-[9px] font-bold uppercase tracking-[.2em] text-slate-400">Seçtiklerin</p><span className="text-[9px] text-amber-200">{selectedCards.length}/{spread.cards}</span></div><div className="flex justify-center gap-3">{selectedCards.map((card, index) => <div key={card.id} className="relative"><div className="w-[64px] overflow-hidden rounded-xl border border-amber-200/25 shadow-lg"><img src={getTarotImage(card)} alt={card.name} className="aspect-[2/3] w-full object-cover" /></div><span className="mt-1 block max-w-[70px] truncate text-center text-[8px] text-slate-400">{positions[index]}</span></div>)}</div></div>}
+            {selectedCards.length > 0 && <div className="mt-5 rounded-2xl border border-amber-200/10 bg-black/15 p-3"><div className="mb-3 flex items-center justify-between"><p className="text-[9px] font-bold uppercase tracking-[.2em] text-slate-400">Seçtiklerin</p><span className="text-[9px] text-amber-200">{selectedCards.length}/{spread.cards}</span></div><div className="flex justify-center gap-3">{selectedCards.map((card, index) => <div key={card.id} className="relative"><div className="w-[64px] overflow-hidden rounded-xl border border-amber-200/25 shadow-lg"><CardFront card={card} /></div><span className="mt-1 block max-w-[70px] truncate text-center text-[8px] text-slate-400">{positions[index]}</span></div>)}</div></div>}
           </div>
         </section>
 
         {activeCard && <section className="mt-4 rounded-[28px] border border-amber-200/20 bg-[radial-gradient(circle_at_50%_0%,rgba(245,158,11,.15),transparent_38%),rgba(18,13,31,.97)] p-5 text-center shadow-2xl sm:p-7"><p className="text-[9px] font-bold uppercase tracking-[.3em] text-amber-200">{name}, {positions[selectedCards.length] || "seçtiğin kart"} açılıyor</p><div className="mx-auto mt-4 flex justify-center"><FlipCard card={activeCard} revealed={revealed} /></div><p className="mx-auto mt-4 max-w-sm text-xs leading-6 text-slate-400">Kartın arka yüzü dönüyor. Sezgisel seçiminin sembolik mesajı birazdan açılacak.</p></section>}
 
         {completed && <section className="mt-4 rounded-[28px] border border-amber-200/20 bg-[radial-gradient(circle_at_50%_0%,rgba(245,158,11,.12),transparent_38%),rgba(18,13,31,.97)] p-5 shadow-2xl sm:p-7"><div className="text-center"><p className="text-[9px] font-bold uppercase tracking-[.3em] text-amber-200">{name}, açılımın</p><h2 className="mt-1 font-serif text-3xl font-bold text-amber-100">Kartların sana ne söylüyor?</h2><p className="mx-auto mt-2 max-w-2xl text-xs leading-6 text-slate-400">Kartları tek tek değil, birbirleriyle kurdukları hikâye üzerinden değerlendir. Aynı tema tekrar ediyorsa özellikle dikkat çekiyor olabilir.</p></div>
-          <div className="mt-6 space-y-4">{selectedCards.map((card, index) => <article key={card.id} className="overflow-hidden rounded-2xl border border-white/10 bg-white/[.025]"><div className="flex items-center gap-3 border-b border-white/5 p-3"><div className="w-[54px] overflow-hidden rounded-lg border border-amber-200/20"><img src={getTarotImage(card)} alt={card.name} className="aspect-[2/3] w-full object-cover" /></div><div className="min-w-0"><p className="text-[9px] font-bold uppercase tracking-[.18em] text-amber-200">{positions[index]}</p><h3 className="mt-0.5 font-serif text-xl font-bold">{card.name}</h3><p className="text-[9px] text-slate-500">{card.keywords.join(" • ")}</p></div></div><div className="p-4"><p className="text-sm leading-7 text-slate-200">{getContextText(card, spreadId, index)}</p>{question.trim() && <p className="mt-3 rounded-xl border border-violet-300/10 bg-violet-400/[.05] p-3 text-xs leading-6 text-slate-300"><strong className="text-violet-200">Soruna göre:</strong> “{question.trim()}” konusunda bu kartın {card.keywords[0]} teması öne çıkıyor. Bunu kesin bir gelecek vaadi olarak değil, kararlarını düşünürken kullanabileceğin sembolik bir ayna olarak değerlendir.</p>}</div></article>)}</div>
+          <div className="mt-6 space-y-4">{selectedCards.map((card, index) => <article key={card.id} className="overflow-hidden rounded-2xl border border-white/10 bg-white/[.025]"><div className="flex items-center gap-3 border-b border-white/5 p-3"><div className="w-[54px] overflow-hidden rounded-lg border border-amber-200/20"><CardFront card={card} /></div><div className="min-w-0"><p className="text-[9px] font-bold uppercase tracking-[.18em] text-amber-200">{positions[index]}</p><h3 className="mt-0.5 font-serif text-xl font-bold">{card.name}</h3><p className="text-[9px] text-slate-500">{card.keywords.join(" • ")}</p></div></div><div className="p-4"><p className="text-sm leading-7 text-slate-200">{getContextText(card, spreadId, index)}</p>{question.trim() && <p className="mt-3 rounded-xl border border-violet-300/10 bg-violet-400/[.05] p-3 text-xs leading-6 text-slate-300"><strong className="text-violet-200">Soruna göre:</strong> “{question.trim()}” konusunda bu kartın {card.keywords[0]} teması öne çıkıyor. Bunu kesin bir gelecek vaadi olarak değil, kararlarını düşünürken kullanabileceğin sembolik bir ayna olarak değerlendir.</p>}</div></article>)}</div>
           <div className="mt-4 grid gap-3 sm:grid-cols-3"><article className="rounded-2xl border border-rose-300/10 bg-rose-400/[.045] p-4"><div className="flex items-center gap-2 text-sm font-bold text-rose-200"><Heart className="h-4 w-4" /> Aşk</div><p className="mt-2 text-xs leading-6 text-slate-300">{selectedCards[0]?.love}</p></article><article className="rounded-2xl border border-sky-300/10 bg-sky-400/[.045] p-4"><div className="flex items-center gap-2 text-sm font-bold text-sky-200"><BriefcaseBusiness className="h-4 w-4" /> İş & Kariyer</div><p className="mt-2 text-xs leading-6 text-slate-300">{selectedCards[1]?.career || selectedCards[0]?.career}</p></article><article className="rounded-2xl border border-amber-300/10 bg-amber-400/[.045] p-4"><div className="flex items-center gap-2 text-sm font-bold text-amber-200"><CircleDollarSign className="h-4 w-4" /> Para & Kısmet</div><p className="mt-2 text-xs leading-6 text-slate-300">{selectedCards[selectedCards.length - 1]?.meaning}</p></article></div>
           <div className="mt-5 grid gap-2 sm:grid-cols-2"><button type="button" onClick={() => resetReading()} className="flex items-center justify-center gap-2 rounded-full border border-white/10 bg-white/[.04] px-5 py-3 text-sm font-semibold"><RotateCcw className="h-4 w-4" /> Yeni Açılım</button><Link href="/fal/premium" className="flex items-center justify-center gap-2 rounded-full bg-gradient-to-r from-amber-300 to-yellow-200 px-5 py-3 text-sm font-black text-slate-950"><Sparkles className="h-4 w-4" /> Derinlemesine Premium Yorum <ChevronRight className="h-4 w-4" /></Link></div>
         </section>}
