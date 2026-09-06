@@ -89,16 +89,6 @@ export default function Home() {
       .catch(() => undefined);
   }, []);
 
-  useEffect(() => {
-    fetch("/api/credits", { cache: "no-store" })
-      .then(async (response) => {
-        if (!response.ok) return;
-        const data = (await response.json()) as { credits?: number };
-        setCredits(Number(data.credits ?? 0));
-      })
-      .catch(() => undefined);
-  }, []);
-
   const firstName = name.split(" ")[0] || "Dostum";
 
   return (
