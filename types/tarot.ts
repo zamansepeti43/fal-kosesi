@@ -5,9 +5,9 @@ export type TarotCard = {
   suit?: string | null;
   meaning: string;
   meaning_reverse?: string;
-  love?: string;
-  career?: string;
-  keywords?: string[];
+  love: string;
+  career: string;
+  keywords: string[];
 };
 
 export type TarotSpread = {
