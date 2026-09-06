@@ -32,15 +32,16 @@ const majorArcana = [
 for (const [number, slug, sourceName] of majorArcana) {
   assets.push({
     file: path.join("tarot", `${number}-${slug}.jpg`),
-    url: `https://commons.wikimedia.org/wiki/Special:Redirect/file/RWS_Tarot_${number}_${sourceName}.jpg?width=1400`,
+    // Wikimedia's current RWS scans are roughly 1.1k × 1.9k and materially sharper than the old 300–750px scans.
+    url: `https://commons.wikimedia.org/wiki/Special:Redirect/file/RWS_Tarot_${number}_${sourceName}.jpg?width=1600`,
   });
 }
 
 async function isFreshEnough(file, asset) {
   try {
     const info = await stat(file);
-    // Re-fetch old 900px tarot scans so the app uses sharper card artwork.
-    if (asset.file.startsWith("tarot/") && info.size < 220_000) return false;
+    // Force-refresh old/small tarot scans. The current Commons originals are generally 700KB–1.2MB.
+    if (asset.file.startsWith("tarot/") && info.size < 700_000) return false;
     return true;
   } catch {
     return false;
