@@ -3,12 +3,13 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { ArrowRight, Check, Mail, ShieldCheck, Smartphone, Sparkles, User } from "lucide-react";
-import { createMember, getStoredMember, MEMBER_STORAGE_KEY, saveMember } from "@/lib/membership";
+import { createMember, getStoredMember, saveMember } from "@/lib/membership";
 
 export default function GirisPage() {
   const [form, setForm] = useState({ name: "", email: "", phone: "" });
   const [isHydrated, setIsHydrated] = useState(false);
   const [currentUser, setCurrentUser] = useState<ReturnType<typeof createMember> | null>(null);
+  const [error, setError] = useState("");
 
   useEffect(() => {
     const member = getStoredMember();
@@ -18,13 +19,26 @@ export default function GirisPage() {
 
   const canOpenProfile = useMemo(() => Boolean(currentUser?.email), [currentUser]);
 
-  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    setError("");
 
     const cleanEmail = form.email.trim().toLowerCase();
     if (!cleanEmail) return;
 
     const member = createMember(form.name, cleanEmail, form.phone);
+    const sessionResponse = await fetch("/api/member/session", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email: cleanEmail, name: member.name, phone: member.phone }),
+    });
+
+    if (!sessionResponse.ok) {
+      const payload = (await sessionResponse.json().catch(() => null)) as { error?: string } | null;
+      setError(payload?.error || "Hesap hazırlanamadı. Lütfen tekrar dene.");
+      return;
+    }
+
     saveMember(member);
     setCurrentUser(member);
     window.location.href = "/profil";
@@ -56,14 +70,14 @@ export default function GirisPage() {
 
             <h1 className="text-3xl font-black text-white md:text-5xl">Fal Köşesi’ne giriş yap.</h1>
             <p className="mt-3 max-w-xl text-base text-slate-300">
-              Normal üye kaydı oluştur, 1 ücretsiz fal hakkı kazan ve sonrasında haftalık/aylık üyelik seçeneği ile devam et.
+              Normal üye kaydı oluştur, 50 kredi hediyeni al ve kredilerinle dilediğin falları aç.
             </p>
 
             <div className="mt-8 space-y-4">
               {[
-                { icon: Mail, label: "Gmail ile üye ol" },
-                { icon: Smartphone, label: "1 ücretsiz fal hakkı" },
-                { icon: ShieldCheck, label: "Haftalık ve aylık üyelik seçenekleri" },
+                { icon: Mail, label: "E-posta ile üye ol" },
+                { icon: Smartphone, label: "50 kredi hoş geldin hediyesi" },
+                { icon: ShieldCheck, label: "Kredilerini güvenli şekilde hesabında sakla" },
               ].map(({ icon: Icon, label }) => (
                 <div key={label} className="flex items-center gap-3 rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-slate-200">
                   <span className="flex h-9 w-9 items-center justify-center rounded-full bg-violet-500/15 text-violet-200">
@@ -89,41 +103,22 @@ export default function GirisPage() {
             <form onSubmit={handleSubmit} className="space-y-4">
               <label className="block">
                 <span className="mb-2 block text-sm text-slate-300">Adınız ve soyadınız</span>
-                <input
-                  required
-                  value={form.name}
-                  onChange={(event) => setForm((prev) => ({ ...prev, name: event.target.value }))}
-                  placeholder="Ayşe Demir"
-                  className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-white placeholder:text-slate-500 outline-none ring-0 transition focus:border-violet-400/60"
-                />
+                <input required value={form.name} onChange={(event) => setForm((prev) => ({ ...prev, name: event.target.value }))} placeholder="Ayşe Demir" className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-white placeholder:text-slate-500 outline-none transition focus:border-violet-400/60" />
               </label>
 
               <label className="block">
                 <span className="mb-2 block text-sm text-slate-300">E-posta adresi</span>
-                <input
-                  required
-                  type="email"
-                  value={form.email}
-                  onChange={(event) => setForm((prev) => ({ ...prev, email: event.target.value }))}
-                  placeholder="ayse@gmail.com"
-                  className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-white placeholder:text-slate-500 outline-none transition focus:border-violet-400/60"
-                />
+                <input required type="email" value={form.email} onChange={(event) => setForm((prev) => ({ ...prev, email: event.target.value }))} placeholder="ayse@gmail.com" className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-white placeholder:text-slate-500 outline-none transition focus:border-violet-400/60" />
               </label>
 
               <label className="block">
                 <span className="mb-2 block text-sm text-slate-300">Telefon</span>
-                <input
-                  value={form.phone}
-                  onChange={(event) => setForm((prev) => ({ ...prev, phone: event.target.value }))}
-                  placeholder="+90 555 123 45 67"
-                  className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-white placeholder:text-slate-500 outline-none transition focus:border-violet-400/60"
-                />
+                <input value={form.phone} onChange={(event) => setForm((prev) => ({ ...prev, phone: event.target.value }))} placeholder="+90 555 123 45 67" className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-white placeholder:text-slate-500 outline-none transition focus:border-violet-400/60" />
               </label>
 
-              <button
-                type="submit"
-                className="inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-amber-300 via-yellow-400 to-orange-300 px-5 py-3.5 text-base font-bold text-slate-950 shadow-[0_12px_30px_rgba(251,191,36,0.35)] transition hover:brightness-110"
-              >
+              {error ? <p className="rounded-2xl border border-rose-400/20 bg-rose-400/10 p-3 text-sm text-rose-100">{error}</p> : null}
+
+              <button type="submit" className="inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-amber-300 via-yellow-400 to-orange-300 px-5 py-3.5 text-base font-bold text-slate-950 shadow-[0_12px_30px_rgba(251,191,36,0.35)] transition hover:brightness-110">
                 Kaydı tamamla
                 <ArrowRight className="h-4 w-4" />
               </button>
@@ -132,7 +127,7 @@ export default function GirisPage() {
             <div className="mt-5 rounded-2xl border border-emerald-400/20 bg-emerald-400/10 p-3 text-sm text-emerald-100">
               <div className="flex items-center gap-2 font-medium">
                 <Check className="h-4 w-4" />
-                1 ücretsiz fal hakkı verilir. Sonraki okumalar üyelik gerektirir.
+                Hesabına 50 kredi tanımlanır. Kredilerin bittiğinde yeni paket alabilirsin.
               </div>
             </div>
           </section>
