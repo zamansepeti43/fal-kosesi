@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 900" role="img" aria-label="Tarot kartı arka yüzü">
+  <defs>
+    <radialGradient id="bg" cx="50%" cy="42%" r="80%">
+      <stop offset="0" stop-color="#39215d"/>
+      <stop offset="0.55" stop-color="#17102f"/>
+      <stop offset="1" stop-color="#080817"/>
+    </radialGradient>
+    <linearGradient id="gold" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#fff0b0"/>
+      <stop offset="0.5" stop-color="#d7a94e"/>
+      <stop offset="1" stop-color="#8e5b20"/>
+    </linearGradient>
+    <pattern id="stars" width="100" height="100" patternUnits="userSpaceOnUse">
+      <circle cx="12" cy="18" r="2" fill="#f5d98a" opacity=".55"/>
+      <circle cx="72" cy="31" r="1.5" fill="#fff1b2" opacity=".5"/>
+      <path d="M46 70l3 7 7 3-7 3-3 7-3-7-7-3 7-3z" fill="#d8b45e" opacity=".38"/>
+    </pattern>
+  </defs>
+  <rect width="600" height="900" rx="34" fill="url(#bg)"/>
+  <rect x="18" y="18" width="564" height="864" rx="28" fill="none" stroke="url(#gold)" stroke-width="7"/>
+  <rect x="34" y="34" width="532" height="832" rx="22" fill="none" stroke="#e9ca77" stroke-opacity=".38" stroke-width="2"/>
+  <rect x="42" y="42" width="516" height="816" rx="18" fill="url(#stars)" opacity=".7"/>
+  <g transform="translate(300 450)">
+    <circle r="164" fill="none" stroke="url(#gold)" stroke-width="4" opacity=".9"/>
+    <circle r="137" fill="none" stroke="#e9ca77" stroke-width="2" opacity=".55"/>
+    <circle r="94" fill="#0c0920" stroke="#dcb766" stroke-width="3"/>
+    <path d="M0-64C-42-64-70-31-70 0s28 64 70 64 70-33 70-64-28-64-70-64z" fill="none" stroke="#f0d78f" stroke-width="5"/>
+    <path d="M-38 0c18-27 58-27 76 0-18 27-58 27-76 0z" fill="#17102f" stroke="#f0d78f" stroke-width="4"/>
+    <circle r="16" fill="#f0d78f"/>
+    <circle r="7" fill="#17102f"/>
+    <path d="M0-192v28M0 164v28M-192 0h28M164 0h28" stroke="#e7c66e" stroke-width="5" stroke-linecap="round"/>
+    <path d="M-136-136l20 20M116 116l20 20M136-136l-20 20M-116 116l-20 20" stroke="#e7c66e" stroke-width="4" stroke-linecap="round"/>
+    <path d="M0-222l6 14 14 6-14 6-6 14-6-14-14-6 14-6zM222 0l6 14 14 6-14 6-6 14-6-14-14-6 14-6zM0 222l6 14 14 6-14 6-6 14-6-14-14-6 14-6zM-222 0l6 14 14 6-14 6-6 14-6-14-14-6 14-6z" fill="#f2d486" opacity=".8"/>
+  </g>
+  <text x="300" y="90" text-anchor="middle" fill="#f6dda0" font-family="Georgia,serif" font-size="26" letter-spacing="7">FAL KÖŞESİ</text>
+  <text x="300" y="830" text-anchor="middle" fill="#cdb36d" font-family="Georgia,serif" font-size="20" letter-spacing="5">BÜYÜK ARKANA</text>
+</svg>
