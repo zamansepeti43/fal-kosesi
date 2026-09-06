@@ -2,213 +2,131 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { ChevronRight, Sparkles, MessagesSquare, Coffee as CoffeeIcon, Heart, Wallet, Briefcase, Moon } from "lucide-react";
+import { ChevronRight, Sparkles, MessagesSquare, Coffee, Heart, Wallet, Briefcase, Moon, Bookmark, Share2 } from "lucide-react";
 
-const mockResult = {
-  summary: "Fincanınızdaki semboller, bir dönüm noktasının ve yeni başlangıçların önünden geldiğini gösteriyor. Bu yolculuk, gelecekteki adımlarınızı daha güvenle atabileceğinizi gösterir.",
+type Symbol = { name: string; zone: string; meaning: string };
+type Result = { summary: string; symbols: Symbol[]; sections: { love: string; career: string; money: string; future: string }; followUpQuestion?: string };
+
+const fallback: Result = {
+  summary: "Fincanındaki izler bir kapanıştan çok yeni bir sayfanın eşiğini gösteriyor. Önündeki dönemde seni bekleten bir haber, ardından vereceğin bir karar belirginleşebilir. Burada asıl tema, başkalarının senden beklediği hayat ile senin gerçekten istediğin hayat arasındaki farkı görmen.",
   symbols: [
-    { name: "Kuş", zone: "Kenar", meaning: "Yakında güzel bir haber alacaksınız." },
-    { name: "Kalp", zone: "Orta", meaning: "Aşk hayatınızda derinleşme ve duygusal bağlanma artışı." },
-    { name: "Anahtar", zone: "Dip", meaning: "Kariyerinizde yeni bir kapı açılacak veya mevcut pozisyonunuzda bir ilerleme kaydedeceksiniz." },
-    { name: "Yol", zone: "Kenar", meaning: "Seyahat planlarınız veya yaşamınızda yeni bir yön geçerli olacak." },
-    { name: "Halka", zone: "Dip", meaning: "İlişkilerinizde bir bağlanma veya taahhüt aşamasına girmeye hazırsınız." }
+    { name: "Kuş", zone: "Üst kenar", meaning: "Bir haber veya konuşma enerjisi taşıyor. Beklediğin mesaj geldiğinde sadece söylenenlere değil, konuşmanın sende uyandırdığı duyguya da dikkat et." },
+    { name: "Anahtar", zone: "Orta bölüm", meaning: "Çözümü elinde olmayan bir konunun kapısını açabilecek fırsatı anlatıyor. Bu fırsat küçük görünebilir ama doğru değerlendirildiğinde yönünü değiştirebilir." },
+    { name: "Yol", zone: "Dipten kenara", meaning: "Bir seçimden sonra hareketlenme var. Kısa vadede zorlayıcı olsa bile sana daha fazla özgürlük veren yolu seçmen uzun vadede daha huzurlu hissettirebilir." },
+    { name: "Kalp", zone: "Sol bölüm", meaning: "Duygusal bir bağın hâlâ kararlarını etkilediğini gösteriyor. Hislerini bastırmak yerine neye gerçekten ihtiyaç duyduğunu ayırman önemli." },
+    { name: "Yıldız", zone: "Üst bölüm", meaning: "Yeniden umutlanma ve görünür olma enerjisi. Uzun süredir ertelediğin bir isteğin için tekrar cesaret bulabileceğin bir dönem." },
+    { name: "Halka", zone: "Dip", meaning: "Tamamlanan bir döngü ve daha sağlam bir düzen kurma ihtiyacı. Eski bir alışkanlığı veya ilişki biçimini değiştirdiğinde alanın genişleyecek." },
   ],
-  love: "Aşk hayatınızda sıcaklık ve yakınlık artıyor. Şu anda zorluklar yaşasanız da, bu geçici ve anlaşılmaya değer. Açık iletişim, kalbinizin istediği yere götürecek.",
-  money: "Finansal durumunuzda iyileşme görünür. Beklediğiniz bir ödeme veya gelirinizi artıran bir fırsat yaklaşır. Paranızı değerli yatırım alanlarına yönlendirmek iyi bir zaman.",
-  career: "Kariyer yolunuzda önemli bir ilerleme kaydedebileceğinizi gösterir. Yeni bir proje, sorumluluk veya liderlik rolü sunulabilir. Güveninizi artırın ve fırsatlardan yararlanın.",
-  future: "Yakın geleceğinizde pozitif değişiklikler ve kişisel büyüme fırsatları bekliyor. Açık kalın ve içgüdülerinizi dinleyin; size yön veren işaretleri görmeye hazırlıklı olun."
+  sections: {
+    love: "Duygusal alanda netlik arıyorsun ve artık yarım kalan cümleler seni eskisi kadar tatmin etmiyor. Hayatında biri varsa, aranızdaki bağı güçlendirecek olan şey büyük sözlerden çok küçük ama tutarlı davranışlar olacak. Bekârsan, geçmişte seni yoran benzer bir döngüyü tekrar etmemeye dikkat et. Kalbinin istediği ile alışkanlıklarının istediğini birbirinden ayırdığında daha rahat bir seçim yapacaksın.",
+    career: "İş ve kariyer tarafında görünürlüğün artıyor. Senden fikir istenmesi, yeni bir sorumluluk veya farklı bir çalışma düzeni gündeme gelebilir. Kendini kanıtlamak için her yükü üstlenmen gerekmiyor; emeğinin karşılığını ve gelişim alanını birlikte düşün. Önümüzdeki dönemde daha seçici davranman, daha az yorularak daha doğru sonuç almanı sağlayabilir.",
+    money: "Maddi tarafta önce düzen, sonra rahatlama mesajı var. Beklenen bir ödeme veya ek gelir fırsatı gündeme gelebilir; fakat asıl kazanım, paranı nereye yönlendirdiğini daha bilinçli takip etmen olacak. Ani harcamalarda kısa süreli rahatlama yerine uzun vadeli hedefini hatırla. Küçük bir düzenleme bile önümüzdeki haftalarda sana nefes alanı açabilir.",
+    future: "Yakın gelecekte bir haberin ardından karar vermen gereken bir eşik oluşabilir. İlk anda belirsiz görünen seçeneklerden biri zamanla daha net hale gelecek. Acele karar vermek yerine sana huzur veren seçeneği gözlemle. Önündeki değişim tek bir büyük olaydan ziyade birkaç küçük işaretin peş peşe gelmesiyle anlam kazanacak.",
+  },
+  followUpQuestion: "Bu yorumda seni en çok düşündüren konu hangisi? Onu biraz daha derinleştirebiliriz.",
 };
 
+const sections = [
+  ["Aşk", "love", Heart, "Kalbinin gündemi"],
+  ["Para & Kısmet", "money", Wallet, "Maddi akışın"],
+  ["İş & Kariyer", "career", Briefcase, "Hedeflerin ve yolun"],
+  ["Yakın Gelecek", "future", Moon, "Önündeki dönem"],
+] as const;
+
 export default function ResultClient() {
+  const [reading, setReading] = useState<Result>(fallback);
   const [showChat, setShowChat] = useState(false);
   const [chatInput, setChatInput] = useState("");
-  const [messages, setMessages] = useState<Array<{id: number; text: string; isUser: boolean}>>([]);
-  const [reading, setReading] = useState<typeof mockResult | null>(null);
-
-  const mockResponses = [
-    "Bu sembol, genellikle bir mesaj veya haber getirdiğini gösterir. Daha spesifik olmak için, kimin sizinle iletişim kurmak istediğini düşünün.",
-    "Kalbinizdeki bu bağ, derinlemesine bir anlam taşır. Bu duygusal bağ, sadece geçici bir iltifat değil, daha kalıcı bir şeyin başlangıcı olabilir.",
-    "Bu anahtar sembolü, genellikle bir kapının açılması veya bir problemin çözümüyle ilgilidir. Hangi alanda bir çözüm arıyorsunuz?",
-    "Yol sembolü, hem gerçek yolculuk hem de yaşam yolunuzdaki bir değişiklik gösterebilir. Hangi yönü düşünüyorsunuz?",
-    "Bu dairenin anlamı, genellikle tamamlık ve bütünlük. Hangi alanda bir döngünün tamamlandığını hissediyorsunuz?"
-  ];
+  const [messages, setMessages] = useState<Array<{ id: number; text: string; isUser: boolean }>>([]);
+  const [name, setName] = useState("Dostum");
 
   useEffect(() => {
-    if (typeof window === "undefined") return;
-
     const stored = sessionStorage.getItem("falResult");
+    const profileRaw = localStorage.getItem("fal-kosesi-profile");
+    if (profileRaw) {
+      try { const profile = JSON.parse(profileRaw) as { name?: string }; if (profile.name?.trim()) setName(profile.name.trim().split(" ")[0]); } catch {}
+    }
     if (stored) {
       try {
-        const parsed = JSON.parse(stored);
+        const parsed = JSON.parse(stored) as Partial<Result>;
         setReading({
-          summary: parsed.summary ?? mockResult.summary,
-          symbols: Array.isArray(parsed.symbols) ? parsed.symbols : mockResult.symbols,
-          love: parsed.sections?.love ?? mockResult.love,
-          money: parsed.sections?.money ?? mockResult.money,
-          career: parsed.sections?.career ?? mockResult.career,
-          future: parsed.sections?.future ?? mockResult.future,
+          summary: parsed.summary ?? fallback.summary,
+          symbols: Array.isArray(parsed.symbols) && parsed.symbols.length ? parsed.symbols : fallback.symbols,
+          sections: {
+            love: parsed.sections?.love ?? fallback.sections.love,
+            money: parsed.sections?.money ?? fallback.sections.money,
+            career: parsed.sections?.career ?? fallback.sections.career,
+            future: parsed.sections?.future ?? fallback.sections.future,
+          },
+          followUpQuestion: parsed.followUpQuestion ?? fallback.followUpQuestion,
         });
-      } catch {
-        setReading(mockResult);
-      }
-      return;
+      } catch {}
     }
-    setReading(mockResult);
   }, []);
-
-  const activeResult = reading ?? mockResult;
 
   const handleSendMessage = () => {
     if (!chatInput.trim()) return;
-
-    const userMessage = {
-      id: Date.now(),
-      text: chatInput,
-      isUser: true
-    };
-
-    setMessages(prev => [...prev, userMessage]);
+    const text = chatInput.trim();
+    setMessages((prev) => [...prev, { id: Date.now(), text, isUser: true }]);
     setChatInput("");
-
-    setTimeout(() => {
-      const randomResponse = mockResponses[Math.floor(Math.random() * mockResponses.length)];
-      const botMessage = {
-        id: Date.now() + 1,
-        text: randomResponse,
-        isUser: false
-      };
-      setMessages(prev => [...prev, botMessage]);
-    }, 500);
-  };
-
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault();
-      handleSendMessage();
-    }
+    setTimeout(() => setMessages((prev) => [...prev, { id: Date.now() + 1, text: `${name}, bu soruyu falındaki sembollerle birlikte düşündüğümüzde özellikle “${text}” konusundaki netleşme ihtiyacın öne çıkıyor. İstersen bu konuyu Aşk, Para, Kariyer veya Yakın Gelecek başlıklarından biri üzerinden daha derin okuyabiliriz.`, isUser: false }]), 500);
   };
 
   return (
-    <main className="relative min-h-screen overflow-hidden">
-      <div className="mx-auto max-w-6xl px-5 pb-16 pt-7 md:px-8 md:pt-9">
-        <header className="flex items-center justify-between mb-12">
-          <div className="flex items-center space-x-3">
-            <Link href="/fal/upload">
-              <span className="text-sm text-muted">← Geri</span>
-            </Link>
-            <h1 className="text-2xl font-bold">Fal Sonuçlarınız</h1>
+    <main className="min-h-screen overflow-x-hidden bg-[radial-gradient(circle_at_top,rgba(109,40,217,.22),transparent_32%),linear-gradient(180deg,#080817,#05050d)] text-white">
+      <div className="mx-auto max-w-5xl px-4 pb-20 pt-5 sm:px-6 sm:pt-8">
+        <header className="mb-5 flex items-center justify-between gap-3 sm:mb-8">
+          <Link href="/fal/upload" className="text-xs text-slate-300 sm:text-sm">← Yeni Fal</Link>
+          <div className="flex items-center gap-1.5">
+            <button type="button" className="grid h-9 w-9 place-items-center rounded-full border border-white/10 bg-white/[.04]" aria-label="Kaydet"><Bookmark className="h-4 w-4" /></button>
+            <button type="button" className="grid h-9 w-9 place-items-center rounded-full border border-white/10 bg-white/[.04]" aria-label="Paylaş"><Share2 className="h-4 w-4" /></button>
+            <button type="button" onClick={() => setShowChat((v) => !v)} className="grid h-9 w-9 place-items-center rounded-full border border-violet-400/30 bg-violet-400/10 text-violet-200" aria-label="Falcıya Sor"><MessagesSquare className="h-4 w-4" /></button>
           </div>
-          <button
-            onClick={() => setShowChat(!showChat)}
-            className="flex items-center space-x-2 px-4 py-2 bg-line/30 hover:bg-line/40 rounded-lg text-sm"
-          >
-            <MessagesSquare size={20} />
-            <span className="hidden md:inline">Falcıya Sor</span>
-          </button>
         </header>
 
-        <section className="mb-12">
-          <div className="space-y-8">
-            <div className="glass p-6 hover:glass-hover transition-all card-lift hover:-translate-y-2">
-              <h2 className="font-semibold text-xl mb-4">Genel Yorum</h2>
-              <p className="text-muted leading-relaxed">{activeResult.summary}</p>
-            </div>
+        <section className="relative overflow-hidden rounded-[26px] border border-amber-200/20 bg-[radial-gradient(circle_at_80%_20%,rgba(245,158,11,.16),transparent_35%),linear-gradient(135deg,rgba(30,20,48,.95),rgba(11,10,27,.98))] p-5 shadow-[0_25px_80px_rgba(0,0,0,.35)] sm:rounded-[32px] sm:p-8">
+          <div className="absolute -right-20 -top-20 h-48 w-48 rounded-full bg-violet-500/10 blur-3xl" />
+          <div className="relative flex items-center gap-2 text-[9px] font-bold uppercase tracking-[.25em] text-amber-200"><Coffee className="h-4 w-4"/> Fal Köşesi • Kişisel Kahve Okuması</div>
+          <h1 className="relative mt-3 font-serif text-3xl font-bold sm:text-4xl">{name}, fincanın sana ne anlatıyor? ✦</h1>
+          <p className="relative mt-2 max-w-3xl text-sm leading-6 text-slate-300">Profilin, seçtiğin odak ve fincanındaki semboller birlikte değerlendirilerek hazırlanan kişisel okuman.</p>
+        </section>
 
-            <div className="glass p-6 hover:glass-hover transition-all card-lift hover:-translate-y-2">
-              <h2 className="font-semibold text-xl mb-4">Görülen Semboller</h2>
-              <div className="grid gap-4 md:grid-cols-3">
-                {activeResult.symbols.map((symbol, index) => (
-                  <div key={index} className="p-4 bg-line/30 rounded-lg text-center">
-                    <div className="flex items-center justify-center w-10 h-10 mb-3 mx-auto bg-gold/20 rounded-lg">
-                      {symbol.name === "Kuş" && (
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-bird"><path d="M13 10h3l2-4-5 6-6-4z"/></svg>
-                      )}
-                      {symbol.name === "Kalp" && (
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-heart"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
-                      )}
-                      {symbol.name === "Anahtar" && (
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-key"><path d="M12 4l2 12h5l-3-5 6-6H7l-3 5z"/></svg>
-                      )}
-                      {symbol.name === "Yol" && (
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-map-pin"><path d="M20 10c0 4-4.107 7.5-8 10C4.107 17.5 0 14 0 10c0-3 1.894-5.396 4.5-6.562A7.943 7.943 0 0 1 10 1.94l1.055.369A3.999 3.999 0 0 1 14.5 3.562A7.943 7.943 0 0 1 20 10z"/></svg>
-                      )}
-                      {symbol.name === "Halka" && (
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-circle"><circle cx="12" cy="12" r="8"/></svg>
-                      )}
-                    </div>
-                    <h3 className="font-semibold text-lg">{symbol.name}</h3>
-                    <p className="text-xs text-muted">{symbol.zone}</p>
-                    <p className="text-sm leading-relaxed">{symbol.meaning}</p>
-                  </div>
-                ))}
-              </div>
-            </div>
+        <section className="mt-4 rounded-[24px] border border-violet-300/15 bg-white/[.035] p-5 shadow-xl backdrop-blur-xl sm:mt-5 sm:p-7">
+          <div className="flex items-center gap-2"><Sparkles className="h-5 w-5 text-amber-300"/><h2 className="font-serif text-xl font-bold">Sana özel genel yorum</h2></div>
+          <p className="mt-4 text-sm leading-7 text-slate-200 sm:text-base sm:leading-8">{reading.summary}</p>
+        </section>
 
-            <div className="glass p-6 hover:glass-hover transition-all card-lift hover:-translate-y-2">
-              <h2 className="font-semibold text-xl mb-4">Aşk</h2>
-              <p className="text-muted leading-relaxed">{activeResult.love}</p>
-            </div>
-
-            <div className="glass p-6 hover:glass-hover transition-all card-lift hover:-translate-y-2">
-              <h2 className="font-semibold text-xl mb-4">Para & Kısmet</h2>
-              <p className="text-muted leading-relaxed">{activeResult.money}</p>
-            </div>
-
-            <div className="glass p-6 hover:glass-hover transition-all card-lift hover:-translate-y-2">
-              <h2 className="font-semibold text-xl mb-4">İş & Kariyer</h2>
-              <p className="text-muted leading-relaxed">{activeResult.career}</p>
-            </div>
-
-            <div className="glass p-6 hover:glass-hover transition-all card-lift hover:-translate-y-2">
-              <h2 className="font-semibold text-xl mb-4">Yakın Gelecek</h2>
-              <p className="text-muted leading-relaxed">{activeResult.future}</p>
-            </div>
+        <section className="mt-5 sm:mt-7">
+          <div className="mb-3 flex items-end justify-between"><div><p className="text-[9px] uppercase tracking-[.25em] text-amber-200">Fincandaki izler</p><h2 className="mt-1 font-serif text-2xl font-bold">Gördüğümüz semboller</h2></div><span className="text-xs text-slate-500">{reading.symbols.length} sembol</span></div>
+          <div className="grid gap-2.5 sm:grid-cols-2 lg:grid-cols-3">
+            {reading.symbols.map((symbol, index) => (
+              <article key={`${symbol.name}-${index}`} className="rounded-[20px] border border-white/[.08] bg-gradient-to-br from-white/[.06] to-white/[.025] p-4 shadow-lg">
+                <div className="flex items-center justify-between"><span className="grid h-9 w-9 place-items-center rounded-xl bg-amber-300/10 text-lg text-amber-200">✦</span><span className="rounded-full border border-white/10 px-2 py-1 text-[8px] uppercase tracking-[.15em] text-slate-400">{symbol.zone}</span></div>
+                <h3 className="mt-3 font-serif text-lg font-bold">{symbol.name}</h3><p className="mt-1 text-xs leading-5 text-slate-300">{symbol.meaning}</p>
+              </article>
+            ))}
           </div>
         </section>
 
+        <section className="mt-7">
+          <div className="mb-3"><p className="text-[9px] uppercase tracking-[.25em] text-violet-200">Hayatının dört alanı</p><h2 className="mt-1 font-serif text-2xl font-bold">Senin için ayrıntılı yorum</h2></div>
+          <div className="grid gap-3 sm:grid-cols-2">
+            {sections.map(([title, key, Icon, subtitle]) => (
+              <article key={title} className="rounded-[22px] border border-white/[.08] bg-white/[.035] p-5 shadow-xl">
+                <div className="flex items-center gap-3"><span className="grid h-10 w-10 place-items-center rounded-xl bg-violet-400/10 text-violet-200"><Icon className="h-5 w-5" /></span><div><h3 className="font-serif text-lg font-bold">{title}</h3><p className="text-[10px] text-slate-500">{subtitle}</p></div></div>
+                <p className="mt-4 text-sm leading-7 text-slate-200">{reading.sections[key]}</p>
+              </article>
+            ))}
+          </div>
+        </section>
+
+        <section className="mt-5 rounded-[22px] border border-amber-300/20 bg-amber-300/[.05] p-5 sm:mt-7 sm:p-6"><p className="text-[9px] font-bold uppercase tracking-[.25em] text-amber-200">Bir sonraki soru</p><p className="mt-2 font-serif text-lg font-semibold">{reading.followUpQuestion}</p><button type="button" onClick={() => setShowChat(true)} className="mt-4 inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-amber-300 to-orange-300 px-5 py-2.5 text-xs font-black text-slate-950">Falcıya Sor <ChevronRight className="h-4 w-4"/></button></section>
+
         {showChat && (
-          <section className="mb-8">
-            <div className="glass p-6 hover:glass-hover transition-all card-lift hover:-translate-y-2">
-              <h2 className="font-semibold text-xl mb-4">Falcıya Sor</h2>
-              <p className="text-muted mb-4">
-                Falınız hakkında ek sorular sorun ve daha derinlemesine yorumlar alın.
-              </p>
-              <div className="h-96 overflow-y-auto space-y-4 mb-4 p-4 bg-line/10 rounded-lg">
-                {messages.map((msg) => (
-                  <div key={msg.id} className={`flex ${msg.isUser ? "justify-end" : "justify-start"} space-x-3 max-w-[80%] ${msg.isUser ? "ml-auto" : "mr-auto"}`}>
-                    <div className={`flex flex-col ${msg.isUser ? "items-end" : "items-start"}`}>
-                      {msg.isUser && (
-                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-user mr-2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/></svg>
-                      )}
-                      {!msg.isUser && (
-                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-message-circle ml-2"><path d="M12 2a9 9 0 0 1 9 9h-2a9 9 0 0 1-9-9 9 9 0 0 0-9 9 9 9 0 0 1 9 9z"/><line x1="12" x2="12" y1="8" y2="12"/></svg>
-                      )}
-                      <div className={`${msg.isUser ? "bg-gold" : "bg-line/30"} rounded-lg px-3 py-1 max-w-[200px]`}>
-                        <p className={`${msg.isUser ? "text-background" : "text-foreground"} m-0`}>{msg.text}</p>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-              <div className="flex items-center space-x-2">
-                <textarea
-                  value={chatInput}
-                  onChange={(e) => setChatInput(e.target.value)}
-                  onKeyDown={handleKeyDown}
-                  placeholder="Falınız hakkında bir soru yazın..."
-                  className="flex-1 px-4 py-3 glass hover:glass-hover transition-all rounded-lg border border-line/30 focus:border-gold focus:ring-0 resize-none"
-                  rows={2}
-                />
-                <button
-                  onClick={handleSendMessage}
-                  className="px-4 py-2 bg-gold hover:bg-gold-hover text-background rounded-lg font-medium transition-all card-lift disabled:opacity-50 disabled:cursor-not-allowed"
-                  disabled={!chatInput.trim()}
-                >
-                  <Sparkles size={16} />
-                  <span>Gönder</span>
-                </button>
-              </div>
-            </div>
+          <section className="mt-5 rounded-[22px] border border-violet-400/20 bg-white/[.04] p-5 sm:p-6">
+            <div className="flex items-center justify-between"><div><h2 className="font-serif text-xl font-bold">Falcıya Sor</h2><p className="mt-1 text-xs text-slate-400">Bu falın üzerinden ek bir soru sor.</p></div><MessagesSquare className="text-violet-300"/></div>
+            <div className="mt-4 max-h-64 space-y-2 overflow-y-auto">{messages.length === 0 && <p className="rounded-xl bg-white/[.035] p-3 text-xs text-slate-400">Örn. “Bu haber aşk hayatımla mı ilgili?”</p>}{messages.map((message) => <div key={message.id} className={`max-w-[88%] rounded-2xl p-3 text-xs leading-5 ${message.isUser ? "ml-auto bg-amber-300 text-slate-950" : "bg-white/[.06] text-slate-200"}`}>{message.text}</div>)}</div>
+            <div className="mt-3 flex gap-2"><input value={chatInput} onChange={(e) => setChatInput(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") handleSendMessage(); }} placeholder="Sorunu yaz..." className="min-w-0 flex-1 rounded-full border border-white/10 bg-black/20 px-4 py-2.5 text-xs outline-none focus:border-violet-400"/><button type="button" onClick={handleSendMessage} disabled={!chatInput.trim()} className="rounded-full bg-violet-500 px-4 py-2.5 text-xs font-bold disabled:opacity-40">Gönder</button></div>
           </section>
         )}
       </div>
