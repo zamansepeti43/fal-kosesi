@@ -1,0 +1,61 @@
+name: Repair duplicate state declarations
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  repair:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Remove duplicate injected state lines
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          replacements = {
+              'app/page.tsx': [
+                  ('  const [credits, setCredits] = useState<number | null>(null);\n  const [credits, setCredits] = useState<number | null>(null);',
+                   '  const [credits, setCredits] = useState<number | null>(null);'),
+                  ('  }, []);\n\n  useEffect(() => {\n    fetch("/api/credits", { cache: "no-store" })',
+                   '  }, []);\n\n  useEffect(() => {\n    fetch("/api/credits", { cache: "no-store" })'),
+              ],
+              'app/fal/tarot/tarot-client.tsx': [
+                  ('  const [creditStatus, setCreditStatus] = useState<"idle" | "checking" | "ok" | "error">("idle");\n  const [creditStatus, setCreditStatus] = useState<"idle" | "checking" | "ok" | "error">("idle");',
+                   '  const [creditStatus, setCreditStatus] = useState<"idle" | "checking" | "ok" | "error">("idle");'),
+              ],
+          }
+
+          changed = False
+          for filename, pairs in replacements.items():
+              path = Path(filename)
+              text = path.read_text()
+              original = text
+              for old, new in pairs:
+                  text = text.replace(old, new)
+              if text != original:
+                  path.write_text(text)
+                  changed = True
+
+          if changed:
+              print('Duplicate state declarations repaired')
+          else:
+              print('No duplicate state declarations found')
+          PY
+
+      - name: Commit repair
+        run: |
+          if git diff --quiet; then
+            echo "Nothing to commit"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add app/page.tsx app/fal/tarot/tarot-client.tsx
+          git commit -m "Fix duplicate credit state declarations"
+          git push
