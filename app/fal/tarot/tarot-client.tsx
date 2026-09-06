@@ -278,6 +278,7 @@ export default function TarotClient() {
   const [creditStatus, setCreditStatus] = useState<"idle" | "checking" | "ok" | "error">("idle");
   const [creditStatus, setCreditStatus] = useState<"idle" | "checking" | "ok" | "error">("idle");
   const [creditStatus, setCreditStatus] = useState<"idle" | "checking" | "ok" | "error">("idle");
+  const [creditStatus, setCreditStatus] = useState<"idle" | "checking" | "ok" | "error">("idle");
 
   const [creditStatus, setCreditStatus] = useState<
     "idle" | "checking" | "ok" | "error"
@@ -347,6 +348,20 @@ export default function TarotClient() {
     revealing,
     creditStatus,
   ]);
+
+  useEffect(() => {
+    if (selectedCards.length !== spread.cards || revealing || creditStatus !== "idle") return;
+    setCreditStatus("checking");
+    fetch("/api/credits/spend", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ type: `tarot_${spreadId}` }),
+    })
+      .then(async (response) => {
+        setCreditStatus(response.ok ? "ok" : "error");
+      })
+      .catch(() => setCreditStatus("error"));
+  }, [selectedCards.length, spread.cards, spreadId, revealing, creditStatus]);
 
   useEffect(() => {
     if (selectedCards.length !== spread.cards || revealing || creditStatus !== "idle") return;
@@ -484,6 +499,9 @@ export default function TarotClient() {
             </Link>
           </div>
         ) : null}
+
+        {creditStatus === "checking" ? <div className="mb-4 rounded-2xl border border-amber-300/20 bg-amber-300/10 p-4 text-center text-sm text-amber-100">Açılımın kredisi kontrol ediliyor…</div> : null}
+        {creditStatus === "error" ? <div className="mb-4 rounded-2xl border border-rose-300/20 bg-rose-300/10 p-4 text-center text-sm text-rose-100">Bu açılım için yeterli kredin yok. <Link href="/kredi" className="font-black underline">Kredi Al</Link></div> : null}
 
         {creditStatus === "checking" ? <div className="mb-4 rounded-2xl border border-amber-300/20 bg-amber-300/10 p-4 text-center text-sm text-amber-100">Açılımın kredisi kontrol ediliyor…</div> : null}
         {creditStatus === "error" ? <div className="mb-4 rounded-2xl border border-rose-300/20 bg-rose-300/10 p-4 text-center text-sm text-rose-100">Bu açılım için yeterli kredin yok. <Link href="/kredi" className="font-black underline">Kredi Al</Link></div> : null}
