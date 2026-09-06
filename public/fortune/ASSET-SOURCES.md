@@ -15,7 +15,9 @@ These visual assets are downloaded by `scripts/download-fortune-assets.mjs`. Git
 - Pexels — viresh studio, “Romantic Candlelit Proposal with Couple Holding Hands”: https://www.pexels.com/photo/romantic-candlelit-proposal-with-couple-holding-hands-35315663/
 - Pexels — Zlaťáky.cz, “Close-Up Shot of Gold Coins”: https://www.pexels.com/photo/close-up-shot-of-gold-coins-8442425/
 - Pexels — RDNE Stock project, “Woman Sitting at her Desk”: https://www.pexels.com/photo/woman-sitting-at-her-desk-10375959/
-- Pexels — Osman Özavcı, “Beautiful Crescent Moon in the Night Sky”: https://www.pexels.com/photo/beautiful-crescent-moon-in-the-night-sky-8929853/
+- Pexels — Lucas Pezeta, “Moon and Star in the Sky during Night Time”: https://www.pexels.com/photo/moon-and-star-in-the-sky-during-night-time-10192712/
+- Pexels — Nikita Grishin, “Magical View Of the Night Sky With Crescent Moon”: https://www.pexels.com/photo/magical-view-of-the-night-sky-with-crescent-moon-11718527/
+- Pexels — Wolf Art, “Sun Behind Clouds”: https://www.pexels.com/photo/sun-behind-clouds-9201718/
 - Pexels — Ксения Вохминцева, “A Close-Up of a Natal Chart”: https://www.pexels.com/photo/a-close-up-of-a-natal-chart-10780188/
 - Pexels — Vika Glitter, “Dreamy woman sleeping on bed”: https://www.pexels.com/photo/dreamy-woman-sleeping-on-bed-4752718/
 - Pexels — Engin Akyurt, “Photograph of a Lit Seven Candle”: https://www.pexels.com/photo/photograph-of-a-lit-seven-candle-15271787/
