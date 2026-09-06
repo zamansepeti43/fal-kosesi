@@ -29,6 +29,19 @@ jobs:
       - name: Download visual assets
         run: node scripts/download-fortune-assets.mjs
 
+      - name: Convert Frideborg tarot artwork to JPG
+        shell: bash
+        run: |
+          mkdir -p public/fortune/tarot
+          for file in public/fortune/tarot-source/*.png; do
+            base=$(basename "$file" .png)
+            if command -v magick >/dev/null 2>&1; then
+              magick "$file" -background white -alpha remove -alpha off -quality 92 "public/fortune/tarot/${base}.jpg"
+            else
+              convert "$file" -background white -alpha remove -alpha off -quality 92 "public/fortune/tarot/${base}.jpg"
+            fi
+          done
+
       - name: Wire real photos into homepage
         run: |
           node <<'NODE'
@@ -59,5 +72,5 @@ jobs:
             echo "No new visual asset changes."
             exit 0
           fi
-          git commit -m "Use premium real photos across homepage fortune cards [skip ci]"
+          git commit -m "Use modern Frideborg tarot artwork and premium fortune photos [skip ci]"
           git push origin main
