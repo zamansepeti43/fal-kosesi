@@ -21,6 +21,11 @@ jobs:
         with:
           node-version: 22
 
+      - name: Refresh from latest main
+        run: |
+          git fetch origin main
+          git reset --hard origin/main
+
       - name: Download visual assets
         run: node scripts/download-fortune-assets.mjs
 
@@ -34,4 +39,4 @@ jobs:
             exit 0
           fi
           git commit -m "Add premium fortune visual assets [skip ci]"
-          git push
+          git push origin main
