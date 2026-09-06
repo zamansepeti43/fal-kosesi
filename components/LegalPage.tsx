@@ -1,12 +1,12 @@
 import Link from "next/link";
 
 export const merchant = {
-  name: process.env.NEXT_PUBLIC_BUSINESS_NAME || "Fal Köşesi",
-  email: process.env.NEXT_PUBLIC_CONTACT_EMAIL || "İletişim e-postası başvuru hesabında tanımlanacaktır.",
-  phone: process.env.NEXT_PUBLIC_CONTACT_PHONE || "Telefon numarası başvuru bilgilerinde tanımlanacaktır.",
-  address: process.env.NEXT_PUBLIC_BUSINESS_ADDRESS || "Merkez adresi başvuru bilgilerinde tanımlanacaktır.",
-  taxId: process.env.NEXT_PUBLIC_TAX_ID || "Vergi / kimlik bilgisi başvuru bilgilerinde tanımlanacaktır.",
-  mersis: process.env.NEXT_PUBLIC_MERSIS || "MERSİS numarası varsa burada yayınlanacaktır.",
+  name: process.env.NEXT_PUBLIC_BUSINESS_NAME || "Ahmet Tan",
+  email: process.env.NEXT_PUBLIC_CONTACT_EMAIL || "Tan.ahmet.at@gmail.com",
+  phone: process.env.NEXT_PUBLIC_CONTACT_PHONE || "05343767308",
+  address: process.env.NEXT_PUBLIC_BUSINESS_ADDRESS || "Yeni Mahalle, Emek Sokak No: 27, Kat: 1, Tavşanlı / Kütahya, Türkiye",
+  taxId: process.env.NEXT_PUBLIC_TAX_ID || "Başvuru sırasında doğrulanacaktır.",
+  mersis: process.env.NEXT_PUBLIC_MERSIS || "Bulunmuyor / başvuru türüne göre doğrulanacaktır.",
 };
 
 export function LegalPage({ title, intro, children }: { title: string; intro: string; children: React.ReactNode }) {
