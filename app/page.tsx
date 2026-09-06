@@ -24,13 +24,13 @@ import {
 
 const discoveries = [
   { title: "Tarot", subtitle: "Kartların bugün ne söylüyor?", href: "/fal/tarot", image: "/fortune/tarot-spread.jpg" },
-  { title: "Aşk Falı", subtitle: "Kalbindeki sorulara ışık tut.", href: "/fal/ask", image: "/fortune/love.svg" },
-  { title: "Para & Bolluk", subtitle: "Maddi enerjini keşfet.", href: "/fal/para", image: "/fortune/money.svg" },
-  { title: "Kariyer", subtitle: "İş ve hedeflerin için açılım.", href: "/fal/kariyer", image: "/fortune/career.svg" },
-  { title: "Günlük Fal", subtitle: "Bugünün enerjisini keşfet.", href: "/fal/gunluk", image: "/fortune/daily.svg" },
-  { title: "Doğum Haritam", subtitle: "Kendini gökyüzünde tanı.", href: "/fal/burc", image: "/fortune/astrology.svg" },
-  { title: "Rüya Yorumu", subtitle: "Rüyalarının sembollerini çöz.", href: "/fal/ruya", image: "/fortune/dream.svg" },
-  { title: "Numeroloji", subtitle: "Sayıların sana ne söylüyor?", href: "/fal/focus", image: "/fortune/numerology.svg" },
+  { title: "Aşk Falı", subtitle: "Kalbindeki sorulara ışık tut.", href: "/fal/ask", image: "/fortune/love-reading.jpg" },
+  { title: "Para & Bolluk", subtitle: "Maddi enerjini keşfet.", href: "/fal/para", image: "/fortune/money-abundance.jpg" },
+  { title: "Kariyer", subtitle: "İş ve hedeflerin için açılım.", href: "/fal/kariyer", image: "/fortune/career-success.jpg" },
+  { title: "Günlük Fal", subtitle: "Bugünün enerjisini keşfet.", href: "/fal/gunluk", image: "/fortune/daily-moon.jpg" },
+  { title: "Doğum Haritam", subtitle: "Kendini gökyüzünde tanı.", href: "/fal/burc", image: "/fortune/birth-chart.jpg" },
+  { title: "Rüya Yorumu", subtitle: "Rüyalarının sembollerini çöz.", href: "/fal/ruya", image: "/fortune/dream-sleep.jpg" },
+  { title: "Numeroloji", subtitle: "Sayıların sana ne söylüyor?", href: "/fal/focus", image: "/fortune/numerology-number.jpg" },
 ];
 
 const drawerItems = [
