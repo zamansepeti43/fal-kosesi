@@ -17,6 +17,24 @@ export const CREDIT_PACKAGES: readonly CreditPackage[] = [
 
 export const WELCOME_CREDITS = 50;
 
+export const READING_COSTS: Record<string, number> = {
+  coffee: 10,
+  love: 10,
+  money: 10,
+  career: 10,
+  future: 7,
+  dream: 7,
+  astrology: 15,
+  numerology: 8,
+  daily: 3,
+  focus: 8,
+  tarot_single: 5,
+  tarot_three: 12,
+  tarot_love: 15,
+  tarot_career: 15,
+  tarot_money: 15,
+};
+
 export function getCreditPackage(id: string) {
   return CREDIT_PACKAGES.find((item) => item.id === id) ?? null;
 }
