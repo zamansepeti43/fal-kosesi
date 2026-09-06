@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { ArrowLeft, ArrowRight, BriefcaseBusiness, Check, Heart, Sparkles, UserRound } from "lucide-react";
+import { ArrowLeft, ArrowRight, Check, Sparkles, UserRound } from "lucide-react";
 
 const steps = [
   { id: "name", eyebrow: "Önce tanışalım", title: "Sana nasıl hitap edelim?", description: "Fal Köşesi'ni sana özel hale getirmek için adınla başlayalım." },
@@ -56,14 +56,9 @@ export default function OnboardingPage() {
   const current = steps[step];
   const zodiac = useMemo(() => getZodiac(birthDate), [birthDate]);
   const progress = ((step + 1) / (steps.length + 1)) * 100;
-
   const canContinue = step === 0 ? name.trim().length >= 2 : step === 1 ? Boolean(birthDate && zodiac) : step === 2 ? Boolean(relationship) : step === 3 ? Boolean(work) : focus.length > 0;
 
-  function next() {
-    if (!canContinue) return;
-    setStep((value) => value + 1);
-  }
-
+  function next() { if (canContinue) setStep((value) => value + 1); }
   function finish() {
     if (!canContinue) return;
     const profile = { name: name.trim(), birthDate, zodiac, relationshipStatus: relationship, workStatus: work, interests: focus, onboardingCompleted: true, completedAt: new Date().toISOString() };
@@ -77,46 +72,21 @@ export default function OnboardingPage() {
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,_rgba(117,79,145,0.24),_transparent_34%),radial-gradient(circle_at_20%_80%,_rgba(189,139,61,0.10),_transparent_30%)]" />
       <div className="relative mx-auto flex min-h-screen w-full max-w-2xl flex-col px-5 py-6 md:px-8">
         <header className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-full border border-[#d7b56d]/20 bg-[#f3d58a]/10 text-[#f4d58a]"><Sparkles className="h-5 w-5" /></div>
-            <span className="text-sm font-black tracking-[0.18em] text-[#f4d58a]">FAL <span className="text-white">KÖŞESİ</span></span>
-          </div>
+          <div className="flex items-center gap-3"><div className="flex h-10 w-10 items-center justify-center rounded-full border border-[#d7b56d]/20 bg-[#f3d58a]/10 text-[#f4d58a]"><Sparkles className="h-5 w-5" /></div><span className="text-sm font-black tracking-[0.18em] text-[#f4d58a]">FAL <span className="text-white">KÖŞESİ</span></span></div>
           <span className="text-xs text-[#bcb1c3]">{step + 1} / {steps.length + 1}</span>
         </header>
-
         <div className="mt-7 h-1.5 overflow-hidden rounded-full bg-white/8"><div className="h-full rounded-full bg-gradient-to-r from-[#f7d98b] to-[#c88d3d] transition-all duration-500" style={{ width: `${progress}%` }} /></div>
 
         <section className="flex flex-1 flex-col justify-center py-10 md:py-14">
-          {step < steps.length ? (
-            <>
-              <div className="mb-8">
-                <p className="mb-3 text-[11px] font-bold uppercase tracking-[0.28em] text-[#f4d58a]">{current.eyebrow}</p>
-                <h1 className="text-4xl font-black leading-tight tracking-[-0.045em] md:text-5xl">{current.title}</h1>
-                <p className="mt-4 max-w-xl text-base leading-7 text-[#c9c0cf]">{current.description}</p>
-              </div>
-
-              {step === 0 && <div className="relative"><UserRound className="absolute left-5 top-1/2 h-5 w-5 -translate-y-1/2 text-[#f4d58a]" /><input autoFocus value={name} onChange={(e) => setName(e.target.value)} onKeyDown={(e) => e.key === "Enter" && next()} placeholder="Adın" className="w-full rounded-2xl border border-[#d7b56d]/20 bg-white/5 px-14 py-5 text-lg text-white outline-none transition placeholder:text-[#807687] focus:border-[#f4d58a]/60 focus:bg-white/8" /></div>}
-
-              {step === 1 && <div className="space-y-5"><input autoFocus type="date" value={birthDate} onChange={(e) => setBirthDate(e.target.value)} className="w-full rounded-2xl border border-[#d7b56d]/20 bg-white/5 px-5 py-5 text-lg text-white outline-none focus:border-[#f4d58a]/60 [color-scheme:dark]" />{zodiac && <div className="rounded-2xl border border-[#d7b56d]/15 bg-[#f4d58a]/6 p-5"><p className="text-xs uppercase tracking-[0.2em] text-[#f4d58a]">Burcun</p><p className="mt-2 text-2xl font-bold">{zodiac}</p><p className="mt-1 text-sm text-[#bdb3c5]">Doğum tarihinden otomatik olarak hesaplandı.</p></div>}</div>}
-
-              {step === 2 && <OptionGrid options={relationshipOptions} value={relationship} onChange={setRelationship} />}
-              {step === 3 && <OptionGrid options={workOptions} value={work} onChange={setWork} />}
-              {step === 4 && <OptionGrid options={focusOptions} value={focus} onChange={(value) => setFocus((prev) => prev.includes(value) ? prev.filter((item) => item !== value) : [...prev, value])} multi />}
-
-              <div className="mt-10 flex items-center gap-3">
-                {step > 0 && <button type="button" onClick={() => setStep((value) => value - 1)} className="flex h-14 w-14 items-center justify-center rounded-full border border-white/10 bg-white/5 text-[#ded5e2] transition hover:bg-white/10" aria-label="Geri"><ArrowLeft className="h-5 w-5" /></button>}
-                <button type="button" disabled={!canContinue} onClick={next} className="flex h-14 flex-1 items-center justify-center gap-2 rounded-full bg-gradient-to-r from-[#f7d98b] via-[#efc76d] to-[#cb8f41] px-6 font-black tracking-wide text-[#140d17] shadow-[0_15px_35px_rgba(239,198,101,0.18)] transition hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-35">Devam <ArrowRight className="h-5 w-5" /></button>
-              </div>
-            </>
-          ) : (
-            <div className="text-center">
-              <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full border border-[#d7b56d]/25 bg-[#f4d58a]/10 text-[#f4d58a]"><Check className="h-9 w-9" /></div>
-              <p className="mt-8 text-[11px] font-bold uppercase tracking-[0.28em] text-[#f4d58a]">Hazırsın</p>
-              <h1 className="mt-3 text-4xl font-black tracking-[-0.045em] md:text-5xl">Harika, {name.trim()} ✨</h1>
-              <p className="mx-auto mt-5 max-w-lg text-base leading-8 text-[#c9c0cf]">Seni biraz tanıdık. Bundan sonra Fal Köşesi'ndeki yorumları profilindeki bilgiler ve seçtiğin ilgi alanlarıyla daha kişisel hale getireceğiz.</p>
-              <button type="button" onClick={finish} className="mt-9 inline-flex h-14 w-full items-center justify-center gap-2 rounded-full bg-gradient-to-r from-[#f7d98b] via-[#efc76d] to-[#cb8f41] px-7 font-black tracking-wide text-[#140d17] shadow-[0_15px_35px_rgba(239,198,101,0.22)] transition hover:-translate-y-0.5">Fal Köşesi'ne Gir <Sparkles className="h-5 w-5" /></button>
-            </div>
-          )}
+          {step < steps.length ? <>
+            <div className="mb-8"><p className="mb-3 text-[11px] font-bold uppercase tracking-[0.28em] text-[#f4d58a]">{current.eyebrow}</p><h1 className="text-4xl font-black leading-tight tracking-[-0.045em] md:text-5xl">{current.title}</h1><p className="mt-4 max-w-xl text-base leading-7 text-[#c9c0cf]">{current.description}</p></div>
+            {step === 0 && <div className="relative"><UserRound className="absolute left-5 top-1/2 h-5 w-5 -translate-y-1/2 text-[#f4d58a]" /><input autoFocus value={name} onChange={(e) => setName(e.target.value)} onKeyDown={(e) => e.key === "Enter" && next()} placeholder="Adın" className="w-full rounded-2xl border border-[#d7b56d]/20 bg-white/5 px-14 py-5 text-lg text-white outline-none transition placeholder:text-[#807687] focus:border-[#f4d58a]/60 focus:bg-white/8" /></div>}
+            {step === 1 && <div className="space-y-5"><input autoFocus type="date" value={birthDate} onChange={(e) => setBirthDate(e.target.value)} className="w-full rounded-2xl border border-[#d7b56d]/20 bg-white/5 px-5 py-5 text-lg text-white outline-none focus:border-[#f4d58a]/60 [color-scheme:dark]" />{zodiac && <div className="rounded-2xl border border-[#d7b56d]/15 bg-[#f4d58a]/6 p-5"><p className="text-xs uppercase tracking-[0.2em] text-[#f4d58a]">Burcun</p><p className="mt-2 text-2xl font-bold">{zodiac}</p><p className="mt-1 text-sm text-[#bdb3c5]">Doğum tarihinden otomatik olarak hesaplandı.</p></div>}</div>}
+            {step === 2 && <OptionGrid options={relationshipOptions} value={relationship} onChange={setRelationship} />}
+            {step === 3 && <OptionGrid options={workOptions} value={work} onChange={setWork} />}
+            {step === 4 && <OptionGrid options={focusOptions} value={focus} onChange={(value) => setFocus((prev) => prev.includes(value) ? prev.filter((item) => item !== value) : [...prev, value])} multi />}
+            <div className="mt-10 flex items-center gap-3">{step > 0 && <button type="button" onClick={() => setStep((value) => value - 1)} className="flex h-14 w-14 items-center justify-center rounded-full border border-white/10 bg-white/5 text-[#ded5e2] transition hover:bg-white/10" aria-label="Geri"><ArrowLeft className="h-5 w-5" /></button>}<button type="button" disabled={!canContinue} onClick={next} className="flex h-14 flex-1 items-center justify-center gap-2 rounded-full bg-gradient-to-r from-[#f7d98b] via-[#efc76d] to-[#cb8f41] px-6 font-black tracking-wide text-[#140d17] shadow-[0_15px_35px_rgba(239,198,101,0.18)] transition hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-35">Devam <ArrowRight className="h-5 w-5" /></button></div>
+          </> : <div className="text-center"><div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full border border-[#d7b56d]/25 bg-[#f4d58a]/10 text-[#f4d58a]"><Check className="h-9 w-9" /></div><p className="mt-8 text-[11px] font-bold uppercase tracking-[0.28em] text-[#f4d58a]">Hazırsın</p><h1 className="mt-3 text-4xl font-black tracking-[-0.045em] md:text-5xl">Harika, {name.trim()} ✨</h1><p className="mx-auto mt-5 max-w-lg text-base leading-8 text-[#c9c0cf]">Seni biraz tanıdık. Bundan sonra Fal Köşesi'ndeki yorumları profilindeki bilgiler ve seçtiğin ilgi alanlarıyla daha kişisel hale getireceğiz.</p><button type="button" onClick={finish} className="mt-9 inline-flex h-14 w-full items-center justify-center gap-2 rounded-full bg-gradient-to-r from-[#f7d98b] via-[#efc76d] to-[#cb8f41] px-7 font-black tracking-wide text-[#140d17] shadow-[0_15px_35px_rgba(239,198,101,0.22)] transition hover:-translate-y-0.5">Fal Köşesi'ne Gir <Sparkles className="h-5 w-5" /></button></div>}
         </section>
         <footer className="pb-2 text-center text-[11px] leading-5 text-[#756b7b]">Bilgilerin yalnızca deneyimini kişiselleştirmek için kullanılır. Hassas gördüğün alanlarda “Belirtmek istemiyorum” seçeneğini kullanabilirsin.</footer>
       </div>
