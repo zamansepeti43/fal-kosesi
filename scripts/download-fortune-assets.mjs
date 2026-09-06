@@ -36,6 +36,10 @@ const assets = [
     url: "https://images.pexels.com/photos/10192712/pexels-photo-10192712.jpeg?cs=srgb&dl=pexels-lucaspezeta-10192712.jpg&fm=jpg",
   },
   {
+    file: "daily-moon-premium.jpg",
+    url: "https://images.pexels.com/photos/11718527/pexels-photo-11718527.jpeg?cs=srgb&dl=pexels-nikita-grishin-128711293-11718527.jpg&fm=jpg",
+  },
+  {
     file: "birth-chart.jpg",
     url: "https://images.pexels.com/photos/10780188/pexels-photo-10780188.jpeg?cs=srgb&dl=pexels-158524029-10780188.jpg&fm=jpg",
   },
