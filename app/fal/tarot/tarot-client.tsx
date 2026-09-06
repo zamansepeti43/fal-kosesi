@@ -180,34 +180,6 @@ export default function TarotClient() {
       .catch(() => setCreditStatus("error"));
   }, [selectedCards.length, spread.cards, spreadId, revealing, creditStatus]);
 
-  useEffect(() => {
-    if (selectedCards.length !== spread.cards || revealing || creditStatus !== "idle") return;
-    setCreditStatus("checking");
-    fetch("/api/credits/spend", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ type: `tarot_${spreadId}` }),
-    })
-      .then(async (response) => {
-        setCreditStatus(response.ok ? "ok" : "error");
-      })
-      .catch(() => setCreditStatus("error"));
-  }, [selectedCards.length, spread.cards, spreadId, revealing, creditStatus]);
-
-  useEffect(() => {
-    if (selectedCards.length !== spread.cards || revealing || creditStatus !== "idle") return;
-    setCreditStatus("checking");
-    fetch("/api/credits/spend", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ type: `tarot_${spreadId}` }),
-    })
-      .then(async (response) => {
-        setCreditStatus(response.ok ? "ok" : "error");
-      })
-      .catch(() => setCreditStatus("error"));
-  }, [selectedCards.length, spread.cards, spreadId, revealing, creditStatus]);
-
   const resetReading = (nextSpread: SpreadId = spreadId) => {
     setSpreadId(nextSpread);
     setSelectedCards([]);
