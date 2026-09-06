@@ -89,20 +89,10 @@ function CardFront({ card }: { card: TarotCard }) {
     <div className="relative h-full w-full overflow-hidden rounded-[18px] bg-[#efe8d8] text-[#33291f] shadow-inner" draggable={false}>
       <div className="absolute inset-[6px] rounded-[14px] border border-[#6d563d]/45" />
       <div className="relative z-10 flex h-full flex-col p-2.5 sm:p-3">
-        <div className="flex items-center justify-between text-[7px] font-black uppercase tracking-[.18em] text-[#80684c]">
-          <span>#{number}</span><span>BÜYÜK ARKANA</span>
-        </div>
-        <div className="mx-auto mt-2 h-[53%] w-[78%] overflow-hidden rounded-full border-[3px] border-[#c5a86a]/80 bg-[#d8c8a9] shadow-[0_7px_18px_rgba(60,42,20,.22)]">
-          <img src={getTarotImage(card)} alt="" className="h-full w-full object-cover object-center" draggable={false} />
-        </div>
-        <div className="mt-2 text-center">
-          <h3 className="font-serif text-[14px] font-black leading-tight text-[#2d241c] sm:text-[16px]">{card.name}</h3>
-          <p className="mt-0.5 text-[7px] font-bold uppercase tracking-[.12em] text-[#9a7650]">{card.keywords.slice(0, 3).join(" • ")}</p>
-        </div>
-        <div className="mt-2 flex min-h-0 flex-1 gap-2 rounded-xl border border-[#8d765a]/20 bg-white/35 p-2">
-          <img src="/fortune/tarot-spread.jpg" alt="" className="h-10 w-8 shrink-0 rounded-md object-cover" draggable={false} />
-          <p className="line-clamp-5 text-[8px] font-medium leading-[1.45] text-[#5b4937] sm:text-[9px]">{summary}</p>
-        </div>
+        <div className="flex items-center justify-between text-[7px] font-black uppercase tracking-[.18em] text-[#80684c]"><span>#{number}</span><span>BÜYÜK ARKANA</span></div>
+        <div className="mx-auto mt-2 h-[53%] w-[78%] overflow-hidden rounded-full border-[3px] border-[#c5a86a]/80 bg-[#d8c8a9] shadow-[0_7px_18px_rgba(60,42,20,.22)]"><img src={getTarotImage(card)} alt="" className="h-full w-full object-cover object-center" draggable={false} /></div>
+        <div className="mt-2 text-center"><h3 className="font-serif text-[14px] font-black leading-tight text-[#2d241c] sm:text-[16px]">{card.name}</h3><p className="mt-0.5 text-[7px] font-bold uppercase tracking-[.12em] text-[#9a7650]">{card.keywords.slice(0, 3).join(" • ")}</p></div>
+        <div className="mt-2 flex min-h-0 flex-1 gap-2 rounded-xl border border-[#8d765a]/20 bg-white/35 p-2"><img src="/fortune/tarot-spread.jpg" alt="" className="h-10 w-8 shrink-0 rounded-md object-cover" draggable={false} /><p className="line-clamp-5 text-[8px] font-medium leading-[1.45] text-[#5b4937] sm:text-[9px]">{summary}</p></div>
         <div className="mt-1.5 text-center text-[6px] font-bold uppercase tracking-[.18em] text-[#9a7650]">Fal Köşesi • sembolik yorum</div>
       </div>
     </div>
@@ -149,9 +139,6 @@ export default function TarotClient() {
   const [revealed, setRevealed] = useState(false);
   const [liftedCardId, setLiftedCardId] = useState<string | null>(null);
   const [creditStatus, setCreditStatus] = useState<"idle" | "checking" | "ok" | "error">("idle");
-  const [creditStatus, setCreditStatus] = useState<"idle" | "checking" | "ok" | "error">("idle");
-  const [creditStatus, setCreditStatus] = useState<"idle" | "checking" | "ok" | "error">("idle");
-  const [creditStatus, setCreditStatus] = useState<"idle" | "checking" | "ok" | "error">("idle");
 
   const spread = useMemo(() => spreads.find((item) => item.id === spreadId) ?? spreads[1], [spreadId]);
   const positions = useMemo(() => getPositionLabels(spreadId), [spreadId]);
@@ -177,48 +164,6 @@ export default function TarotClient() {
       body: JSON.stringify({ type: `tarot_${spreadId}` }),
     })
       .then((response) => setCreditStatus(response.ok ? "ok" : "error"))
-      .catch(() => setCreditStatus("error"));
-  }, [selectedCards.length, spread.cards, spreadId, revealing, creditStatus]);
-
-  useEffect(() => {
-    if (selectedCards.length !== spread.cards || revealing || creditStatus !== "idle") return;
-    setCreditStatus("checking");
-    fetch("/api/credits/spend", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ type: `tarot_${spreadId}` }),
-    })
-      .then(async (response) => {
-        setCreditStatus(response.ok ? "ok" : "error");
-      })
-      .catch(() => setCreditStatus("error"));
-  }, [selectedCards.length, spread.cards, spreadId, revealing, creditStatus]);
-
-  useEffect(() => {
-    if (selectedCards.length !== spread.cards || revealing || creditStatus !== "idle") return;
-    setCreditStatus("checking");
-    fetch("/api/credits/spend", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ type: `tarot_${spreadId}` }),
-    })
-      .then(async (response) => {
-        setCreditStatus(response.ok ? "ok" : "error");
-      })
-      .catch(() => setCreditStatus("error"));
-  }, [selectedCards.length, spread.cards, spreadId, revealing, creditStatus]);
-
-  useEffect(() => {
-    if (selectedCards.length !== spread.cards || revealing || creditStatus !== "idle") return;
-    setCreditStatus("checking");
-    fetch("/api/credits/spend", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ type: `tarot_${spreadId}` }),
-    })
-      .then(async (response) => {
-        setCreditStatus(response.ok ? "ok" : "error");
-      })
       .catch(() => setCreditStatus("error"));
   }, [selectedCards.length, spread.cards, spreadId, revealing, creditStatus]);
 
@@ -265,48 +210,21 @@ export default function TarotClient() {
         {creditStatus === "checking" ? <div className="mb-4 rounded-2xl border border-amber-300/20 bg-amber-300/10 p-4 text-center text-sm text-amber-100">Açılımın kredisi kontrol ediliyor…</div> : null}
         {creditStatus === "error" ? <div className="mb-4 rounded-2xl border border-rose-300/20 bg-rose-300/10 p-4 text-center text-sm text-rose-100">Bu açılım için yeterli kredin yok. <Link href="/kredi" className="font-black underline">Kredi Al</Link></div> : null}
 
-        {creditStatus === "checking" ? <div className="mb-4 rounded-2xl border border-amber-300/20 bg-amber-300/10 p-4 text-center text-sm text-amber-100">Açılımın kredisi kontrol ediliyor…</div> : null}
-        {creditStatus === "error" ? <div className="mb-4 rounded-2xl border border-rose-300/20 bg-rose-300/10 p-4 text-center text-sm text-rose-100">Bu açılım için yeterli kredin yok. <Link href="/kredi" className="font-black underline">Kredi Al</Link></div> : null}
-
-        {creditStatus === "checking" ? <div className="mb-4 rounded-2xl border border-amber-300/20 bg-amber-300/10 p-4 text-center text-sm text-amber-100">Açılımın kredisi kontrol ediliyor…</div> : null}
-        {creditStatus === "error" ? <div className="mb-4 rounded-2xl border border-rose-300/20 bg-rose-300/10 p-4 text-center text-sm text-rose-100">Bu açılım için yeterli kredin yok. <Link href="/kredi" className="font-black underline">Kredi Al</Link></div> : null}
-
-        {creditStatus === "checking" ? <div className="mb-4 rounded-2xl border border-amber-300/20 bg-amber-300/10 p-4 text-center text-sm text-amber-100">Açılımın kredisi kontrol ediliyor…</div> : null}
-        {creditStatus === "error" ? <div className="mb-4 rounded-2xl border border-rose-300/20 bg-rose-300/10 p-4 text-center text-sm text-rose-100">Bu açılım için yeterli kredin yok. <Link href="/kredi" className="font-black underline">Kredi Al</Link></div> : null}
-
         <section className="overflow-hidden rounded-[30px] border border-amber-200/15 bg-[radial-gradient(circle_at_80%_0%,rgba(245,158,11,.16),transparent_35%),rgba(17,12,29,.95)] shadow-2xl">
-          <div className="relative h-[190px] sm:h-[270px]">
-            <img src="/fortune/tarot-spread.jpg" alt="Gerçek tarot kartları" className="h-full w-full object-cover" />
-            <div className="absolute inset-0 bg-gradient-to-t from-[#080817] via-[#080817]/50 to-[#080817]/10" />
-            <div className="absolute bottom-5 left-5 right-5 sm:left-8 sm:right-8">
-              <p className="text-[9px] font-bold uppercase tracking-[.3em] text-amber-200">22 Büyük Arkana • Kişisel açılım</p>
-              <h1 className="mt-1 font-serif text-3xl font-bold sm:text-5xl">Tarot Falı</h1>
-              <p className="mt-1 max-w-2xl text-xs leading-5 text-slate-300 sm:text-sm">Sorunu belirle, açılımını seç ve kartları kendi sezginle çek. Her seçim ayrı bir aşamada açılır; sonrasında kartların birlikte anlattığı hikâyeyi oku.</p>
-            </div>
-          </div>
+          <div className="relative h-[190px] sm:h-[270px]"><img src="/fortune/tarot-spread.jpg" alt="Gerçek tarot kartları" className="h-full w-full object-cover" /><div className="absolute inset-0 bg-gradient-to-t from-[#080817] via-[#080817]/50 to-[#080817]/10" /><div className="absolute bottom-5 left-5 right-5 sm:left-8 sm:right-8"><p className="text-[9px] font-bold uppercase tracking-[.3em] text-amber-200">22 Büyük Arkana • Kişisel açılım</p><h1 className="mt-1 font-serif text-3xl font-bold sm:text-5xl">Tarot Falı</h1><p className="mt-1 max-w-2xl text-xs leading-5 text-slate-300 sm:text-sm">Sorunu belirle, açılımını seç ve kartları kendi sezginle çek. Her seçim ayrı bir aşamada açılır; sonrasında kartların birlikte anlattığı hikâyeyi oku.</p></div></div>
 
           <div className="border-t border-white/5 p-4 sm:p-6">
             <p className="mb-3 text-[9px] font-bold uppercase tracking-[.28em] text-amber-200">Önce açılımını seç</p>
             <div className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 sm:mx-0 sm:px-0">
-              {spreads.map((item) => {
-                const Icon = item.icon;
-                const active = item.id === spreadId;
-                return <button key={item.id} type="button" onClick={() => resetReading(item.id)} className={`min-w-[142px] rounded-2xl border p-3 text-left transition ${active ? "border-amber-300/60 bg-amber-300/10 shadow-[0_0_25px_rgba(245,158,11,.1)]" : "border-white/10 bg-white/[.025] hover:border-white/20"}`}><div className="flex items-center justify-between"><Icon className={`h-4 w-4 ${active ? "text-amber-200" : "text-slate-400"}`} /><span className="text-[8px] text-slate-500">{item.cards} kart</span></div><p className="mt-2 text-xs font-bold">{item.label}</p><p className="mt-0.5 text-[9px] text-slate-500">{item.short}</p></button>;
-              })}
+              {spreads.map((item) => { const Icon = item.icon; const active = item.id === spreadId; return <button key={item.id} type="button" onClick={() => resetReading(item.id)} className={`min-w-[142px] rounded-2xl border p-3 text-left transition ${active ? "border-amber-300/60 bg-amber-300/10 shadow-[0_0_25px_rgba(245,158,11,.1)]" : "border-white/10 bg-white/[.025] hover:border-white/20"}`}><div className="flex items-center justify-between"><Icon className={`h-4 w-4 ${active ? "text-amber-200" : "text-slate-400"}`} /><span className="text-[8px] text-slate-500">{item.cards} kart</span></div><p className="mt-2 text-xs font-bold">{item.label}</p><p className="mt-0.5 text-[9px] text-slate-500">{item.short}</p></button>; })}
             </div>
 
-            <div className="mt-4 rounded-2xl border border-violet-300/10 bg-violet-400/[.045] p-4">
-              <div className="flex items-start gap-3"><div className="rounded-xl bg-violet-300/10 p-2"><Wand2 className="h-4 w-4 text-violet-200" /></div><div><p className="text-sm font-semibold">{spread.label}</p><p className="mt-1 text-xs leading-5 text-slate-400">{spread.description}</p></div></div>
-              <label className="mt-4 block text-[10px] font-bold uppercase tracking-[.2em] text-slate-400">Niyetin veya sorun (isteğe bağlı)</label>
-              <textarea value={question} onChange={(e) => setQuestion(e.target.value)} rows={2} placeholder="Örn: Bu ilişkinin geleceğinde beni ne bekliyor?" className="mt-2 w-full resize-none rounded-2xl border border-white/10 bg-black/20 px-4 py-3 text-sm text-white outline-none placeholder:text-slate-600 focus:border-amber-300/40" />
-            </div>
+            <div className="mt-4 rounded-2xl border border-violet-300/10 bg-violet-400/[.045] p-4"><div className="flex items-start gap-3"><div className="rounded-xl bg-violet-300/10 p-2"><Wand2 className="h-4 w-4 text-violet-200" /></div><div><p className="text-sm font-semibold">{spread.label}</p><p className="mt-1 text-xs leading-5 text-slate-400">{spread.description}</p></div></div><label className="mt-4 block text-[10px] font-bold uppercase tracking-[.2em] text-slate-400">Niyetin veya sorun (isteğe bağlı)</label><textarea value={question} onChange={(e) => setQuestion(e.target.value)} rows={2} placeholder="Örn: Bu ilişkinin geleceğinde beni ne bekliyor?" className="mt-2 w-full resize-none rounded-2xl border border-white/10 bg-black/20 px-4 py-3 text-sm text-white outline-none placeholder:text-slate-600 focus:border-amber-300/40" /></div>
 
             <div className="mt-5 flex items-end justify-between gap-3"><div><p className="text-[9px] font-bold uppercase tracking-[.25em] text-amber-200">Adım {Math.min(selectedCards.length + 1, spread.cards)} / {spread.cards}</p><h2 className="mt-1 font-serif text-xl font-bold">{completed ? "Açılımın tamamlandı ✦" : positions[selectedCards.length] || "Kartını seç"}</h2></div><span className="rounded-full border border-white/10 bg-white/[.04] px-2.5 py-1 text-[9px] text-slate-400">22 kart • yeni deste</span></div>
             <div className="mt-3 flex gap-1.5">{Array.from({ length: spread.cards }).map((_, index) => <div key={index} className={`h-1 flex-1 rounded-full ${index < selectedCards.length ? "bg-amber-300" : index === selectedCards.length ? "bg-amber-300/35" : "bg-white/10"}`} />)}</div>
 
-            <div className="mt-4 -mx-4 overflow-x-auto px-4 pb-5 sm:-mx-6 sm:px-6"><div className="flex w-max items-end gap-3 pt-8">
-              {availableCards.map((card, index) => { const lifted = liftedCardId === String(card.id); return <button key={String(card.id)} type="button" onClick={() => chooseCard(card)} disabled={revealing || completed} aria-label={`${card.name} kartını seç`} className={`group relative w-[105px] shrink-0 overflow-hidden rounded-[17px] border bg-[#0c0916] shadow-[0_14px_30px_rgba(0,0,0,.5)] transition-all duration-500 focus:outline-none focus:ring-2 focus:ring-amber-300/60 sm:w-[128px] ${lifted ? "z-20 -translate-y-8 scale-[1.06] border-amber-300 shadow-[0_0_38px_rgba(245,158,11,.4)]" : "border-white/10 hover:-translate-y-1 hover:border-amber-300/60"}`}><div className="relative aspect-[2/3] overflow-hidden"><CardBack /><div className="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_18%,rgba(0,0,0,.28)_100%)]" /><span className="absolute left-2 top-2 rounded-full border border-amber-100/20 bg-black/45 px-1.5 py-0.5 text-[8px] font-bold text-amber-100 backdrop-blur">{String(index + 1).padStart(2, "0")}</span><span className="absolute bottom-2 left-2 right-2 text-center text-[8px] font-bold uppercase tracking-[.12em] text-amber-100 opacity-0 transition group-hover:opacity-100">Seç ✦</span></div></button>; })}
-            </div></div>
+            <div className="mt-4 -mx-4 overflow-x-auto px-4 pb-5 sm:-mx-6 sm:px-6"><div className="flex w-max items-end gap-3 pt-8">{availableCards.map((card, index) => { const lifted = liftedCardId === String(card.id); return <button key={String(card.id)} type="button" onClick={() => chooseCard(card)} disabled={revealing || completed} aria-label={`${card.name} kartını seç`} className={`group relative w-[105px] shrink-0 overflow-hidden rounded-[17px] border bg-[#0c0916] shadow-[0_14px_30px_rgba(0,0,0,.5)] transition-all duration-500 focus:outline-none focus:ring-2 focus:ring-amber-300/60 sm:w-[128px] ${lifted ? "z-20 -translate-y-8 scale-[1.06] border-amber-300 shadow-[0_0_38px_rgba(245,158,11,.4)]" : "border-white/10 hover:-translate-y-1 hover:border-amber-300/60"}`}><div className="relative aspect-[2/3] overflow-hidden"><CardBack /><div className="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_18%,rgba(0,0,0,.28)_100%)]" /><span className="absolute left-2 top-2 rounded-full border border-amber-100/20 bg-black/45 px-1.5 py-0.5 text-[8px] font-bold text-amber-100 backdrop-blur">{String(index + 1).padStart(2, "0")}</span><span className="absolute bottom-2 left-2 right-2 text-center text-[8px] font-bold uppercase tracking-[.12em] text-amber-100 opacity-0 transition group-hover:opacity-100">Seç ✦</span></div></button>; })}</div></div>
             <p className="text-center text-[10px] text-slate-500">← Kaydır • Kartların yüzü kapalı • İçinden gelen karta dokun →</p>
 
             {selectedCards.length > 0 && <div className="mt-5 rounded-2xl border border-amber-200/10 bg-black/15 p-3"><div className="mb-3 flex items-center justify-between"><p className="text-[9px] font-bold uppercase tracking-[.2em] text-slate-400">Seçtiklerin</p><span className="text-[9px] text-amber-200">{selectedCards.length}/{spread.cards}</span></div><div className="flex justify-center gap-3">{selectedCards.map((card, index) => <div key={card.id} className="relative"><div className="w-[64px] overflow-hidden rounded-xl border border-amber-200/25 shadow-lg"><CardFront card={card} /></div><span className="mt-1 block max-w-[70px] truncate text-center text-[8px] text-slate-400">{positions[index]}</span></div>)}</div></div>}
