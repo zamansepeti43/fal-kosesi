@@ -1,160 +1,63 @@
-import Link from "next/link";
-import { Bell, Briefcase, Coffee, Heart, Menu, MoonStar, UserRound, Wallet, WandSparkles } from "lucide-react";
+"use client";
 
-const quickItems = [
-  { label: "Kahve Falı", href: "/fal/upload", icon: Coffee },
-  { label: "Tarot", href: "/fal/tarot", icon: WandSparkles },
-  { label: "Aşk Falı", href: "/fal/ask", icon: Heart },
-  { label: "Para Falı", href: "/fal/para", icon: Wallet },
-  { label: "Günlük Fal", href: "/fal/gunluk", icon: MoonStar },
-  { label: "Kariyer", href: "/fal/kariyer", icon: Briefcase },
+import Image from "next/image";
+import Link from "next/link";
+import { useEffect, useState } from "react";
+import { Bell, BriefcaseBusiness, ChevronRight, Coffee, Crown, Heart, History, Home as HomeIcon, Menu, MessageCircle, Moon, Sparkles, Star, UserRound, WalletCards, X } from "lucide-react";
+
+const discoveries = [
+  { title: "Tarot", subtitle: "Kartların bugün ne söylüyor?", href: "/fal/tarot", image: "/fortune/tarot.svg" },
+  { title: "Aşk Falı", subtitle: "Kalbindeki sorulara ışık tut.", href: "/fal/ask", image: "/fortune/love.svg" },
+  { title: "Para & Bolluk", subtitle: "Maddi enerjini keşfet.", href: "/fal/para", image: "/fortune/money.svg" },
+  { title: "Kariyer", subtitle: "İş ve hedeflerin için açılım.", href: "/fal/kariyer", image: "/fortune/career.svg" },
+  { title: "Günlük Fal", subtitle: "Bugünün enerjisini keşfet.", href: "/fal/gunluk", image: "/fortune/daily.svg" },
+  { title: "Doğum Haritam", subtitle: "Kendini gökyüzünde tanı.", href: "/fal/astroloji", image: "/fortune/astrology.svg" },
+  { title: "Rüya Yorumu", subtitle: "Rüyalarının sembollerini çöz.", href: "/fal/ruya", image: "/fortune/dream.svg" },
+  { title: "Numeroloji", subtitle: "Sayıların sana ne söylüyor?", href: "/fal/numeroloji", image: "/fortune/numerology.svg" },
 ];
 
 export default function Home() {
+  const [name, setName] = useState("Dostum");
+  const [menuOpen, setMenuOpen] = useState(false);
+
+  useEffect(() => {
+    const savedName = window.localStorage.getItem("fal-kosesi-onboarding-name");
+    if (savedName?.trim()) setName(savedName.trim());
+  }, []);
+
+  const firstName = name.split(" ")[0] || "Dostum";
+
   return (
-    <main className="min-h-screen bg-[#0b0810] px-4 py-5 text-white md:px-6 lg:px-8">
-      <div className="mx-auto w-full max-w-[1500px]">
-        <header className="mb-8 flex items-center justify-between rounded-full border border-[#d7b56d]/10 bg-[#120d1b]/70 px-4 py-3 shadow-[0_18px_45px_rgba(10,8,16,0.5)] backdrop-blur-sm md:px-6 lg:mb-10">
-          <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-full border border-[#d7b56d]/20 bg-[#f3d58a]/10 text-[#f4d58a]">
-              <Coffee className="h-5 w-5" />
-            </div>
-            <div className="text-lg font-black tracking-[0.18em] text-[#f4d58a] md:text-xl">
-              FAL <span className="text-white">KÖŞESİ</span>
-            </div>
-          </div>
+    <main className="min-h-screen bg-[#070714] pb-24 text-white selection:bg-[#e7bd68] selection:text-[#160f1b]">
+      <div className="fixed inset-0 -z-10 bg-[radial-gradient(circle_at_20%_0%,rgba(107,61,151,.28),transparent_30%),radial-gradient(circle_at_100%_20%,rgba(201,118,72,.16),transparent_28%),linear-gradient(180deg,#0b0a1b_0%,#070714_55%,#05050d_100%)]" />
 
-          <nav className="hidden items-center gap-6 text-[15px] text-[#f3e6c5] lg:flex">
-            <Link href="/fal/upload" className="transition hover:text-[#f4d58a]">Kahve Falı</Link>
-            <Link href="/fal/tarot" className="transition hover:text-[#f4d58a]">Tarot</Link>
-            <Link href="/fal/ask" className="transition hover:text-[#f4d58a]">Aşk Falı</Link>
-            <Link href="/fal/gunluk" className="transition hover:text-[#f4d58a]">Günlük Fal</Link>
-            <Link href="/fal/premium" className="transition hover:text-[#f4d58a]">Üyelik</Link>
-          </nav>
+      <header className="sticky top-0 z-40 border-b border-white/[.06] bg-[#080817]/80 backdrop-blur-2xl">
+        <div className="mx-auto flex h-[68px] max-w-[1180px] items-center justify-between px-4 sm:px-6">
+          <button type="button" onClick={() => setMenuOpen(true)} className="grid h-11 w-11 place-items-center rounded-2xl border border-white/10 bg-white/[.04] text-[#f5d78e] transition hover:bg-white/[.08]" aria-label="Menüyü aç"><Menu className="h-5 w-5" /></button>
+          <Link href="/" className="flex items-center gap-2.5"><div className="grid h-10 w-10 place-items-center rounded-full border border-[#f0cf80]/30 bg-[#f0cf80]/10 shadow-[0_0_30px_rgba(240,207,128,.1)]"><Moon className="h-5 w-5 fill-[#f6d98f] text-[#f6d98f]" /></div><div className="leading-none"><div className="font-serif text-[19px] font-bold tracking-tight text-[#f6dda2]">Fal Köşesi</div><div className="mt-1 text-[9px] uppercase tracking-[.24em] text-[#aaa1bd]">Kaderini keşfet</div></div></Link>
+          <div className="flex items-center gap-2"><button type="button" className="relative grid h-11 w-11 place-items-center rounded-2xl border border-white/10 bg-white/[.04] text-[#f5d78e]" aria-label="Bildirimler"><Bell className="h-5 w-5" /><span className="absolute right-2.5 top-2.5 h-1.5 w-1.5 rounded-full bg-[#f2b84b] shadow-[0_0_10px_#f2b84b]" /></button><Link href="/profil" className="hidden items-center gap-2 rounded-full border border-[#f0cf80]/15 bg-white/[.04] py-1.5 pl-1.5 pr-3 sm:flex"><div className="grid h-8 w-8 place-items-center rounded-full bg-gradient-to-br from-[#f4d998] to-[#93602f] text-[#1a1020]"><UserRound className="h-4 w-4" /></div><span className="max-w-[100px] truncate text-xs font-semibold text-[#eee5d5]">{firstName}</span></Link></div>
+        </div>
+      </header>
 
-          <div className="flex items-center gap-2">
-            <button type="button" className="flex h-10 w-10 items-center justify-center rounded-full border border-[#d7b56d]/15 bg-[#ffffff08] text-[#f5d88e] lg:hidden" aria-label="Menü">
-              <Menu className="h-4 w-4" />
-            </button>
-            <button type="button" className="relative flex h-10 w-10 items-center justify-center rounded-full border border-[#d7b56d]/15 bg-[#ffffff08] text-[#f5d88e]" aria-label="Bildirimler">
-              <Bell className="h-4 w-4" />
-              <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-[#f0bb4a]" />
-            </button>
-            <Link href="/giris" className="hidden items-center gap-2 rounded-full bg-gradient-to-r from-[#f7d98b] via-[#efc76d] to-[#cb8f41] px-4 py-2.5 text-[11px] font-black tracking-[0.14em] text-[#140d17] shadow-[0_12px_30px_rgba(239,198,101,0.25)] lg:inline-flex">
-              <UserRound className="h-4 w-4" />
-              GİRİŞ YAP
-            </Link>
-          </div>
-        </header>
-
-        <section className="rounded-[2.25rem] border border-[#d7b56d]/10 bg-[radial-gradient(circle_at_top,_rgba(92,68,120,0.18),_transparent_30%),linear-gradient(180deg,_rgba(16,11,22,0.9),_rgba(11,8,16,0.96))] p-5 shadow-[0_28px_80px_rgba(7,5,12,0.58)] backdrop-blur-sm md:p-8 lg:p-10">
-          <div className="grid items-center gap-8 lg:grid-cols-[minmax(0,1.08fr)_minmax(420px,0.92fr)] lg:gap-10">
-            <div className="flex flex-col justify-center">
-              <div className="mb-5 inline-flex w-fit items-center gap-2 rounded-full border border-[#d7b56d]/15 bg-[#f5d790]/6 px-3 py-1.5 text-[10px] font-medium uppercase tracking-[0.26em] text-[#f4d58a]">
-                <Coffee className="h-3.5 w-3.5" />
-                Yapay zekâ destekli kahve falı
-              </div>
-
-              <h1 className="max-w-[680px] text-4xl font-black leading-[0.95] tracking-[-0.06em] text-white md:text-6xl lg:text-[72px]">
-                Fincanını getir.
-                <span className="mt-2 block text-[#f4d58a]">Falını keşfet.</span>
-              </h1>
-
-              <p className="mt-5 max-w-[620px] text-base leading-8 text-[#d8d0de] md:text-[18px]">
-                Kahve izlerinden aşkını, şansını ve hayatındaki gelişmeleri keşfet. Fal Köşesi, fincanındaki şekilleri yorumlayıp sana özel bir okuma hazırlar.
-              </p>
-
-              <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-                <Link href="/fal/upload" className="inline-flex items-center justify-center rounded-full bg-gradient-to-r from-[#f7d98b] via-[#efc76d] to-[#cb8f41] px-6 py-3.5 text-[15px] font-black uppercase tracking-[0.12em] text-[#140d17] shadow-[0_16px_35px_rgba(239,198,101,0.26)] transition hover:translate-y-[-1px] hover:shadow-[0_18px_40px_rgba(239,198,101,0.32)] active:translate-y-[0px]">
-                  Falını Gönder
-                </Link>
-                <Link href="/fal/tarot" className="inline-flex items-center justify-center rounded-full border border-[#d7b56d]/20 bg-[#ffffff08] px-6 py-3.5 text-[15px] font-semibold text-[#f4e7c9] transition hover:border-[#d7b56d]/35 hover:bg-[#ffffff10]">
-                  Tarotu Keşfet
-                </Link>
-              </div>
-
-              <div className="mt-8 grid gap-3 sm:grid-cols-3">
-                {[
-                  { label: "1 ücretsiz fal", value: "Başlangıç" },
-                  { label: "Plus / Pro / Premium", value: "Üyelik" },
-                  { label: "Hızlı analiz", value: "Anlık" },
-                ].map((item) => (
-                  <div key={item.label} className="rounded-[1.1rem] border border-[#d7b56d]/10 bg-[#ffffff04] p-3.5">
-                    <div className="text-[10px] uppercase tracking-[0.22em] text-[#f4d58a]">{item.value}</div>
-                    <div className="mt-2 text-sm font-semibold text-[#f5ecd4]">{item.label}</div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <div className="relative flex items-center justify-center">
-              <div className="relative w-full max-w-[560px] overflow-hidden rounded-[2.1rem] bg-[radial-gradient(circle_at_50%_18%,_rgba(142,104,163,0.24),_transparent_28%),radial-gradient(circle_at_50%_100%,_rgba(95,62,32,0.14),_transparent_42%)] px-2 py-2 md:px-4 md:py-4">
-                <div className="relative flex h-[340px] items-center justify-center overflow-hidden rounded-[2rem] bg-[radial-gradient(circle_at_top,_rgba(95,62,32,0.20),_rgba(16,8,22,0.75)_50%,_rgba(11,8,16,1)_100%)] md:h-[380px]">
-                  <div className="absolute left-8 top-8 h-14 w-14 rounded-full border border-[#f1d48a]/30 bg-[#f7d98d]/8" />
-                  <div className="absolute left-10 top-12 text-[1.5rem] text-[#f3d47a]">✦</div>
-                  <div className="absolute right-12 top-16 text-[1.4rem] text-[#f3d47a] opacity-80">✦</div>
-                  <div className="absolute right-20 top-24 text-[1.8rem] text-[#f3d47a] opacity-60">☾</div>
-
-                  <div className="absolute left-1/2 top-1/2 h-[220px] w-[220px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[radial-gradient(circle,_rgba(255,255,255,0.18),_transparent_62%)] blur-2xl" />
-
-                  <div className="absolute left-[24%] top-[20%] h-20 w-10 rounded-full border-[2px] border-[#f1d48a]/30 border-b-0 opacity-80" style={{ transform: "rotate(-18deg)" }} />
-                  <div className="absolute left-[42%] top-[18%] h-24 w-12 rounded-full border-[2px] border-[#f1d48a]/30 border-b-0 opacity-80" style={{ transform: "rotate(14deg)" }} />
-                  <div className="absolute left-[58%] top-[20%] h-20 w-10 rounded-full border-[2px] border-[#f1d48a]/30 border-b-0 opacity-80" style={{ transform: "rotate(22deg)" }} />
-
-                  <div className="relative flex h-[250px] w-[250px] items-center justify-center md:h-[300px] md:w-[300px]">
-                    <div className="absolute bottom-[8%] left-1/2 h-8 w-44 -translate-x-1/2 rounded-[999px] border border-[#d7b56d]/10 bg-[#1a1120]/80 shadow-[0_0_30px_rgba(243,203,110,0.08)]" />
-
-                    <div className="absolute bottom-[18%] left-1/2 h-[120px] w-[160px] -translate-x-1/2 rounded-[42%_42%_46%_54%/42%_42%_58%_58%] border-[3px] border-[#f1d48a]/30 bg-[linear-gradient(180deg,_rgba(82,50,34,0.95),_rgba(32,18,17,0.98)_30%,_rgba(18,12,16,0.95)_100%)] shadow-[0_18px_35px_rgba(17,9,13,0.6)]">
-                      <div className="absolute inset-x-[16%] bottom-[14%] h-[44px] rounded-[50%] bg-[radial-gradient(circle_at_50%_30%,_#8e4d22_0%,_#4a2414_38%,_#2a120d_100%)] opacity-90" />
-                      <div className="absolute inset-x-[16%] top-[18%] h-[46px] rounded-[50%] bg-[radial-gradient(circle_at_50%_30%,_rgba(255,224,172,0.28),_transparent_62%)]" />
-                    </div>
-
-                    <div className="absolute bottom-[26%] left-1/2 h-16 w-[120px] -translate-x-1/2 rounded-[50%] bg-[radial-gradient(circle_at_center,_rgba(255,210,127,0.25),_rgba(41,24,17,0.15)_58%,_transparent_100%)] blur-md" />
-
-                    <div className="absolute left-[38%] top-[28%] h-8 w-8 rounded-full bg-[#f8e8b4]/70 blur-sm" />
-                    <div className="absolute right-[34%] top-[32%] h-6 w-6 rounded-full bg-[#f8e8b4]/60 blur-sm" />
-                    <div className="absolute left-[30%] top-[38%] h-4 w-4 rounded-full bg-[#f1d48a]/80" />
-                    <div className="absolute right-[30%] top-[38%] h-4 w-4 rounded-full bg-[#f1d48a]/80" />
-
-                    <div className="absolute left-[50%] top-[18%] h-24 w-12 -translate-x-1/2 rounded-full border-[2px] border-[#f1d48a]/35 border-b-0 opacity-80" style={{ transform: "translateX(-50%) rotate(-12deg)" }} />
-                    <div className="absolute left-[46%] top-[10%] h-28 w-14 -translate-x-1/2 rounded-full border-[2px] border-[#f1d48a]/25 border-b-0 opacity-70" style={{ transform: "translateX(-50%) rotate(8deg)" }} />
-                    <div className="absolute left-[54%] top-[12%] h-24 w-12 -translate-x-1/2 rounded-full border-[2px] border-[#f1d48a]/25 border-b-0 opacity-70" style={{ transform: "translateX(-50%) rotate(20deg)" }} />
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
+      <div className="mx-auto max-w-[1180px] px-4 sm:px-6">
+        <section className="relative mt-4 overflow-hidden rounded-[28px] border border-[#d7b56d]/15 shadow-[0_30px_90px_rgba(0,0,0,.42)] sm:mt-6 sm:rounded-[34px]">
+          <Image src="/fortune/hero.svg" alt="Fal Köşesi mistik kahve falı" fill priority sizes="(max-width: 768px) 100vw, 1180px" className="object-cover" />
+          <div className="absolute inset-0 bg-gradient-to-r from-[#090918]/95 via-[#0b0919]/70 to-[#0b0919]/20" />
+          <div className="relative min-h-[330px] px-6 py-8 sm:min-h-[390px] sm:px-10 sm:py-12 lg:px-14"><div className="max-w-[650px]"><div className="inline-flex items-center gap-2 rounded-full border border-[#f5d88e]/20 bg-black/20 px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[.22em] text-[#f5d88e] backdrop-blur-md"><Sparkles className="h-3.5 w-3.5" /> Sana özel fal köşen</div><h1 className="mt-5 font-serif text-[38px] font-bold leading-[.98] tracking-[-.04em] text-white sm:text-5xl lg:text-6xl">Merhaba {firstName} <span className="text-[#f5d88e]">✦</span></h1><p className="mt-4 max-w-[560px] text-base leading-7 text-[#d9d1e1] sm:text-lg">Bugün senin için neler söylüyor?</p><p className="mt-2 font-serif text-sm italic text-[#c8b9d6] sm:text-base">“Her fincan, yeni bir hikâye anlatır…”</p></div></div>
         </section>
 
-        <section className="mt-10 pb-6 md:mt-14">
-          <div className="mb-6 flex items-end justify-between gap-3">
-            <div>
-              <p className="text-[10px] uppercase tracking-[0.26em] text-[#f4d58a]">Keşfet</p>
-              <h2 className="mt-2 text-2xl font-black tracking-[-0.05em] text-white md:text-4xl">Falını keşfet</h2>
-            </div>
-            <Link href="/fal/premium" className="hidden rounded-full border border-[#d7b56d]/20 bg-[#ffffff05] px-4 py-2 text-sm text-[#f6e8c8] hover:border-[#d7b56d]/35 md:inline-flex">
-              Premium üyelik
-            </Link>
-          </div>
+        <section className="relative mt-5 overflow-hidden rounded-[26px] border border-[#a56fff]/25 bg-[#17132b]/90 p-3 shadow-[0_22px_65px_rgba(0,0,0,.34)] sm:mt-6 sm:p-4"><div className="grid gap-4 md:grid-cols-[190px_1fr_220px] md:items-center"><div className="relative h-[155px] overflow-hidden rounded-[20px] bg-[#0d0a18] sm:h-[175px]"><Image src="/fortune/hero.svg" alt="Kahve falı" fill sizes="220px" className="object-cover object-[70%_65%]" /><div className="absolute inset-0 bg-gradient-to-t from-[#0b0815] via-transparent to-transparent" /><div className="absolute bottom-3 left-3 rounded-full border border-white/10 bg-black/45 px-2.5 py-1 text-[10px] font-semibold text-[#f6d98e] backdrop-blur-md">AI ANALİZ</div></div><div className="px-1 sm:px-2"><div className="flex items-center gap-2 text-[#f6d98e]"><Coffee className="h-5 w-5" /><span className="text-xs font-bold uppercase tracking-[.2em]">Kahve Falı</span></div><h2 className="mt-2 font-serif text-2xl font-bold text-white sm:text-3xl">Fincanını gönder, sembollerini keşfet.</h2><p className="mt-2 max-w-xl text-sm leading-6 text-[#bdb4c9]">Fincan ve tabak fotoğrafını yükle. Sana özel, detaylı ve sıcak bir yorum hazırlayalım.</p><Link href="/fal/upload" className="mt-4 inline-flex items-center justify-center gap-2 rounded-full bg-gradient-to-r from-[#f6d88e] via-[#efbd69] to-[#c76e9a] px-6 py-3 text-sm font-black text-[#1b1020] shadow-[0_12px_30px_rgba(236,178,107,.22)] transition hover:-translate-y-0.5">Falımı Yorumla <ChevronRight className="h-4 w-4" /></Link></div><div className="grid gap-2 md:pr-1"><Link href="/fal/upload" className="flex items-center gap-3 rounded-2xl border border-white/10 bg-white/[.045] p-3 transition hover:bg-white/[.08]"><span className="grid h-10 w-10 place-items-center rounded-xl bg-[#f3d48b]/10 text-[#f3d48b]"><Coffee className="h-5 w-5" /></span><span><b className="block text-sm">Fincan Fotoğrafı</b><small className="text-xs text-[#aaa1bb]">Yüklemeye hazır</small></span></Link><Link href="/fal/upload" className="flex items-center gap-3 rounded-2xl border border-white/10 bg-white/[.045] p-3 transition hover:bg-white/[.08]"><span className="grid h-10 w-10 place-items-center rounded-xl bg-[#a875ff]/10 text-[#bd92ff]"><Star className="h-5 w-5" /></span><span><b className="block text-sm">Tabak Fotoğrafı</b><small className="text-xs text-[#aaa1bb]">Daha detaylı analiz</small></span></Link></div></div></section>
 
-          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-6">
-            {quickItems.map(({ label, href, icon: Icon }) => (
-              <Link
-                key={label}
-                href={href}
-                className="group rounded-[1.4rem] border border-[#d7b56d]/10 bg-[#120d1b]/80 p-4 text-left transition hover:-translate-y-1 hover:border-[#d7b56d]/25 hover:bg-[#1a1323]"
-              >
-                <div className="mb-4 flex h-11 w-11 items-center justify-center rounded-[0.9rem] bg-gradient-to-br from-[#f5d790] to-[#d7a64f] text-[#140d17] shadow-[0_10px_25px_rgba(244,213,138,0.2)]">
-                  <Icon className="h-5 w-5" />
-                </div>
-                <p className="text-base font-bold text-white">{label}</p>
-                <p className="mt-2 text-sm text-[#c8bfcf]">İçerik ve yorum için tıkla</p>
-              </Link>
-            ))}
-          </div>
-        </section>
+        <section className="mt-9 sm:mt-12"><div className="mb-4 flex items-end justify-between"><div><p className="text-[10px] font-bold uppercase tracking-[.28em] text-[#f0c978]">✦ keşfet</p><h2 className="mt-1 font-serif text-3xl font-bold tracking-tight">Bugün neye bakmak istersin?</h2></div><Link href="/kesfet" className="hidden items-center gap-1 text-sm font-semibold text-[#d7cce1] sm:flex">Tümünü Gör <ChevronRight className="h-4 w-4" /></Link></div><div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">{discoveries.map((item) => <Link key={item.title} href={item.href} className="group overflow-hidden rounded-[20px] border border-white/[.09] bg-[#111022] shadow-[0_12px_35px_rgba(0,0,0,.25)] transition duration-300 hover:-translate-y-1 hover:border-[#d5a6ff]/35 hover:shadow-[0_18px_45px_rgba(0,0,0,.4)]"><div className="relative aspect-[1.45] overflow-hidden"><Image src={item.image} alt={item.title} fill sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw" className="object-cover transition duration-500 group-hover:scale-105" /><div className="absolute inset-0 bg-gradient-to-t from-[#111022] via-transparent to-transparent opacity-85" /></div><div className="relative -mt-8 px-4 pb-4"><h3 className="font-serif text-lg font-bold text-white sm:text-xl">{item.title}</h3><p className="mt-1 line-clamp-2 text-xs leading-5 text-[#bcb3c9]">{item.subtitle}</p></div></Link>)}</div></section>
+
+        <Link href="/fal/premium" className="group mt-8 flex items-center gap-4 overflow-hidden rounded-[24px] border border-[#e8c86f]/40 bg-[radial-gradient(circle_at_0%_50%,rgba(242,193,93,.28),transparent_35%),linear-gradient(100deg,#211827,#17121e)] p-5 shadow-[0_20px_50px_rgba(0,0,0,.3)] transition hover:border-[#f5d98f]/65 sm:mt-10 sm:p-6"><div className="grid h-14 w-14 shrink-0 place-items-center rounded-2xl bg-gradient-to-br from-[#ffe49c] to-[#c7863e] text-[#20121b] shadow-[0_10px_35px_rgba(238,193,96,.25)]"><Crown className="h-7 w-7" /></div><div className="min-w-0 flex-1"><p className="font-serif text-lg font-bold sm:text-xl">Premium ile daha fazlasını keşfet</p><p className="mt-1 text-xs leading-5 text-[#bfb3c4] sm:text-sm">Sınırsız fal, detaylı yorumlar ve kişiselleştirilmiş içerikler seni bekliyor.</p></div><span className="hidden shrink-0 items-center gap-1 rounded-full bg-[#f4d18b] px-5 py-3 text-sm font-black text-[#24161c] sm:inline-flex">Premium’a Geç <ChevronRight className="h-4 w-4" /></span></Link>
+
+        <section className="mt-9 sm:mt-12"><div className="mb-4 flex items-end justify-between"><div><p className="text-[10px] font-bold uppercase tracking-[.28em] text-[#a9a0b9]">geçmiş</p><h2 className="mt-1 font-serif text-2xl font-bold">Son Falın</h2></div><Link href="/fal/gecmis" className="flex items-center gap-1 text-sm text-[#c9bfd2]">Tüm Geçmişim <ChevronRight className="h-4 w-4" /></Link></div><div className="flex items-center gap-4 rounded-[22px] border border-white/[.09] bg-[#101021]/80 p-3 sm:p-4"><div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-2xl border border-white/10"><Image src="/fortune/hero.svg" alt="Son kahve falı" fill sizes="80px" className="object-cover object-[70%_70%]" /></div><div className="min-w-0 flex-1"><div className="flex items-center gap-2 text-xs text-[#e8cf91]"><Coffee className="h-4 w-4" /> Kahve Falı <span className="text-[#777184]">• Son falın</span></div><h3 className="mt-1 font-semibold">Fincanındaki sembollere yeniden bak</h3><p className="mt-1 truncate text-xs text-[#9890a3]">Falını aç ve Falcıya Sor ile devam et.</p></div><Link href="/fal/gecmis" className="hidden items-center gap-1 rounded-full border border-[#a86cff]/45 px-4 py-2.5 text-xs font-bold text-[#d4b8ff] sm:flex">Yorumu Gör <ChevronRight className="h-4 w-4" /></Link></div></section>
       </div>
+
+      <nav className="fixed bottom-0 left-0 right-0 z-50 border-t border-white/[.08] bg-[#090918]/95 px-2 pb-[max(8px,env(safe-area-inset-bottom))] pt-2 backdrop-blur-2xl"><div className="mx-auto grid max-w-[720px] grid-cols-5">{[["Ana Sayfa", "/", HomeIcon],["Fal Geçmişim", "/fal/gecmis", History],["Favorilerim", "/favoriler", Heart],["Falcıya Sor", "/fal/ask", MessageCircle],["Premium", "/fal/premium", Crown]].map(([label, href, Icon]) => <Link key={String(label)} href={String(href)} className="flex min-h-[58px] flex-col items-center justify-center gap-1 rounded-2xl text-[#9f97ae] transition hover:bg-white/[.04] hover:text-[#f4d68e]"><Icon className="h-5 w-5" /><span className="text-[9px] font-semibold sm:text-[10px]">{label as string}</span></Link>)}</div></nav>
+
+      {menuOpen && <div className="fixed inset-0 z-[60] bg-black/65 backdrop-blur-sm" onClick={() => setMenuOpen(false)}><aside className="h-full w-[86%] max-w-[360px] border-r border-white/10 bg-[#0c0b1b] p-5 shadow-[30px_0_90px_rgba(0,0,0,.5)]" onClick={(event) => event.stopPropagation()}><div className="flex items-center justify-between"><div className="font-serif text-2xl font-bold text-[#f4d68e]">Fal Köşesi</div><button type="button" onClick={() => setMenuOpen(false)} className="grid h-10 w-10 place-items-center rounded-xl bg-white/[.05]"><X className="h-5 w-5" /></button></div><p className="mt-2 text-sm text-[#9991a8]">Merhaba {firstName}, hangi keşfe çıkıyoruz?</p><div className="mt-8 grid gap-2">{[["Kahve Falı", "/fal/upload", Coffee],["Tarot", "/fal/tarot", Sparkles],["Aşk Falı", "/fal/ask", Heart],["Para & Bolluk", "/fal/para", WalletCards],["Kariyer", "/fal/kariyer", BriefcaseBusiness],["Günlük Fal", "/fal/gunluk", Moon],["Doğum Haritam", "/fal/astroloji", Star]].map(([label, href, Icon]) => <Link key={String(label)} href={String(href)} onClick={() => setMenuOpen(false)} className="flex items-center gap-3 rounded-2xl border border-white/[.06] bg-white/[.03] p-3.5"><span className="grid h-10 w-10 place-items-center rounded-xl bg-[#f1d38b]/10 text-[#f1d38b]"><Icon className="h-5 w-5" /></span><span className="font-semibold">{label as string}</span><ChevronRight className="ml-auto h-4 w-4 text-[#746d7e]" /></Link>)}</div><Link href="/fal/premium" onClick={() => setMenuOpen(false)} className="mt-6 flex items-center gap-3 rounded-2xl border border-[#e9c66d]/35 bg-[#e9c66d]/10 p-4 text-[#f5d992]"><Crown className="h-5 w-5" /><span className="font-bold">Premium’u Keşfet</span></Link></aside></div>}
     </main>
   );
 }
-
