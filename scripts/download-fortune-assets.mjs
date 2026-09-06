@@ -19,6 +19,34 @@ const assets = [
     file: "tarot-spread.jpg",
     url: "https://images.pexels.com/photos/14190187/pexels-photo-14190187.jpeg?cs=srgb&dl=pexels-gabriela-hughes-326722820-14190187.jpg&fm=jpg",
   },
+  {
+    file: "love-reading.jpg",
+    url: "https://images.pexels.com/photos/35315663/pexels-photo-35315663.jpeg?cs=srgb&dl=pexels-vireshstudio-35315663.jpg&fm=jpg",
+  },
+  {
+    file: "money-abundance.jpg",
+    url: "https://images.pexels.com/photos/8442425/pexels-photo-8442425.jpeg?cs=srgb&dl=pexels-zlataky-cz-61823415-8442425.jpg&fm=jpg",
+  },
+  {
+    file: "career-success.jpg",
+    url: "https://images.pexels.com/photos/10375959/pexels-photo-10375959.jpeg?cs=srgb&dl=pexels-rdne-10375959.jpg&fm=jpg",
+  },
+  {
+    file: "daily-moon.jpg",
+    url: "https://images.pexels.com/photos/8929853/pexels-photo-8929853.jpeg?cs=srgb&dl=pexels-osman-8929853.jpg&fm=jpg",
+  },
+  {
+    file: "birth-chart.jpg",
+    url: "https://images.pexels.com/photos/10780188/pexels-photo-10780188.jpeg?cs=srgb&dl=pexels-158524029-10780188.jpg&fm=jpg",
+  },
+  {
+    file: "dream-sleep.jpg",
+    url: "https://images.pexels.com/photos/4752718/pexels-photo-4752718.jpeg?cs=srgb&dl=pexels-vika-glitter-392079-4752718.jpg&fm=jpg",
+  },
+  {
+    file: "numerology-number.jpg",
+    url: "https://images.pexels.com/photos/15271787/pexels-photo-15271787.jpeg?cs=srgb&dl=pexels-enginakyurt-15271787.jpg&fm=jpg",
+  },
 ];
 
 const majorArcana = [
