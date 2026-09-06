@@ -33,7 +33,7 @@ const assets = [
   },
   {
     file: "daily-moon.jpg",
-    url: "https://images.pexels.com/photos/8929853/pexels-photo-8929853.jpeg?cs=srgb&dl=pexels-osman-8929853.jpg&fm=jpg",
+    url: "https://images.pexels.com/photos/10192712/pexels-photo-10192712.jpeg?cs=srgb&dl=pexels-lucaspezeta-10192712.jpg&fm=jpg",
   },
   {
     file: "birth-chart.jpg",
