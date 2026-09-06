@@ -39,6 +39,9 @@ jobs:
             "https://angelorum.co/wp-content/uploads/2014/03/Frideborg-Tarot.zip" \
             -o /tmp/frideborg.zip
           unzip -q -o /tmp/frideborg.zip -d /tmp/frideborg
+          echo "--- Frideborg archive files ---"
+          find /tmp/frideborg -type f | sort | head -200
+          echo "--- End archive files ---"
           node <<'NODE'
           const fs = require('node:fs');
           const path = require('node:path');
