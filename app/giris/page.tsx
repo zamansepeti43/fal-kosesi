@@ -1,136 +1,334 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
-import { ArrowRight, Check, Mail, ShieldCheck, Smartphone, Sparkles, User } from "lucide-react";
+import { useEffect, useState } from "react";
+import {
+  ArrowRight,
+  Check,
+  Eye,
+  EyeOff,
+  LockKeyhole,
+  Mail,
+  ShieldCheck,
+  Smartphone,
+  Sparkles,
+  User,
+} from "lucide-react";
 import { createMember, getStoredMember, saveMember } from "@/lib/membership";
 
 export default function GirisPage() {
-  const [form, setForm] = useState({ name: "", email: "", phone: "" });
+  const [mode, setMode] = useState<"login" | "register">("login");
+  const [form, setForm] = useState({ name: "", email: "", phone: "", password: "" });
   const [isHydrated, setIsHydrated] = useState(false);
-  const [currentUser, setCurrentUser] = useState<ReturnType<typeof createMember> | null>(null);
   const [error, setError] = useState("");
+  const [message, setMessage] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
 
   useEffect(() => {
     const member = getStoredMember();
-    setCurrentUser(member);
+    if (member?.email) {
+      setForm((current) => ({ ...current, name: member.name, email: member.email, phone: member.phone }));
+    }
     setIsHydrated(true);
   }, []);
-
-  const canOpenProfile = useMemo(() => Boolean(currentUser?.email), [currentUser]);
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setError("");
+    setMessage("");
 
     const cleanEmail = form.email.trim().toLowerCase();
-    if (!cleanEmail) return;
+    const cleanPassword = form.password;
 
-    const member = createMember(form.name, cleanEmail, form.phone);
+    if (!cleanEmail || !cleanEmail.includes("@")) {
+      setError("Geçerli bir e-posta adresi gir.");
+      return;
+    }
+
+    if (cleanPassword.length < 6) {
+      setError("Şifre en az 6 karakter olmalı.");
+      return;
+    }
+
+    if (mode === "register") {
+      if (!form.name.trim()) {
+        setError("Ad soyad alanını doldur.");
+        return;
+      }
+
+      const member = createMember(form.name, cleanEmail, form.phone);
+      const sessionResponse = await fetch("/api/member/session", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: cleanEmail,
+          name: member.name,
+          phone: member.phone,
+        }),
+      });
+
+      if (!sessionResponse.ok) {
+        const payload = (await sessionResponse.json().catch(() => null)) as { error?: string } | null;
+        setError(payload?.error || "Hesap oluşturulamadı. Lütfen tekrar dene.");
+        return;
+      }
+
+      saveMember(member);
+      setMessage("Hesabın oluşturuldu. Profiline yönlendiriliyorsun…");
+      window.setTimeout(() => {
+        window.location.href = "/profil";
+      }, 350);
+      return;
+    }
+
+    const stored = getStoredMember();
+    if (!stored || stored.email !== cleanEmail) {
+      setError("Bu e-posta ile kayıtlı bir hesap bulunamadı. Önce kayıt ol.");
+      return;
+    }
+
     const sessionResponse = await fetch("/api/member/session", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email: cleanEmail, name: member.name, phone: member.phone }),
+      body: JSON.stringify({
+        email: stored.email,
+        name: stored.name,
+        phone: stored.phone,
+      }),
     });
 
     if (!sessionResponse.ok) {
       const payload = (await sessionResponse.json().catch(() => null)) as { error?: string } | null;
-      setError(payload?.error || "Hesap hazırlanamadı. Lütfen tekrar dene.");
+      setError(payload?.error || "Oturum açılamadı. Lütfen tekrar dene.");
       return;
     }
 
-    saveMember(member);
-    setCurrentUser(member);
-    window.location.href = "/profil";
+    setMessage("Giriş başarılı. Profiline yönlendiriliyorsun…");
+    window.setTimeout(() => {
+      window.location.href = "/profil";
+    }, 350);
   };
 
   if (!isHydrated) {
-    return <div className="min-h-screen flex items-center justify-center text-white">Yükleniyor...</div>;
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-[#070714] text-white">
+        Yükleniyor...
+      </div>
+    );
   }
 
   return (
-    <main className="min-h-screen px-4 py-8 text-white md:px-6">
+    <main className="min-h-screen bg-[radial-gradient(circle_at_top,rgba(124,58,237,.18),transparent_38%),linear-gradient(180deg,#080817,#05050d)] px-4 py-8 text-white md:px-6">
       <div className="mx-auto max-w-5xl">
         <div className="mb-6 flex items-center justify-between">
-          <Link href="/" className="text-sm text-slate-300">← Ana sayfa</Link>
-          {canOpenProfile ? (
-            <Link href="/profil" className="inline-flex items-center gap-2 rounded-full border border-violet-400/40 bg-violet-500/10 px-3 py-1.5 text-xs font-semibold text-violet-100">
-              Profilim
-              <ArrowRight className="h-3.5 w-3.5" />
-            </Link>
-          ) : null}
+          <Link href="/" className="text-sm text-slate-300 transition hover:text-white">
+            ← Ana sayfa
+          </Link>
+
+          <Link
+            href="/profil"
+            className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[.04] px-3 py-1.5 text-xs font-semibold text-slate-200"
+          >
+            Profilim
+            <ArrowRight className="h-3.5 w-3.5" />
+          </Link>
         </div>
 
-        <div className="grid gap-6 lg:grid-cols-[1.05fr_0.95fr]">
-          <section className="rounded-[2rem] border border-white/10 bg-slate-950/60 p-6 shadow-[0_30px_80px_rgba(15,23,42,0.7)] md:p-8">
+        <div className="mx-auto max-w-xl overflow-hidden rounded-[2rem] border border-white/10 bg-slate-950/70 shadow-[0_30px_90px_rgba(0,0,0,.45)] backdrop-blur-xl">
+          <div className="border-b border-white/10 p-6 md:p-8">
             <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-amber-300/20 bg-amber-400/10 px-3 py-1.5 text-xs font-medium uppercase tracking-[0.22em] text-amber-200">
               <Sparkles className="h-3.5 w-3.5" />
-              Üye girişi
+              Fal Köşesi
             </div>
 
-            <h1 className="text-3xl font-black text-white md:text-5xl">Fal Köşesi’ne giriş yap.</h1>
-            <p className="mt-3 max-w-xl text-base text-slate-300">
-              Normal üye kaydı oluştur, 50 kredi hediyeni al ve kredilerinle dilediğin falları aç.
+            <h1 className="text-3xl font-black md:text-4xl">
+              {mode === "login" ? "Tekrar hoş geldin." : "Hesabını oluştur."}
+            </h1>
+
+            <p className="mt-3 text-sm leading-6 text-slate-400">
+              {mode === "login"
+                ? "Hesabına giriş yap, kredilerini ve fal geçmişini kaldığın yerden kullan."
+                : "Kayıt ol, 50 kredi hoş geldin hediyeni al ve fal köşeni kişiselleştir."}
             </p>
+          </div>
 
-            <div className="mt-8 space-y-4">
-              {[
-                { icon: Mail, label: "E-posta ile üye ol" },
-                { icon: Smartphone, label: "50 kredi hoş geldin hediyesi" },
-                { icon: ShieldCheck, label: "Kredilerini güvenli şekilde hesabında sakla" },
-              ].map(({ icon: Icon, label }) => (
-                <div key={label} className="flex items-center gap-3 rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-slate-200">
-                  <span className="flex h-9 w-9 items-center justify-center rounded-full bg-violet-500/15 text-violet-200">
-                    <Icon className="h-4 w-4" />
-                  </span>
-                  {label}
-                </div>
-              ))}
-            </div>
-          </section>
+          <div className="grid grid-cols-2 border-b border-white/10 bg-white/[.025] p-1.5">
+            <button
+              type="button"
+              onClick={() => {
+                setMode("login");
+                setError("");
+                setMessage("");
+              }}
+              className={`rounded-xl px-4 py-2.5 text-sm font-bold transition ${
+                mode === "login"
+                  ? "bg-amber-300 text-slate-950"
+                  : "text-slate-400 hover:text-white"
+              }`}
+            >
+              Giriş Yap
+            </button>
 
-          <section className="rounded-[2rem] border border-white/10 bg-gradient-to-br from-slate-950 via-slate-950 to-violet-950/40 p-6 md:p-8">
-            <div className="mb-5 flex items-center gap-3 text-white">
-              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-violet-500 via-fuchsia-500 to-amber-400">
-                <User className="h-5 w-5" />
+            <button
+              type="button"
+              onClick={() => {
+                setMode("register");
+                setError("");
+                setMessage("");
+              }}
+              className={`rounded-xl px-4 py-2.5 text-sm font-bold transition ${
+                mode === "register"
+                  ? "bg-amber-300 text-slate-950"
+                  : "text-slate-400 hover:text-white"
+              }`}
+            >
+              Kayıt Ol
+            </button>
+          </div>
+
+          <div className="p-6 md:p-8">
+            {mode === "login" ? (
+              <div className="mb-6 grid gap-3 sm:grid-cols-3">
+                {[
+                  { icon: Mail, text: "E-posta hesabın" },
+                  { icon: LockKeyhole, text: "Güvenli oturum" },
+                  { icon: ShieldCheck, text: "Hesap verilerin" },
+                ].map(({ icon: Icon, text }) => (
+                  <div
+                    key={text}
+                    className="flex items-center gap-2 rounded-xl border border-white/10 bg-white/[.03] px-3 py-2.5 text-xs text-slate-300"
+                  >
+                    <Icon className="h-4 w-4 text-violet-200" />
+                    {text}
+                  </div>
+                ))}
               </div>
-              <div>
-                <p className="text-xs uppercase tracking-[0.22em] text-violet-200">Hesap oluştur</p>
-                <h2 className="text-xl font-bold">Kayıt ol</h2>
+            ) : (
+              <div className="mb-6 grid gap-3 sm:grid-cols-3">
+                {[
+                  { icon: Mail, text: "E-posta ile kayıt" },
+                  { icon: Smartphone, text: "50 kredi hediye" },
+                  { icon: ShieldCheck, text: "Hesabını güvenle kullan" },
+                ].map(({ icon: Icon, text }) => (
+                  <div
+                    key={text}
+                    className="flex items-center gap-2 rounded-xl border border-white/10 bg-white/[.03] px-3 py-2.5 text-xs text-slate-300"
+                  >
+                    <Icon className="h-4 w-4 text-violet-200" />
+                    {text}
+                  </div>
+                ))}
               </div>
-            </div>
+            )}
 
             <form onSubmit={handleSubmit} className="space-y-4">
-              <label className="block">
-                <span className="mb-2 block text-sm text-slate-300">Adınız ve soyadınız</span>
-                <input required value={form.name} onChange={(event) => setForm((prev) => ({ ...prev, name: event.target.value }))} placeholder="Ayşe Demir" className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-white placeholder:text-slate-500 outline-none transition focus:border-violet-400/60" />
-              </label>
+              {mode === "register" ? (
+                <label className="block">
+                  <span className="mb-2 block text-sm text-slate-300">Adınız ve soyadınız</span>
+                  <div className="relative">
+                    <User className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" />
+                    <input
+                      required
+                      value={form.name}
+                      onChange={(event) => setForm((prev) => ({ ...prev, name: event.target.value }))}
+                      placeholder="Ayşe Demir"
+                      className="w-full rounded-2xl border border-white/10 bg-white/5 py-3 pl-11 pr-4 text-white placeholder:text-slate-500 outline-none transition focus:border-violet-400/60"
+                    />
+                  </div>
+                </label>
+              ) : null}
 
               <label className="block">
                 <span className="mb-2 block text-sm text-slate-300">E-posta adresi</span>
-                <input required type="email" value={form.email} onChange={(event) => setForm((prev) => ({ ...prev, email: event.target.value }))} placeholder="ayse@gmail.com" className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-white placeholder:text-slate-500 outline-none transition focus:border-violet-400/60" />
+                <div className="relative">
+                  <Mail className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" />
+                  <input
+                    required
+                    type="email"
+                    value={form.email}
+                    onChange={(event) => setForm((prev) => ({ ...prev, email: event.target.value }))}
+                    placeholder="ornek@gmail.com"
+                    className="w-full rounded-2xl border border-white/10 bg-white/5 py-3 pl-11 pr-4 text-white placeholder:text-slate-500 outline-none transition focus:border-violet-400/60"
+                  />
+                </div>
               </label>
+
+              {mode === "register" ? (
+                <label className="block">
+                  <span className="mb-2 block text-sm text-slate-300">Telefon</span>
+                  <div className="relative">
+                    <Smartphone className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" />
+                    <input
+                      value={form.phone}
+                      onChange={(event) => setForm((prev) => ({ ...prev, phone: event.target.value }))}
+                      placeholder="+90 555 123 45 67"
+                      className="w-full rounded-2xl border border-white/10 bg-white/5 py-3 pl-11 pr-4 text-white placeholder:text-slate-500 outline-none transition focus:border-violet-400/60"
+                    />
+                  </div>
+                </label>
+              ) : null}
 
               <label className="block">
-                <span className="mb-2 block text-sm text-slate-300">Telefon</span>
-                <input value={form.phone} onChange={(event) => setForm((prev) => ({ ...prev, phone: event.target.value }))} placeholder="+90 555 123 45 67" className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-white placeholder:text-slate-500 outline-none transition focus:border-violet-400/60" />
+                <span className="mb-2 block text-sm text-slate-300">Şifre</span>
+                <div className="relative">
+                  <LockKeyhole className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" />
+                  <input
+                    required
+                    type={showPassword ? "text" : "password"}
+                    minLength={6}
+                    value={form.password}
+                    onChange={(event) => setForm((prev) => ({ ...prev, password: event.target.value }))}
+                    placeholder="En az 6 karakter"
+                    className="w-full rounded-2xl border border-white/10 bg-white/5 py-3 pl-11 pr-11 text-white placeholder:text-slate-500 outline-none transition focus:border-violet-400/60"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword((value) => !value)}
+                    className="absolute right-3 top-1/2 grid h-8 w-8 -translate-y-1/2 place-items-center rounded-lg text-slate-400 hover:text-white"
+                    aria-label={showPassword ? "Şifreyi gizle" : "Şifreyi göster"}
+                  >
+                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
+                </div>
               </label>
 
-              {error ? <p className="rounded-2xl border border-rose-400/20 bg-rose-400/10 p-3 text-sm text-rose-100">{error}</p> : null}
+              {mode === "login" ? (
+                <div className="flex items-center justify-between gap-3 text-xs text-slate-500">
+                  <span>Şifreni hatırlıyor musun?</span>
+                  <span className="text-violet-300">Yakında: şifre sıfırlama</span>
+                </div>
+              ) : null}
 
-              <button type="submit" className="inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-amber-300 via-yellow-400 to-orange-300 px-5 py-3.5 text-base font-bold text-slate-950 shadow-[0_12px_30px_rgba(251,191,36,0.35)] transition hover:brightness-110">
-                Kaydı tamamla
+              {error ? (
+                <p className="rounded-2xl border border-rose-400/20 bg-rose-400/10 p-3 text-sm text-rose-100">
+                  {error}
+                </p>
+              ) : null}
+
+              {message ? (
+                <p className="rounded-2xl border border-emerald-400/20 bg-emerald-400/10 p-3 text-sm text-emerald-100">
+                  {message}
+                </p>
+              ) : null}
+
+              <button
+                type="submit"
+                className="inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-amber-300 via-yellow-400 to-orange-300 px-5 py-3.5 text-base font-bold text-slate-950 shadow-[0_12px_30px_rgba(251,191,36,0.25)] transition hover:brightness-110"
+              >
+                {mode === "login" ? "Giriş Yap" : "Kaydı Tamamla"}
                 <ArrowRight className="h-4 w-4" />
               </button>
             </form>
 
-            <div className="mt-5 rounded-2xl border border-emerald-400/20 bg-emerald-400/10 p-3 text-sm text-emerald-100">
-              <div className="flex items-center gap-2 font-medium">
-                <Check className="h-4 w-4" />
-                Hesabına 50 kredi tanımlanır. Kredilerin bittiğinde yeni paket alabilirsin.
+            {mode === "register" ? (
+              <div className="mt-5 rounded-2xl border border-emerald-400/20 bg-emerald-400/10 p-3 text-sm text-emerald-100">
+                <div className="flex items-center gap-2 font-medium">
+                  <Check className="h-4 w-4" />
+                  Hesabına 50 kredi tanımlanır. Kredilerin bittiğinde yeni paket alabilirsin.
+                </div>
               </div>
-            </div>
-          </section>
+            ) : null}
+          </div>
         </div>
       </div>
     </main>
