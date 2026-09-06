@@ -1,4 +1,4 @@
-name: Repair duplicate state declarations
+name: Repair duplicate injected state and effects
 
 on:
   push:
@@ -13,7 +13,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Remove duplicate injected state lines
+      - name: Remove duplicate injected state and effect blocks
         run: |
           python - <<'PY'
           from pathlib import Path
@@ -22,12 +22,12 @@ jobs:
               'app/page.tsx': [
                   ('  const [credits, setCredits] = useState<number | null>(null);\n  const [credits, setCredits] = useState<number | null>(null);',
                    '  const [credits, setCredits] = useState<number | null>(null);'),
-                  ('  }, []);\n\n  useEffect(() => {\n    fetch("/api/credits", { cache: "no-store" })',
-                   '  }, []);\n\n  useEffect(() => {\n    fetch("/api/credits", { cache: "no-store" })'),
               ],
               'app/fal/tarot/tarot-client.tsx': [
                   ('  const [creditStatus, setCreditStatus] = useState<"idle" | "checking" | "ok" | "error">("idle");\n  const [creditStatus, setCreditStatus] = useState<"idle" | "checking" | "ok" | "error">("idle");',
                    '  const [creditStatus, setCreditStatus] = useState<"idle" | "checking" | "ok" | "error">("idle");'),
+                  ('  useEffect(() => {\n    if (selectedCards.length !== spread.cards || revealing || creditStatus !== "idle") return;\n    setCreditStatus("checking");\n    fetch("/api/credits/spend", {\n      method: "POST",\n      headers: { "Content-Type": "application/json" },\n      body: JSON.stringify({ type: `tarot_${spreadId}` }),\n    })\n      .then(async (response) => {\n        setCreditStatus(response.ok ? "ok" : "error");\n      })\n      .catch(() => setCreditStatus("error"));\n  }, [selectedCards.length, spread.cards, spreadId, revealing, creditStatus]);\n\n  useEffect(() => {\n    if (selectedCards.length !== spread.cards || revealing || creditStatus !== "idle") return;\n    setCreditStatus("checking");\n    fetch("/api/credits/spend", {\n      method: "POST",\n      headers: { "Content-Type": "application/json" },\n      body: JSON.stringify({ type: `tarot_${spreadId}` }),\n    })\n      .then(async (response) => {\n        setCreditStatus(response.ok ? "ok" : "error");\n      })\n      .catch(() => setCreditStatus("error"));\n  }, [selectedCards.length, spread.cards, spreadId, revealing, creditStatus]);\n\n  useEffect(() => {\n    if (selectedCards.length !== spread.cards || revealing || creditStatus !== "idle") return;\n    setCreditStatus("checking");\n    fetch("/api/credits/spend", {\n      method: "POST",\n      headers: { "Content-Type": "application/json" },\n      body: JSON.stringify({ type: `tarot_${spreadId}` }),\n    })\n      .then(async (response) => {\n        setCreditStatus(response.ok ? "ok" : "error");\n      })\n      .catch(() => setCreditStatus("error"));\n  }, [selectedCards.length, spread.cards, spreadId, revealing, creditStatus]);',
+                   '  useEffect(() => {\n    if (selectedCards.length !== spread.cards || revealing || creditStatus !== "idle") return;\n    setCreditStatus("checking");\n    fetch("/api/credits/spend", {\n      method: "POST",\n      headers: { "Content-Type": "application/json" },\n      body: JSON.stringify({ type: `tarot_${spreadId}` }),\n    })\n      .then(async (response) => {\n        setCreditStatus(response.ok ? "ok" : "error");\n      })\n      .catch(() => setCreditStatus("error"));\n  }, [selectedCards.length, spread.cards, spreadId, revealing, creditStatus]);'),
               ],
           }
 
@@ -43,9 +43,9 @@ jobs:
                   changed = True
 
           if changed:
-              print('Duplicate state declarations repaired')
+              print('Duplicate state/effect blocks repaired')
           else:
-              print('No duplicate state declarations found')
+              print('No duplicate state/effect blocks found')
           PY
 
       - name: Commit repair
@@ -57,5 +57,5 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add app/page.tsx app/fal/tarot/tarot-client.tsx
-          git commit -m "Fix duplicate credit state declarations"
+          git commit -m "Fix duplicate credit effects"
           git push
