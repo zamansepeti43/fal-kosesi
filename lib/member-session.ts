@@ -4,7 +4,7 @@ import { cookies } from "next/headers";
 const COOKIE_NAME = "fal-kosesi-member";
 
 function secret() {
-  return process.env.MEMBER_SESSION_SECRET || process.env.SUPABASE_SERVICE_ROLE_KEY || "development-only-change-me";
+  return process.env.MEMBER_SESSION_SECRET || process.env.NEXTAUTH_SECRET || "development-only-change-me";
 }
 
 function sign(value: string) {
@@ -22,7 +22,10 @@ export function decodeMemberSession(value?: string | null) {
   if (!encoded || !signature) return null;
   try {
     const email = Buffer.from(encoded, "base64url").toString("utf8");
-    if (!email || !crypto.timingSafeEqual(Buffer.from(sign(email)), Buffer.from(signature))) return null;
+    const expected = sign(email);
+    if (!email || signature.length !== expected.length || !crypto.timingSafeEqual(Buffer.from(expected), Buffer.from(signature))) {
+      return null;
+    }
     return email;
   } catch {
     return null;
