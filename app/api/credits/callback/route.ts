@@ -24,18 +24,11 @@ export async function POST(request: Request) {
       currency?: string;
       basketId?: string;
       token?: string;
-    }>("/payment/iyzipos/checkoutform/auth/ecom/detail", {
-      locale: "tr",
-      token,
-    });
+    }>("/payment/iyzipos/checkoutform/auth/ecom/detail", { locale: "tr", token });
 
     const orderId = result.basketId;
     if (!orderId || !result.paymentId || result.paymentStatus !== "SUCCESS" || result.fraudStatus !== 1) {
-      if (orderId) {
-        await sql`
-          update public.credit_orders set status = 'failed' where id = ${orderId}
-        `;
-      }
+      if (orderId) await sql`update public.credit_orders set status = 'failed' where id = ${orderId}`;
       return NextResponse.redirect(`${siteUrl}/kredi?payment=failed`, 303);
     }
 
@@ -47,12 +40,7 @@ export async function POST(request: Request) {
     `;
     const order = orderRows[0];
 
-    if (
-      !order ||
-      order.iyzico_token !== token ||
-      Number(order.price_try) !== Number(result.paidPrice) ||
-      result.currency !== "TRY"
-    ) {
+    if (!order || order.iyzico_token !== token || Number(order.price_try) !== Number(result.paidPrice) || result.currency !== "TRY") {
       return NextResponse.redirect(`${siteUrl}/kredi?payment=failed`, 303);
     }
 
@@ -70,11 +58,13 @@ export async function POST(request: Request) {
 
     await sql`
       insert into public.notifications (email, title, body, type)
-      values (
-        ${order.email},
-        'Kredi yüklemesi tamamlandı',
-        ${`${Number(order.credits)} kredi hesabına eklendi. Yeni bakiyen ${balance} kredi.`},
-        'purchase'
+      select ${order.email}, 'Kredi yüklemesi tamamlandı', ${`${Number(order.credits)} kredi hesabına eklendi. Yeni bakiyen ${balance} kredi.`}, 'purchase'
+      where not exists (
+        select 1 from public.notifications
+        where email = ${order.email}
+          and type = 'purchase'
+          and body like ${`${Number(order.credits)} kredi hesabına eklendi.%`}
+          and created_at > now() - interval '10 minutes'
       )
     `;
 
