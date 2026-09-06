@@ -1,5 +1,4 @@
-import { mkdir, access, stat, writeFile } from "node:fs/promises";
-import { constants } from "node:fs";
+import { mkdir, stat, writeFile } from "node:fs/promises";
 import path from "node:path";
 
 const root = process.cwd();
@@ -21,27 +20,47 @@ const assets = [
   { file: "numerology-number.jpg", url: "https://images.pexels.com/photos/15271787/pexels-photo-15271787.jpeg?cs=srgb&dl=pexels-enginakyurt-15271787.jpg&fm=jpg" },
 ];
 
+// Modern, photographic Frideborg Major Arcana deck.
+// Tarot Spreader documents these images as part of the Frideborg deck,
+// which was created from public-domain source imagery and is free for commercial use.
 const majorArcana = [
-  ["00", "fool", "Fool"], ["01", "magician", "Magician"], ["02", "high-priestess", "High_Priestess"], ["03", "empress", "Empress"],
-  ["04", "emperor", "Emperor"], ["05", "hierophant", "Hierophant"], ["06", "lovers", "Lovers"], ["07", "chariot", "Chariot"],
-  ["08", "strength", "Strength"], ["09", "hermit", "Hermit"], ["10", "wheel-of-fortune", "Wheel_of_Fortune"], ["11", "justice", "Justice"],
-  ["12", "hanged-man", "Hanged_Man"], ["13", "death", "Death"], ["14", "temperance", "Temperance"], ["15", "devil", "Devil"],
-  ["16", "tower", "Tower"], ["17", "star", "Star"], ["18", "moon", "Moon"], ["19", "sun", "Sun"], ["20", "judgement", "Judgement"], ["21", "world", "World"],
+  ["00", "fool", "the-fool"],
+  ["01", "magician", "the-magician"],
+  ["02", "high-priestess", "the-high-priestess"],
+  ["03", "empress", "the-empress"],
+  ["04", "emperor", "the-emperor"],
+  ["05", "hierophant", "the-hierophant"],
+  ["06", "lovers", "the-lovers"],
+  ["07", "chariot", "the-chariot"],
+  ["08", "strength", "strength"],
+  ["09", "hermit", "the-hermit"],
+  ["10", "wheel-of-fortune", "the-wheel-of-fortune"],
+  ["11", "justice", "justice"],
+  ["12", "hanged-man", "the-hanged-man"],
+  ["13", "death", "death"],
+  ["14", "temperance", "temperance"],
+  ["15", "devil", "the-devil"],
+  ["16", "tower", "the-tower"],
+  ["17", "star", "the-star"],
+  ["18", "the-moon", "the-moon"],
+  ["19", "sun", "the-sun"],
+  ["20", "judgement", "judgement"],
+  ["21", "world", "the-world"],
 ];
 
-for (const [number, slug, sourceName] of majorArcana) {
+for (const [number, slug, sourceSlug] of majorArcana) {
   assets.push({
     file: path.join("tarot", `${number}-${slug}.jpg`),
-    // Wikimedia's current RWS scans are roughly 1.1k × 1.9k and materially sharper than the old 300–750px scans.
-    url: `https://commons.wikimedia.org/wiki/Special:Redirect/file/RWS_Tarot_${number}_${sourceName}.jpg?width=1600`,
+    url: `https://www.tarotspreader.info/img/tarot/decks/the-frideborg/${sourceSlug}.png`,
   });
 }
 
 async function isFreshEnough(file, asset) {
   try {
     const info = await stat(file);
-    // Force-refresh old/small tarot scans. The current Commons originals are generally 700KB–1.2MB.
-    if (asset.file.startsWith("tarot/") && info.size < 700_000) return false;
+    // Frideborg source images are PNGs converted/served into the existing JPG paths.
+    // Refresh very small files so stale RWS scans cannot survive the migration.
+    if (asset.file.startsWith("tarot/") && info.size < 80_000) return false;
     return true;
   } catch {
     return false;
