@@ -39,62 +39,24 @@ jobs:
             "https://angelorum.co/wp-content/uploads/2014/03/Frideborg-Tarot.zip" \
             -o /tmp/frideborg.zip
           unzip -q -o /tmp/frideborg.zip -d /tmp/frideborg
-          echo "--- Frideborg archive files ---"
-          find /tmp/frideborg -type f | sort | head -200
-          echo "--- End archive files ---"
-          node <<'NODE'
-          const fs = require('node:fs');
-          const path = require('node:path');
-          const sourceRoot = '/tmp/frideborg';
-          const outputRoot = 'public/fortune/tarot-source';
-          const cards = [
-            ['00','fool','The Fool'],['01','magician','The Magician'],['02','high-priestess','The High Priestess'],['03','empress','The Empress'],
-            ['04','emperor','The Emperor'],['05','hierophant','The Hierophant'],['06','lovers','The Lovers'],['07','chariot','The Chariot'],
-            ['08','strength','Strength'],['09','hermit','The Hermit'],['10','wheel-of-fortune','The Wheel of Fortune'],['11','justice','Justice'],
-            ['12','hanged-man','The Hanged Man'],['13','death','Death'],['14','temperance','Temperance'],['15','devil','The Devil'],
-            ['16','tower','The Tower'],['17','star','The Star'],['18','moon','The Moon'],['19','sun','The Sun'],['20','judgement','Judgement'],['21','world','The World'],
-          ];
-          const normalize = (value) => value.toLowerCase()
-            .replace(/\.[a-z0-9]+$/i, '')
-            .replace(/^\s*\d+\s*[-_.:]?\s*/, '')
-            .replace(/\b(tarot|card|major|arcana)\b/g, '')
-            .replace(/[^a-z]+/g, ' ')
-            .trim()
-            .replace(/^the\s+/, '');
-          const files = [];
-          const walk = (dir) => {
-            for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
-              const full = path.join(dir, entry.name);
-              if (entry.isDirectory()) walk(full);
-              else if (/\.(png|jpe?g|webp)$/i.test(entry.name)) files.push(full);
-            }
-          };
-          walk(sourceRoot);
-          const index = new Map(files.map((file) => [normalize(path.basename(file)), file]));
-          for (const [number, slug, title] of cards) {
-            const key = normalize(title);
-            const source = index.get(key);
-            if (!source) {
-              const fallback = files.find((file) => normalize(path.basename(file)).includes(key));
-              if (!fallback) throw new Error(`Frideborg card not found: ${title}`);
-              fs.copyFileSync(fallback, path.join(outputRoot, `${number}-${slug}.png`));
-            } else {
-              fs.copyFileSync(source, path.join(outputRoot, `${number}-${slug}.png`));
-            }
-          }
-          console.log(`Mapped ${cards.length} Frideborg Major Arcana cards.`);
-          NODE
+          for number in $(seq -w 0 21); do
+            cp "/tmp/frideborg/Frideborg Tarot/${number}.jpg" "public/fortune/tarot-source/${number}.jpg"
+          done
 
-      - name: Convert Frideborg tarot artwork to JPG
+      - name: Convert Frideborg tarot artwork to app JPGs
         shell: bash
         run: |
           mkdir -p public/fortune/tarot
-          for file in public/fortune/tarot-source/*.png; do
-            base=$(basename "$file" .png)
+          names=(fool magician high-priestess empress emperor hierophant lovers chariot strength hermit wheel-of-fortune justice hanged-man death temperance devil tower star moon sun judgement world)
+          for index in $(seq 0 21); do
+            number=$(printf "%02d" "$index")
+            name="${names[$index]}"
+            source="public/fortune/tarot-source/${number}.jpg"
+            target="public/fortune/tarot/${number}-${name}.jpg"
             if command -v magick >/dev/null 2>&1; then
-              magick "$file" -background white -alpha remove -alpha off -quality 92 "public/fortune/tarot/${base}.jpg"
+              magick "$source" -quality 92 "$target"
             else
-              convert "$file" -background white -alpha remove -alpha off -quality 92 "public/fortune/tarot/${base}.jpg"
+              convert "$source" -quality 92 "$target"
             fi
           done
 
@@ -173,7 +135,7 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add public/fortune/*.jpg public/fortune/tarot/*.jpg public/fortune/tarot-source/*.png app/page.tsx app/fal/tarot/tarot-client.tsx
+          git add public/fortune/*.jpg public/fortune/tarot/*.jpg public/fortune/tarot-source/*.jpg app/page.tsx app/fal/tarot/tarot-client.tsx
           if git diff --cached --quiet; then
             echo "No new visual asset changes."
             exit 0
