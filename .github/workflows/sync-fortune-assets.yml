@@ -42,6 +42,47 @@ jobs:
             fi
           done
 
+      - name: Apply premium fortune-reader card face
+        run: |
+          node <<'NODE'
+          const fs = require('node:fs');
+          const file = 'app/fal/tarot/tarot-client.tsx';
+          let source = fs.readFileSync(file, 'utf8');
+          const oldCardFront = `function CardFront({ card }: { card: TarotCard }) {
+            return <img src={getTarotImage(card)} alt={\`${'${card.name}'} tarot kartı\`} className="h-full w-full object-cover" draggable={false} />;
+          }`;
+          const newCardFront = `function CardFront({ card }: { card: TarotCard }) {
+            const file = imageByCardId[String(card.id)] ?? "00-fool";
+            const number = file.slice(0, 2);
+            const summary = card.meaning.split(".")[0].trim();
+            return (
+              <div className="relative h-full w-full overflow-hidden rounded-[18px] bg-[#efe8d8] text-[#33291f] shadow-inner" draggable={false}>
+                <div className="absolute inset-[6px] rounded-[14px] border border-[#6d563d]/45" />
+                <div className="relative z-10 flex h-full flex-col p-2.5 sm:p-3">
+                  <div className="flex items-center justify-between text-[7px] font-black uppercase tracking-[.18em] text-[#80684c]">
+                    <span>#{number}</span><span>BÜYÜK ARKANA</span>
+                  </div>
+                  <div className="mx-auto mt-2 h-[53%] w-[78%] overflow-hidden rounded-full border-[3px] border-[#c5a86a]/80 bg-[#d8c8a9] shadow-[0_7px_18px_rgba(60,42,20,.22)]">
+                    <img src={getTarotImage(card)} alt="" className="h-full w-full object-cover object-center" draggable={false} />
+                  </div>
+                  <div className="mt-2 text-center">
+                    <h3 className="font-serif text-[14px] font-black leading-tight text-[#2d241c] sm:text-[16px]">{card.name}</h3>
+                    <p className="mt-0.5 text-[7px] font-bold uppercase tracking-[.12em] text-[#9a7650]">{card.keywords.slice(0, 3).join(" • ")}</p>
+                  </div>
+                  <div className="mt-2 flex min-h-0 flex-1 gap-2 rounded-xl border border-[#8d765a]/20 bg-white/35 p-2">
+                    <img src="/fortune/tarot-spread.jpg" alt="" className="h-10 w-8 shrink-0 rounded-md object-cover" draggable={false} />
+                    <p className="line-clamp-5 text-[8px] font-medium leading-[1.45] text-[#5b4937] sm:text-[9px]">{summary}</p>
+                  </div>
+                  <div className="mt-1.5 text-center text-[6px] font-bold uppercase tracking-[.18em] text-[#9a7650]">Fal Köşesi • sembolik yorum</div>
+                </div>
+              </div>
+            );
+          }`;
+          if (!source.includes(oldCardFront)) throw new Error('CardFront block not found; aborting rewrite.');
+          source = source.replace(oldCardFront, newCardFront);
+          fs.writeFileSync(file, source);
+          NODE
+
       - name: Wire real photos into homepage
         run: |
           node <<'NODE'
@@ -67,10 +108,10 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add public/fortune/*.jpg public/fortune/tarot/*.jpg app/page.tsx
+          git add public/fortune/*.jpg public/fortune/tarot/*.jpg app/page.tsx app/fal/tarot/tarot-client.tsx
           if git diff --cached --quiet; then
             echo "No new visual asset changes."
             exit 0
           fi
-          git commit -m "Use modern Frideborg tarot artwork and premium fortune photos [skip ci]"
+          git commit -m "Use modern Frideborg tarot artwork and premium fortune card faces [skip ci]"
           git push origin main
