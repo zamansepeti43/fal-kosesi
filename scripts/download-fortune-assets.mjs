@@ -3,7 +3,7 @@ import path from "node:path";
 
 const root = process.cwd();
 const outputDir = path.join(root, "public", "fortune");
-const tarotDir = path.join(outputDir, "tarot");
+const tarotSourceDir = path.join(outputDir, "tarot-source");
 
 const assets = [
   { file: "coffee-reading.jpg", url: "https://images.pexels.com/photos/37823298/pexels-photo-37823298.jpeg?cs=srgb&dl=pexels-idilcelikler-37823298.jpg&fm=jpg" },
@@ -21,36 +21,18 @@ const assets = [
 ];
 
 // Modern, photographic Frideborg Major Arcana deck.
-// Tarot Spreader documents these images as part of the Frideborg deck,
-// which was created from public-domain source imagery and is free for commercial use.
+// Tarot Spreader documents the deck as made from public-domain source imagery and free for commercial use.
 const majorArcana = [
-  ["00", "fool", "the-fool"],
-  ["01", "magician", "the-magician"],
-  ["02", "high-priestess", "the-high-priestess"],
-  ["03", "empress", "the-empress"],
-  ["04", "emperor", "the-emperor"],
-  ["05", "hierophant", "the-hierophant"],
-  ["06", "lovers", "the-lovers"],
-  ["07", "chariot", "the-chariot"],
-  ["08", "strength", "strength"],
-  ["09", "hermit", "the-hermit"],
-  ["10", "wheel-of-fortune", "the-wheel-of-fortune"],
-  ["11", "justice", "justice"],
-  ["12", "hanged-man", "the-hanged-man"],
-  ["13", "death", "death"],
-  ["14", "temperance", "temperance"],
-  ["15", "devil", "the-devil"],
-  ["16", "tower", "the-tower"],
-  ["17", "star", "the-star"],
-  ["18", "the-moon", "the-moon"],
-  ["19", "sun", "the-sun"],
-  ["20", "judgement", "judgement"],
-  ["21", "world", "the-world"],
+  ["00", "fool", "the-fool"], ["01", "magician", "the-magician"], ["02", "high-priestess", "the-high-priestess"], ["03", "empress", "the-empress"],
+  ["04", "emperor", "the-emperor"], ["05", "hierophant", "the-hierophant"], ["06", "lovers", "the-lovers"], ["07", "chariot", "the-chariot"],
+  ["08", "strength", "strength"], ["09", "hermit", "the-hermit"], ["10", "wheel-of-fortune", "the-wheel-of-fortune"], ["11", "justice", "justice"],
+  ["12", "hanged-man", "the-hanged-man"], ["13", "death", "death"], ["14", "temperance", "temperance"], ["15", "devil", "the-devil"],
+  ["16", "tower", "the-tower"], ["17", "star", "the-star"], ["18", "moon", "the-moon"], ["19", "sun", "the-sun"], ["20", "judgement", "judgement"], ["21", "world", "the-world"],
 ];
 
 for (const [number, slug, sourceSlug] of majorArcana) {
   assets.push({
-    file: path.join("tarot", `${number}-${slug}.jpg`),
+    file: path.join("tarot-source", `${number}-${slug}.png`),
     url: `https://www.tarotspreader.info/img/tarot/decks/the-frideborg/${sourceSlug}.png`,
   });
 }
@@ -58,16 +40,14 @@ for (const [number, slug, sourceSlug] of majorArcana) {
 async function isFreshEnough(file, asset) {
   try {
     const info = await stat(file);
-    // Frideborg source images are PNGs converted/served into the existing JPG paths.
-    // Refresh very small files so stale RWS scans cannot survive the migration.
-    if (asset.file.startsWith("tarot/") && info.size < 80_000) return false;
+    if (asset.file.startsWith("tarot-source/") && info.size < 20_000) return false;
     return true;
   } catch {
     return false;
   }
 }
 
-await mkdir(tarotDir, { recursive: true });
+await mkdir(tarotSourceDir, { recursive: true });
 
 for (const asset of assets) {
   const target = path.join(outputDir, asset.file);
@@ -79,10 +59,7 @@ for (const asset of assets) {
     redirect: "follow",
   });
 
-  if (!response.ok) {
-    throw new Error(`Failed to download ${asset.url}: HTTP ${response.status}`);
-  }
-
+  if (!response.ok) throw new Error(`Failed to download ${asset.url}: HTTP ${response.status}`);
   const buffer = Buffer.from(await response.arrayBuffer());
   await writeFile(target, buffer);
 }
