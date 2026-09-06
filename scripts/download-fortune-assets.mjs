@@ -3,7 +3,6 @@ import path from "node:path";
 
 const root = process.cwd();
 const outputDir = path.join(root, "public", "fortune");
-const tarotSourceDir = path.join(outputDir, "tarot-source");
 
 const assets = [
   { file: "coffee-reading.jpg", url: "https://images.pexels.com/photos/37823298/pexels-photo-37823298.jpeg?cs=srgb&dl=pexels-idilcelikler-37823298.jpg&fm=jpg" },
@@ -20,44 +19,24 @@ const assets = [
   { file: "numerology-number.jpg", url: "https://images.pexels.com/photos/15271787/pexels-photo-15271787.jpeg?cs=srgb&dl=pexels-enginakyurt-15271787.jpg&fm=jpg" },
 ];
 
-const majorArcana = [
-  ["00", "fool", "the-fool"], ["01", "magician", "the-magician"], ["02", "high-priestess", "the-high-priestess"], ["03", "empress", "the-empress"],
-  ["04", "emperor", "the-emperor"], ["05", "hierophant", "the-hierophant"], ["06", "lovers", "the-lovers"], ["07", "chariot", "the-chariot"],
-  ["08", "strength", "strength"], ["09", "hermit", "the-hermit"], ["10", "wheel-of-fortune", "the-wheel-of-fortune"], ["11", "justice", "justice"],
-  ["12", "hanged-man", "the-hanged-man"], ["13", "death", "death"], ["14", "temperance", "temperance"], ["15", "devil", "the-devil"],
-  ["16", "tower", "the-tower"], ["17", "star", "the-star"], ["18", "moon", "the-moon"], ["19", "sun", "the-sun"], ["20", "judgement", "judgement"], ["21", "world", "the-world"],
-];
-
-for (const [number, slug, sourceSlug] of majorArcana) {
-  assets.push({
-    file: path.join("tarot-source", `${number}-${slug}.png`),
-    url: `https://www.tarotspreader.info/img/tarot/decks/the-frideborg/${sourceSlug}.png`,
-  });
-}
-
-async function isFreshEnough(file, asset) {
+async function isFreshEnough(file) {
   try {
     const info = await stat(file);
-    if (asset.file.startsWith("tarot-source/") && info.size < 20_000) return false;
-    return true;
+    return info.size > 20_000;
   } catch {
     return false;
   }
 }
 
-await mkdir(tarotSourceDir, { recursive: true });
+await mkdir(outputDir, { recursive: true });
 
 for (const asset of assets) {
   const target = path.join(outputDir, asset.file);
-  if (await isFreshEnough(target, asset)) continue;
+  if (await isFreshEnough(target)) continue;
 
   console.log(`[fortune-assets] downloading ${asset.file}`);
   const response = await fetch(asset.url, {
-    headers: {
-      "User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/140 Safari/537.36",
-      "Accept": "image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8",
-      "Referer": "https://www.tarotspreader.info/tarot/decks/the-frideborg/",
-    },
+    headers: { "User-Agent": "Fal-Kosesi/1.0 asset downloader" },
     redirect: "follow",
   });
 
@@ -66,4 +45,4 @@ for (const asset of assets) {
   await writeFile(target, buffer);
 }
 
-console.log(`[fortune-assets] ready: ${assets.length} local visual assets`);
+console.log(`[fortune-assets] ready: ${assets.length} visual assets; tarot deck is handled by the workflow archive step`);
