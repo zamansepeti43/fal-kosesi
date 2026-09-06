@@ -90,13 +90,9 @@ declare
   next_credits integer;
 begin
   if p_amount <= 0 then raise exception 'Invalid credit amount'; end if;
-
   perform pg_advisory_xact_lock(hashtext(lower(trim(p_email))));
 
-  if exists (
-    select 1 from public.credit_transactions
-    where type = 'purchase' and reference_id = p_payment_id
-  ) then
+  if exists (select 1 from public.credit_transactions where type = 'purchase' and reference_id = p_payment_id) then
     select credits into current_credits from public.profiles where email = lower(trim(p_email));
     return coalesce(current_credits, 0);
   end if;
@@ -105,29 +101,73 @@ begin
   values (uuid_generate_v4(), lower(trim(p_email)), 50, 'Normal Üye', 'Üye', to_char(now(), 'DD Mon YYYY'))
   on conflict (email) do nothing;
 
-  select credits into current_credits
-  from public.profiles
-  where email = lower(trim(p_email))
-  for update;
-
+  select credits into current_credits from public.profiles where email = lower(trim(p_email)) for update;
   next_credits := coalesce(current_credits, 0) + p_amount;
 
-  update public.profiles
-  set credits = next_credits, updated_at = now()
-  where email = lower(trim(p_email));
-
+  update public.profiles set credits = next_credits, updated_at = now() where email = lower(trim(p_email));
   insert into public.credit_transactions (email, amount, balance_after, type, reference_id, description)
   values (lower(trim(p_email)), p_amount, next_credits, 'purchase', p_payment_id, p_description);
+  update public.credit_orders set status = 'paid', iyzico_payment_id = p_payment_id, paid_at = now() where id = p_order_id;
+  return next_credits;
+end;
+$$;
 
-  update public.credit_orders
-  set status = 'paid', iyzico_payment_id = p_payment_id, paid_at = now()
-  where id = p_order_id;
+create or replace function public.consume_credits(p_email text, p_amount integer, p_reference_id text, p_description text)
+returns integer
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  current_credits integer;
+  next_credits integer;
+begin
+  if p_amount <= 0 then raise exception 'Invalid credit amount'; end if;
+  perform pg_advisory_xact_lock(hashtext(lower(trim(p_email))));
+  if exists (select 1 from public.credit_transactions where type = 'reading' and reference_id = p_reference_id) then
+    select credits into current_credits from public.profiles where email = lower(trim(p_email));
+    return coalesce(current_credits, 0);
+  end if;
+  select credits into current_credits from public.profiles where email = lower(trim(p_email)) for update;
+  if coalesce(current_credits, 0) < p_amount then raise exception 'Yetersiz kredi'; end if;
+  next_credits := current_credits - p_amount;
+  update public.profiles set credits = next_credits, readings = coalesce(readings, 0) + 1, updated_at = now() where email = lower(trim(p_email));
+  insert into public.credit_transactions (email, amount, balance_after, type, reference_id, description)
+  values (lower(trim(p_email)), -p_amount, next_credits, 'reading', p_reference_id, p_description);
+  return next_credits;
+end;
+$$;
 
+create or replace function public.refund_credits(p_email text, p_amount integer, p_reference_id text, p_description text)
+returns integer
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  current_credits integer;
+  next_credits integer;
+begin
+  if p_amount <= 0 then raise exception 'Invalid credit amount'; end if;
+  perform pg_advisory_xact_lock(hashtext(lower(trim(p_email))));
+  if exists (select 1 from public.credit_transactions where type = 'refund' and reference_id = p_reference_id) then
+    select credits into current_credits from public.profiles where email = lower(trim(p_email));
+    return coalesce(current_credits, 0);
+  end if;
+  select credits into current_credits from public.profiles where email = lower(trim(p_email)) for update;
+  next_credits := coalesce(current_credits, 0) + p_amount;
+  update public.profiles set credits = next_credits, readings = greatest(0, coalesce(readings, 0) - 1), updated_at = now() where email = lower(trim(p_email));
+  insert into public.credit_transactions (email, amount, balance_after, type, reference_id, description)
+  values (lower(trim(p_email)), p_amount, next_credits, 'refund', p_reference_id, p_description);
   return next_credits;
 end;
 $$;
 
 revoke all on function public.ensure_credit_profile(text, text, text) from public, anon, authenticated;
 revoke all on function public.grant_credit_purchase(text, integer, text, uuid, text) from public, anon, authenticated;
+revoke all on function public.consume_credits(text, integer, text, text) from public, anon, authenticated;
+revoke all on function public.refund_credits(text, integer, text, text) from public, anon, authenticated;
 grant execute on function public.ensure_credit_profile(text, text, text) to service_role;
 grant execute on function public.grant_credit_purchase(text, integer, text, uuid, text) to service_role;
+grant execute on function public.consume_credits(text, integer, text, text) to service_role;
+grant execute on function public.refund_credits(text, integer, text, text) to service_role;
