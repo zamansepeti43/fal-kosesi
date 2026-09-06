@@ -2,7 +2,7 @@ import crypto from "node:crypto";
 import { NextResponse } from "next/server";
 import { generateFalResponse } from "@/lib/ai/provider";
 import { getMemberEmail } from "@/lib/member-session";
-import { supabaseAdmin } from "@/lib/supabase/admin";
+import { requireDb } from "@/lib/neon/db";
 import { READING_COSTS } from "@/lib/credits";
 
 export const runtime = "nodejs";
@@ -15,21 +15,29 @@ export async function POST(request: Request) {
   try {
     const body = await request.json();
     email = await getMemberEmail();
-    if (!email || !supabaseAdmin) return NextResponse.json({ error: "Kredi hesabına erişilemedi." }, { status: 401 });
+    if (!email) return NextResponse.json({ error: "Kredi hesabına erişilemedi." }, { status: 401 });
 
+    const sql = requireDb();
     const kind = body.kind ?? "coffee";
     chargeAmount = READING_COSTS[kind] ?? READING_COSTS.coffee;
     chargeReference = `reading-${crypto.randomUUID()}`;
 
-    const { error: chargeError } = await supabaseAdmin.rpc("consume_credits", {
-      p_email: email,
-      p_amount: chargeAmount,
-      p_reference_id: chargeReference,
-      p_description: `${kind} falı`,
-    });
-    if (chargeError) {
-      const insufficient = /yetersiz kredi/i.test(chargeError.message);
-      return NextResponse.json({ error: insufficient ? "Yeterli kredin yok." : "Kredi kullanılamadı." }, { status: insufficient ? 402 : 500 });
+    try {
+      await sql`
+        select public.consume_credits(
+          ${email},
+          ${chargeAmount},
+          ${chargeReference},
+          ${`${kind} falı`}
+        ) as credits
+      `;
+    } catch (chargeError) {
+      const message = chargeError instanceof Error ? chargeError.message : "Kredi kullanılamadı.";
+      const insufficient = /yetersiz kredi/i.test(message);
+      return NextResponse.json(
+        { error: insufficient ? "Yeterli kredin yok." : "Kredi kullanılamadı." },
+        { status: insufficient ? 402 : 500 },
+      );
     }
 
     try {
@@ -41,12 +49,14 @@ export async function POST(request: Request) {
       });
       return NextResponse.json(result);
     } catch (generationError) {
-      await supabaseAdmin.rpc("refund_credits", {
-        p_email: email,
-        p_amount: chargeAmount,
-        p_reference_id: `refund-${chargeReference}`,
-        p_description: `${kind} falı başarısız olduğu için kredi iadesi`,
-      });
+      await sql`
+        select public.refund_credits(
+          ${email},
+          ${chargeAmount},
+          ${`refund-${chargeReference}`},
+          ${`${kind} falı başarısız olduğu için kredi iadesi`}
+        ) as credits
+      `;
       throw generationError;
     }
   } catch (error) {
