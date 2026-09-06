@@ -1,6 +1,15 @@
 import OpenAI from "openai";
 
-export type FalKind = "coffee" | "love" | "money" | "career" | "future" | "general";
+export type FalKind = "coffee" | "love" | "money" | "career" | "future" | "daily" | "dream" | "astrology" | "numerology" | "general";
+
+export type UserProfile = {
+  name?: string;
+  birthDate?: string;
+  zodiac?: string;
+  relationshipStatus?: string;
+  workStatus?: string;
+  interests?: string[];
+};
 
 export type VisionInput = {
   imageUrls: string[];
@@ -20,31 +29,49 @@ export type FalRequest = {
   focus?: string;
   question?: string;
   images?: string[];
+  profile?: UserProfile;
 };
 
 export interface FortuneProvider {
   analyzeCoffee(input: VisionInput): Promise<ReadingResult>;
 }
 
+function profileText(profile?: UserProfile) {
+  if (!profile) return "Kullanıcı profili paylaşılmadı.";
+  const interests = profile.interests?.length ? profile.interests.join(", ") : "belirtilmedi";
+  return [
+    `İsim: ${profile.name || "belirtilmedi"}`,
+    `Doğum tarihi: ${profile.birthDate || "belirtilmedi"}`,
+    `Burç: ${profile.zodiac || "belirtilmedi"}`,
+    `İlişki durumu: ${profile.relationshipStatus || "belirtilmedi"}`,
+    `İş durumu: ${profile.workStatus || "belirtilmedi"}`,
+    `İlgi/odak alanları: ${interests}`,
+  ].join("\n");
+}
+
 function makeFallbackReading(input: FalRequest): ReadingResult {
+  const name = input.profile?.name?.trim() || "sen";
   const focusLabel = input.focus ?? "genel";
-  const question = input.question?.trim() || "Bu fal için net bir soru yazılmadı.";
+  const question = input.question?.trim();
+  const questionLine = question ? ` Özellikle “${question}” sorunun çevresinde bir netleşme ihtiyacı öne çıkıyor.` : "";
 
   return {
-    summary: `Bu fal yorumu, ${focusLabel} odaklı olarak sizin içsel dinamiklerinizi ve yakın dönem fırsatlarını yansıtıyor. ${question} sorusu için ruhsal ve pratik eğilimler birlikte okunuyor.`,
+    summary: `${name}, bu okuma ${focusLabel} alanındaki mevcut enerjine ve paylaştığın bilgilere göre hazırlanmış kişisel bir yorumdur.${questionLine} Önümüzdeki dönemde seni aynı anda hem heyecanlandıran hem de karar vermeye zorlayan iki ayrı gelişme belirginleşebilir. Burada acele etmekten çok, hangi seçeneğin sana uzun vadede huzur verdiğine bakman önemli.`,
     symbols: [
-      { name: "Fincan", zone: "Merkez", meaning: "Güçlü içsel farkındalık ve kalıcı bir dönüm noktası." },
-      { name: "Kuş", zone: "Sağ taraf", meaning: "Haber, destek ve olumlu bir gelişme yaklaşıyor." },
-      { name: "Kapı", zone: "Sol taraf", meaning: "Yeni fırsatların kapısı açılıyor; cesaret gerekli." },
-      { name: "Yol", zone: "Alt", meaning: "Yolculukta sabır ve doğru adımın zamanlaması önemli." },
+      { name: "Kuş", zone: "Üst kenar", meaning: `${name}, beklediğin bir haberin veya konuşmanın hareketlenmesine işaret eden bir sembol. Mesajın içeriğinden çok, sende yaratacağı netleşme önemli.` },
+      { name: "Anahtar", zone: "Orta bölüm", meaning: "Kapanmış sandığın bir konuyu yeniden açabilecek çözüm veya fırsat. Doğru kapıyı seçmek için sezginle mantığını birlikte kullan." },
+      { name: "Yol", zone: "Dipten kenara", meaning: "Bir kararın seni yeni bir rotaya taşıyacağını gösteren hareketli enerji. Kısa vadeli konfordan çok uzun vadeli hedefi düşün." },
+      { name: "Kalp", zone: "Sol bölüm", meaning: "Duygusal olarak önem verdiğin bir bağın hâlâ kararlarını etkilediğini anlatıyor. Açık iletişim burada belirleyici." },
+      { name: "Yıldız", zone: "Üst bölüm", meaning: "Umut, görünürlük ve yeniden motive olma. Son dönemde ertelediğin bir isteği tekrar gündeme alabilirsin." },
+      { name: "Halka", zone: "Dip", meaning: "Bir döngünün tamamlanması ve yerine daha sağlam bir düzen kurulması. Eski bir alışkanlık veya ilişki biçimi değişebilir." },
     ],
     sections: {
-      love: "İlişkiniz daha açık ve samimi bir iletişim dili kurma fırsatı yakalıyor. Duygularınızı paylaşmak, güveni güçlendirir.",
-      career: "İş ve kariyer alanında yeni fırsatlar oluşabilir; özellikle iletişim ve liderlik temelli adımlar öne çıkar.",
-      money: "Mali akışta olumlu bir dönüşüm yaşanabilir. Planlı ve sabırlı hareket etmek daha kazançlı sonuç verir.",
-      future: "Geleceğe dair güven artıyor. Kendi iç sesinizi dinleyin, küçük ama doğru adımlar sizi ileri taşıyacak.",
+      love: `${name}, duygusal tarafta yüzeysel bir hareketten çok güven ve netlik arayışı öne çıkıyor. Hayatında biri varsa söyleyemediğin bir konuyu açıkça konuşmak ilişkinin yönünü değiştirebilir. Bekârsan, seni sadece heyecanlandıran değil yanında kendin gibi hissettiren bir enerjiye dikkat et. Geçmişten gelen bir kişi veya konu yeniden görünür olabilir; karar verirken eski kırgınlıklarla bugünkü gerçekleri birbirinden ayır.`,
+      career: `İş tarafında görünürlüğünün arttığı bir dönemdesin. Üstlendiğin bir sorumluluk, yeni bir teklif ya da senden fikir istenmesi seni daha fazla öne çıkarabilir. ${name}, burada kendini olduğundan küçük göstermemen gerekiyor. Ancak sırf hızlı sonuç almak için her fırsata atlama; şartları, emeğinin karşılığını ve uzun vadeli gelişimini birlikte değerlendir.`,
+      money: `Maddi alanda büyük bir sıçramadan önce düzen kurma mesajı var. Beklenen bir ödeme, ek gelir fırsatı veya masrafları azaltacak bir karar rahatlama sağlayabilir. ${name}, özellikle ani harcamalarda “nasıl olsa yerine gelir” düşüncesinden kaçınman iyi olur. Para konusunda net bir plan yaptığında önündeki seçenekler daha görünür hale gelecek.`,
+      future: `Yakın gelecekte iki aşamalı bir hareketlilik görünüyor: önce haber veya konuşma, ardından somut bir karar. ${name}, bu dönemde başkalarının beklentisine göre değil, kendi önceliklerine göre seçim yaptığında daha rahat ilerleyeceksin. Önündeki değişim bir anda değil, birkaç küçük işaretin birleşmesiyle netleşecek.`,
     },
-    followUpQuestion: "Bu yorumu biraz daha özel hale getirmek için en çok hangi alanı derinleştirmek istersiniz?",
+    followUpQuestion: question ? `“${question}” sorunun içinde seni en çok düşündüren kişi, karar veya tarih hangisi?` : `${name}, bu yorumda hangi konu senin için daha önemli: aşk, para, kariyer yoksa yakın gelecek?`,
   };
 }
 
@@ -56,61 +83,53 @@ function parseReadingFromText(text: string, input: FalRequest): ReadingResult {
   try {
     const cleaned = stripCodeFences(text);
     const parsed = JSON.parse(cleaned) as Partial<ReadingResult>;
-    if (parsed.summary && parsed.sections && parsed.symbols) {
+    if (parsed.summary && parsed.sections && Array.isArray(parsed.symbols)) {
       return {
         summary: parsed.summary,
-        symbols: parsed.symbols.map((item) => ({
+        symbols: parsed.symbols.slice(0, 8).map((item) => ({
           name: item.name ?? "Sembol",
           zone: item.zone ?? "Genel",
-          meaning: item.meaning ?? "Anlam yükleniyor.",
+          meaning: item.meaning ?? "Bu sembolün yorumu hazırlanıyor.",
         })),
         sections: {
-          love: parsed.sections.love ?? "Sevgi alanında olumlu bir zihin açılımı bekleniyor.",
-          career: parsed.sections.career ?? "Kariyer alanında doğru fırsatlar şekilleniyor.",
-          money: parsed.sections.money ?? "Mali akışta düzen ve bilinçli hareketin önemi öne çıkıyor.",
-          future: parsed.sections.future ?? "Gelecek için açıklık ve cesaret önemli bir trend.",
+          love: parsed.sections.love ?? "Duygusal alanda netleşme ve açık iletişim öne çıkıyor.",
+          career: parsed.sections.career ?? "Kariyer alanında görünürlük ve yeni seçenekler öne çıkıyor.",
+          money: parsed.sections.money ?? "Maddi konularda planlı hareket etmek avantaj sağlayabilir.",
+          future: parsed.sections.future ?? "Yakın gelecekte haber ve karar teması belirginleşiyor.",
         },
-        followUpQuestion: parsed.followUpQuestion ?? "Bu yorumu başka bir bakış açısıyla açmak ister misiniz?",
+        followUpQuestion: parsed.followUpQuestion ?? "Bu yorumda hangi alanı daha derin incelemek istersin?",
       };
     }
   } catch {
-    // ignore and use fallback below
+    // Use the deterministic premium fallback when the provider returns invalid JSON.
   }
-
   return makeFallbackReading(input);
 }
 
 export async function generateFalResponse(input: FalRequest): Promise<ReadingResult> {
   const apiKey = process.env.HF_TOKEN || process.env.AI_API_KEY;
-
-  if (!apiKey) {
-    return makeFallbackReading(input);
-  }
+  if (!apiKey) return makeFallbackReading(input);
 
   try {
-    const client = new OpenAI({
-      apiKey,
-      baseURL: "https://router.huggingface.co/v1",
-    });
+    const client = new OpenAI({ apiKey, baseURL: "https://router.huggingface.co/v1" });
 
-    const systemPrompt = `Sen bir mistik fal yorumlayıcısısın. Türkçe cevap ver. Her cevap JSON formatında olmalı. Düzgün bir yapı döndür: summary, symbols (name, zone, meaning), sections {love, career, money, future}, followUpQuestion.`;
+    const systemPrompt = `Sen Fal Köşesi'nin premium dijital fal yorumcususun. Türkçe yaz. Bu içerik eğlence ve kişisel farkındalık amaçlıdır; kesin gelecek vaadi, tıbbi/hukuki/finansal kesinlik veya kaderin değişmez olduğu iddiası kullanma. Kullanıcıya doğrudan adıyla hitap et ve ikinci tekil şahıs kullan: “sen”, “hayatında”, “sana”, “önündeki dönem” gibi ifadeler kullan. Yorum genel bir burç/fal metni gibi değil, verilen profil, soru, odak ve varsa görsel bilgilerine bağlanan kişisel bir okuma gibi hissettirmeli. Tekrarlayan klişelerden kaçın. Her alanı somutlaştır: hangi tema, neden öne çıkıyor, kullanıcı neyi fark etmeli ve hangi davranış daha sağlıklı olabilir. Uzun ama akıcı paragraflar üret; kısa tek cümlelik yorumlar verme. JSON dışında hiçbir şey döndürme. Şu yapıyı eksiksiz kullan: summary (3-5 cümle), symbols (6-8 öğe; her biri name, zone, meaning; meaning en az 2 cümle), sections {love, career, money, future} (her biri 4-6 cümle), followUpQuestion (kişiye özel tek soru).`;
 
-    const userPrompt = `Falcılık türü: ${input.kind}. Odak alanı: ${input.focus ?? "genel"}. Kullanıcı sorusu: ${input.question ?? "Yok"}. Görseller: ${input.images?.length ? `${input.images.length} adet fotoğraf` : "fotoğraf yok"}. Bu bilgileri kullanarak kısa ama anlamlı bir fal yorumu üret. JSON olarak sadece gerekli alanları döndür.`;
+    const userPrompt = `Fal türü: ${input.kind}\nOdak: ${input.focus ?? "genel"}\nKullanıcının sorusu: ${input.question?.trim() || "Belirtilmedi"}\nProfil:\n${profileText(input.profile)}\nGörseller: ${input.images?.length ? `${input.images.length} adet fincan/fal fotoğrafı mevcut; sembol yorumunu görsel bağlama dayandır.` : "Görsel yok."}\n\nBu verilerle premium, kişiye özel ve detaylı bir okuma hazırla. Kullanıcının adı varsa doğal biçimde birkaç kez kullan ama yapay tekrar yapma. Soruyu doğrudan cevaplamaya çalış; cevabı aşk, kariyer, para ve yakın gelecek eksenlerinde aç. Olasılık dili kullan ve kullanıcıya uygulanabilir bir farkındalık/tavsiye bırak.`;
 
     const completion = await client.chat.completions.create({
       model: "openai/gpt-oss-120b:fastest",
-      temperature: 0.8,
-      max_tokens: 600,
+      temperature: 0.82,
+      max_tokens: 1800,
       messages: [
         { role: "system", content: systemPrompt },
         { role: "user", content: userPrompt },
       ],
     });
 
-    const responseText = completion.choices[0]?.message?.content ?? "";
-    return parseReadingFromText(responseText, input);
+    return parseReadingFromText(completion.choices[0]?.message?.content ?? "", input);
   } catch (error) {
-    console.error("AI provider failed, using fallback response:", error);
+    console.error("AI provider failed, using premium fallback response:", error);
     return makeFallbackReading(input);
   }
 }
@@ -118,15 +137,7 @@ export async function generateFalResponse(input: FalRequest): Promise<ReadingRes
 export function getConfiguredProvider() {
   const provider = process.env.AI_PROVIDER || "none";
   if (provider === "none") return null;
-
   return {
-    analyzeCoffee: async (input: VisionInput) => {
-      return generateFalResponse({
-        kind: "coffee",
-        focus: "genel",
-        question: input.question ?? "",
-        images: input.imageUrls,
-      });
-    },
+    analyzeCoffee: async (input: VisionInput) => generateFalResponse({ kind: "coffee", question: input.question, images: input.imageUrls, focus: "genel" }),
   } satisfies FortuneProvider;
 }
