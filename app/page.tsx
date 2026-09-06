@@ -8,8 +8,8 @@ import {
   BriefcaseBusiness,
   ChevronRight,
   Coffee,
-  Crown,
   Coins,
+  Crown,
   Heart,
   History,
   Home as HomeIcon,
@@ -58,8 +58,6 @@ export default function Home() {
   const [name, setName] = useState("Dostum");
   const [menuOpen, setMenuOpen] = useState(false);
   const [credits, setCredits] = useState<number | null>(null);
-  const [credits, setCredits] = useState<number | null>(null);
-  const [credits, setCredits] = useState<number | null>(null);
 
   useEffect(() => {
     const raw = window.localStorage.getItem("fal-kosesi-profile");
@@ -71,26 +69,6 @@ export default function Home() {
     } catch {
       // Keep the neutral fallback greeting if the saved profile is malformed.
     }
-  }, []);
-
-  useEffect(() => {
-    fetch("/api/credits", { cache: "no-store" })
-      .then(async (response) => {
-        if (!response.ok) return;
-        const data = (await response.json()) as { credits?: number };
-        setCredits(Number(data.credits ?? 0));
-      })
-      .catch(() => undefined);
-  }, []);
-
-  useEffect(() => {
-    fetch("/api/credits", { cache: "no-store" })
-      .then(async (response) => {
-        if (!response.ok) return;
-        const data = (await response.json()) as { credits?: number };
-        setCredits(Number(data.credits ?? 0));
-      })
-      .catch(() => undefined);
   }, []);
 
   useEffect(() => {
@@ -141,16 +119,8 @@ export default function Home() {
         <section className="relative mt-2.5 overflow-hidden rounded-[20px] border border-[#a56fff]/25 bg-[#17132b]/95 p-2.5 shadow-[0_18px_50px_rgba(0,0,0,.30)] sm:mt-4 sm:rounded-[24px] sm:p-3">
           <div className="grid grid-cols-[31%_69%] gap-2.5 sm:grid-cols-[25%_1fr] sm:gap-4 md:grid-cols-[210px_1fr_220px] md:items-center">
             <div className="relative h-[135px] overflow-hidden rounded-[16px] bg-[#0d0a18] sm:h-[170px] md:h-[180px]"><Image src="/fortune/coffee-reading.jpg" alt="Kahve falı" fill sizes="220px" className="object-cover object-[70%_65%]" /><div className="absolute inset-0 bg-gradient-to-t from-[#0b0815] via-transparent to-transparent" /><div className="absolute bottom-2 left-2 rounded-full border border-white/10 bg-black/45 px-2 py-0.5 text-[7px] font-semibold text-[#f6d98e] backdrop-blur-md sm:text-[9px]">KAHVE FALI</div></div>
-            <div className="min-w-0 px-0.5 sm:px-1 md:px-2">
-              <div className="flex items-center gap-1.5 text-[#f6d98e]"><Coffee className="h-3.5 w-3.5 sm:h-4 sm:w-4" /><span className="text-[8px] font-bold uppercase tracking-[.18em] sm:text-[10px]">Kahve Falı</span></div>
-              <h2 className="mt-1 font-serif text-[17px] font-bold leading-[1.12] text-white sm:text-2xl md:text-3xl">Fincanını gönder, sembollerini keşfet.</h2>
-              <p className="mt-1 hidden text-xs leading-5 text-[#bdb4c9] sm:block">Fincan ve tabak fotoğrafını yükle. Sana özel, detaylı ve sıcak bir yorum hazırlayalım.</p>
-              <Link href="/fal/upload" className="mt-2 inline-flex items-center justify-center gap-1.5 rounded-full bg-gradient-to-r from-[#f6d88e] via-[#efbd69] to-[#c76e9a] px-4 py-2 text-[10px] font-black text-[#1b1020] shadow-[0_8px_20px_rgba(236,178,107,.20)] sm:mt-3 sm:px-5 sm:py-2.5 sm:text-xs">Falımı Yorumla <ChevronRight className="h-3.5 w-3.5" /></Link>
-            </div>
-            <div className="col-span-2 grid grid-cols-2 gap-1.5 md:col-span-1 md:grid-cols-1 md:gap-2">
-              <Link href="/fal/upload" className="flex min-w-0 items-center gap-2 rounded-xl border border-white/10 bg-white/[.045] p-2 sm:gap-3 sm:rounded-2xl sm:p-3"><span className="grid h-7 w-7 shrink-0 place-items-center rounded-lg bg-[#f3d48b]/10 text-[#f3d48b] sm:h-9 sm:w-9 sm:rounded-xl"><Coffee className="h-3.5 w-3.5 sm:h-4 sm:w-4" /></span><span className="min-w-0"><b className="block truncate text-[9px] sm:text-xs">Fincan Fotoğrafı</b><small className="hidden text-[9px] text-[#aaa1bb] sm:block">Yüklemeye hazır</small></span></Link>
-              <Link href="/fal/upload" className="flex min-w-0 items-center gap-2 rounded-xl border border-white/10 bg-white/[.045] p-2 sm:gap-3 sm:rounded-2xl sm:p-3"><span className="grid h-7 w-7 shrink-0 place-items-center rounded-lg bg-[#a875ff]/10 text-[#bd92ff] sm:h-9 sm:w-9 sm:rounded-xl"><Star className="h-3.5 w-3.5 sm:h-4 sm:w-4" /></span><span className="min-w-0"><b className="block truncate text-[9px] sm:text-xs">Tabak Fotoğrafı</b><small className="hidden text-[9px] text-[#aaa1bb] sm:block">Daha detaylı analiz</small></span></Link>
-            </div>
+            <div className="min-w-0 px-0.5 sm:px-1 md:px-2"><div className="flex items-center gap-1.5 text-[#f6d98e]"><Coffee className="h-3.5 w-3.5 sm:h-4 sm:w-4" /><span className="text-[8px] font-bold uppercase tracking-[.18em] sm:text-[10px]">Kahve Falı</span></div><h2 className="mt-1 font-serif text-[17px] font-bold leading-[1.12] text-white sm:text-2xl md:text-3xl">Fincanını gönder, sembollerini keşfet.</h2><p className="mt-1 hidden text-xs leading-5 text-[#bdb4c9] sm:block">Fincan ve tabak fotoğrafını yükle. Sana özel, detaylı ve sıcak bir yorum hazırlayalım.</p><Link href="/fal/upload" className="mt-2 inline-flex items-center justify-center gap-1.5 rounded-full bg-gradient-to-r from-[#f6d88e] via-[#efbd69] to-[#c76e9a] px-4 py-2 text-[10px] font-black text-[#1b1020] shadow-[0_8px_20px_rgba(236,178,107,.20)] sm:mt-3 sm:px-5 sm:py-2.5 sm:text-xs">Falımı Yorumla <ChevronRight className="h-3.5 w-3.5" /></Link></div>
+            <div className="col-span-2 grid grid-cols-2 gap-1.5 md:col-span-1 md:grid-cols-1 md:gap-2"><Link href="/fal/upload" className="flex min-w-0 items-center gap-2 rounded-xl border border-white/10 bg-white/[.045] p-2 sm:gap-3 sm:rounded-2xl sm:p-3"><span className="grid h-7 w-7 shrink-0 place-items-center rounded-lg bg-[#f3d48b]/10 text-[#f3d48b] sm:h-9 sm:w-9 sm:rounded-xl"><Coffee className="h-3.5 w-3.5 sm:h-4 sm:w-4" /></span><span className="min-w-0"><b className="block truncate text-[9px] sm:text-xs">Fincan Fotoğrafı</b><small className="hidden text-[9px] text-[#aaa1bb] sm:block">Yüklemeye hazır</small></span></Link><Link href="/fal/upload" className="flex min-w-0 items-center gap-2 rounded-xl border border-white/10 bg-white/[.045] p-2 sm:gap-3 sm:rounded-2xl sm:p-3"><span className="grid h-7 w-7 shrink-0 place-items-center rounded-lg bg-[#a875ff]/10 text-[#bd92ff] sm:h-9 sm:w-9 sm:rounded-xl"><Star className="h-3.5 w-3.5 sm:h-4 sm:w-4" /></span><span className="min-w-0"><b className="block truncate text-[9px] sm:text-xs">Tabak Fotoğrafı</b><small className="hidden text-[9px] text-[#aaa1bb] sm:block">Daha detaylı analiz</small></span></Link></div>
           </div>
         </section>
 
@@ -173,7 +143,16 @@ export default function Home() {
 
       <nav className="fixed bottom-0 left-0 right-0 z-50 border-t border-white/[.08] bg-[#090918]/96 px-1 pb-[max(6px,env(safe-area-inset-bottom))] pt-1.5 backdrop-blur-2xl"><div className="mx-auto grid max-w-[720px] grid-cols-5">{bottomItems.map(([label, href, Icon], index) => (<Link key={label} href={href} className={`flex min-h-[54px] flex-col items-center justify-center gap-0.5 rounded-xl ${index === 0 ? "bg-[#f4d18b]/[.10] text-[#f4d68e]" : "text-[#9f97ae]"}`}><Icon className="h-[18px] w-[18px]" /><span className="text-[8px] font-semibold sm:text-[10px]">{label}</span></Link>))}</div></nav>
 
-      {menuOpen && (<div className="fixed inset-0 z-[60] bg-black/65 backdrop-blur-sm" onClick={() => setMenuOpen(false)}><aside className="h-full w-[84%] max-w-[340px] border-r border-white/10 bg-[#0c0b1b] p-4 shadow-[30px_0_90px_rgba(0,0,0,.5)] sm:p-5" onClick={(event) => event.stopPropagation()}><div className="flex items-center justify-between"><div className="font-serif text-xl font-bold text-[#f4d68e] sm:text-2xl">Fal Köşesi</div><button type="button" onClick={() => setMenuOpen(false)} className="grid h-9 w-9 place-items-center rounded-xl bg-white/[.05]"><X className="h-4 w-4" /></button></div><p className="mt-1.5 text-xs text-[#9991a8] sm:text-sm">Merhaba {firstName}, hangi keşfe çıkıyoruz?</p><div className="mt-5 grid gap-1.5 sm:mt-7 sm:gap-2">{drawerItems.map(([label, href, Icon]) => (<Link key={label} href={href} onClick={() => setMenuOpen(false)} className="flex items-center gap-2.5 rounded-xl border border-white/[.06] bg-white/[.03] p-2.5 sm:gap-3 sm:rounded-2xl sm:p-3.5"><span className="grid h-8 w-8 place-items-center rounded-lg bg-[#f1d38b]/10 text-[#f1d38b] sm:h-10 sm:w-10 sm:rounded-xl"><Icon className="h-4 w-4 sm:h-5 sm:w-5" /></span><span className="text-sm font-semibold sm:text-base">{label}</span><ChevronRight className="ml-auto h-3.5 w-3.5 text-[#746d7e] sm:h-4 sm:w-4" /></Link>))}</div><Link href="/fal/premium" onClick={() => setMenuOpen(false)} className="mt-4 flex items-center gap-2.5 rounded-xl border border-[#e9c66d]/35 bg-[#e9c66d]/10 p-3 text-sm text-[#f5d992] sm:mt-6 sm:gap-3 sm:rounded-2xl sm:p-4"><Crown className="h-4 w-4 sm:h-5 sm:w-5" /><span className="font-bold">Premium’u Keşfet</span></Link></aside></div>)}
+      {menuOpen && (
+        <div className="fixed inset-0 z-[60] bg-black/65 backdrop-blur-sm" onClick={() => setMenuOpen(false)}>
+          <aside className="h-full w-[84%] max-w-[340px] border-r border-white/10 bg-[#0c0b1b] p-4 shadow-[30px_0_90px_rgba(0,0,0,.5)] sm:p-5" onClick={(event) => event.stopPropagation()}>
+            <div className="flex items-center justify-between"><div className="font-serif text-xl font-bold text-[#f4d68e] sm:text-2xl">Fal Köşesi</div><button type="button" onClick={() => setMenuOpen(false)} className="grid h-9 w-9 place-items-center rounded-xl bg-white/[.05]"><X className="h-4 w-4" /></button></div>
+            <p className="mt-1.5 text-xs text-[#9991a8] sm:text-sm">Merhaba {firstName}, hangi keşfe çıkıyoruz?</p>
+            <div className="mt-5 grid gap-1.5 sm:mt-7 sm:gap-2">{drawerItems.map(([label, href, Icon]) => (<Link key={label} href={href} onClick={() => setMenuOpen(false)} className="flex items-center gap-2.5 rounded-xl border border-white/[.06] bg-white/[.03] p-2.5 sm:gap-3 sm:rounded-2xl sm:p-3.5"><span className="grid h-8 w-8 place-items-center rounded-lg bg-[#f1d38b]/10 text-[#f1d38b] sm:h-10 sm:w-10 sm:rounded-xl"><Icon className="h-4 w-4 sm:h-5 sm:w-5" /></span><span className="text-sm font-semibold sm:text-base">{label}</span><ChevronRight className="ml-auto h-3.5 w-3.5 text-[#746d7e] sm:h-4 sm:w-4" /></Link>))}</div>
+            <Link href="/fal/premium" onClick={() => setMenuOpen(false)} className="mt-4 flex items-center gap-2.5 rounded-xl border border-[#e9c66d]/35 bg-[#e9c66d]/10 p-3 text-sm text-[#f5d992] sm:mt-6 sm:gap-3 sm:rounded-2xl sm:p-4"><Crown className="h-4 w-4 sm:h-5 sm:w-5" /><span className="font-bold">Premium’u Keşfet</span></Link>
+          </aside>
+        </div>
+      )}
     </main>
   );
 }
