@@ -43,7 +43,7 @@ function shuffleCards(cards: TarotCard[]) {
 }
 
 function getTarotImage(card: TarotCard) {
-  const file = imageByCardId[card.id];
+  const file = imageByCardId[String(card.id)];
   return file ? `/fortune/tarot/${file}.jpg` : "/fortune/tarot-spread.jpg";
 }
 
@@ -111,7 +111,7 @@ export default function TarotClient() {
   const chooseCard = (card: TarotCard) => {
     if (revealing) return;
 
-    setLiftedCardId(card.id);
+    setLiftedCardId(String(card.id));
     setSelectedCard(null);
     setRevealCard(card);
     setRevealed(false);
@@ -130,7 +130,6 @@ export default function TarotClient() {
     setRevealCard(null);
     setRevealed(false);
     setLiftedCardId(null);
-    // Every new reading gets a fresh order so the card positions are never predictable.
     setDeck(shuffleCards(tarotCards.slice(0, 22)));
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
@@ -177,10 +176,10 @@ export default function TarotClient() {
             <div className="mt-4 -mx-4 overflow-x-auto px-4 pb-5 scrollbar-thin scrollbar-track-transparent scrollbar-thumb-white/15 sm:-mx-6 sm:px-6">
               <div className="flex w-max items-end gap-3 pt-7">
                 {deck.map((card, index) => {
-                  const lifted = liftedCardId === card.id;
+                  const lifted = liftedCardId === String(card.id);
                   return (
                     <button
-                      key={card.id}
+                      key={String(card.id)}
                       type="button"
                       onClick={() => chooseCard(card)}
                       aria-label={`${card.name} kartını seç`}
