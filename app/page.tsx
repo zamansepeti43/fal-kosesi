@@ -27,7 +27,7 @@ const discoveries = [
   { title: "Aşk Falı", subtitle: "Kalbindeki sorulara ışık tut.", href: "/fal/ask", image: "/fortune/love-reading.jpg" },
   { title: "Para & Bolluk", subtitle: "Maddi enerjini keşfet.", href: "/fal/para", image: "/fortune/money-abundance.jpg" },
   { title: "Kariyer", subtitle: "İş ve hedeflerin için açılım.", href: "/fal/kariyer", image: "/fortune/career-success.jpg" },
-  { title: "Günlük Fal", subtitle: "Bugünün enerjisini keşfet.", href: "/fal/gunluk", image: "/fortune/daily-moon.jpg" },
+  { title: "Günlük Fal", subtitle: "Bugünün enerjisini keşfet.", href: "/fal/gunluk", image: "/fortune/daily-moon-premium.jpg" },
   { title: "Doğum Haritam", subtitle: "Kendini gökyüzünde tanı.", href: "/fal/burc", image: "/fortune/birth-chart.jpg" },
   { title: "Rüya Yorumu", subtitle: "Rüyalarının sembollerini çöz.", href: "/fal/ruya", image: "/fortune/dream-sleep.jpg" },
   { title: "Numeroloji", subtitle: "Sayıların sana ne söylüyor?", href: "/fal/focus", image: "/fortune/numerology-number.jpg" },
