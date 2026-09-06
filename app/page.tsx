@@ -59,6 +59,7 @@ export default function Home() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [credits, setCredits] = useState<number | null>(null);
   const [credits, setCredits] = useState<number | null>(null);
+  const [credits, setCredits] = useState<number | null>(null);
 
   useEffect(() => {
     const raw = window.localStorage.getItem("fal-kosesi-profile");
@@ -70,6 +71,16 @@ export default function Home() {
     } catch {
       // Keep the neutral fallback greeting if the saved profile is malformed.
     }
+  }, []);
+
+  useEffect(() => {
+    fetch("/api/credits", { cache: "no-store" })
+      .then(async (response) => {
+        if (!response.ok) return;
+        const data = (await response.json()) as { credits?: number };
+        setCredits(Number(data.credits ?? 0));
+      })
+      .catch(() => undefined);
   }, []);
 
   useEffect(() => {
