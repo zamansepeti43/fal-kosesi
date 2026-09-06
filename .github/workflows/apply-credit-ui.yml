@@ -1,0 +1,60 @@
+name: Apply credit UI
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "app/page.tsx"
+      - "app/fal/tarot/tarot-client.tsx"
+      - "app/api/credits/**"
+      - "lib/credits.ts"
+      - ".github/workflows/apply-credit-ui.yml"
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    if: ${{ !contains(github.event.head_commit.message, '[skip ci]') }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Patch credit UI
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          page = Path('app/page.tsx')
+          text = page.read_text()
+          text = text.replace('  Crown,\n  Heart,', '  Crown,\n  Coins,\n  Heart,')
+          text = text.replace('  const [menuOpen, setMenuOpen] = useState(false);', '  const [menuOpen, setMenuOpen] = useState(false);\n  const [credits, setCredits] = useState<number | null>(null);')
+          marker = '  }, []);\n\n  const firstName = name.split(" ")[0] || "Dostum";'
+          replacement = '  }, []);\n\n  useEffect(() => {\n    fetch("/api/credits", { cache: "no-store" })\n      .then(async (response) => {\n        if (!response.ok) return;\n        const data = (await response.json()) as { credits?: number };\n        setCredits(Number(data.credits ?? 0));\n      })\n      .catch(() => undefined);\n  }, []);\n\n  const firstName = name.split(" ")[0] || "Dostum";'
+          text = text.replace(marker, replacement)
+          text = text.replace('          <div className="flex items-center gap-1.5 sm:gap-2">\n            <button type="button"', '          <div className="flex items-center gap-1.5 sm:gap-2">\n            <Link href="/kredi" className="inline-flex items-center gap-1.5 rounded-full border border-amber-300/20 bg-amber-300/10 px-2.5 py-1.5 text-[9px] font-black text-amber-100 sm:px-3 sm:text-[10px]"><Coins className="h-3.5 w-3.5" /> {credits === null ? "—" : credits}</Link>\n            <button type="button"')
+          text = text.replace('>AI ANALİZ</div>', '>KAHVE FALI</div>')
+          text = text.replace('  ["Doğum Haritam", "/fal/burc", Star],\n] as const;', '  ["Doğum Haritam", "/fal/burc", Star],\n  ["Kredi Mağazası", "/kredi", Coins],\n] as const;')
+          page.write_text(text)
+
+          tarot = Path('app/fal/tarot/tarot-client.tsx')
+          text = tarot.read_text()
+          text = text.replace('  const [liftedCardId, setLiftedCardId] = useState<string | null>(null);', '  const [liftedCardId, setLiftedCardId] = useState<string | null>(null);\n  const [creditStatus, setCreditStatus] = useState<"idle" | "checking" | "ok" | "error">("idle");')
+          text = text.replace('  const completed = selectedCards.length >= spread.cards && !revealing;', '  const completed = selectedCards.length >= spread.cards && !revealing && creditStatus === "ok";')
+          text = text.replace('    setLiftedCardId(null);\n    setDeck(shuffleCards', '    setLiftedCardId(null);\n    setCreditStatus("idle");\n    setDeck(shuffleCards')
+          marker = '  const resetReading = (nextSpread: SpreadId = spreadId) => {'
+          effect = '''  useEffect(() => {\n    if (selectedCards.length !== spread.cards || revealing || creditStatus !== "idle") return;\n    setCreditStatus("checking");\n    fetch("/api/credits/spend", {\n      method: "POST",\n      headers: { "Content-Type": "application/json" },\n      body: JSON.stringify({ type: `tarot_${spreadId}` }),\n    })\n      .then(async (response) => {\n        setCreditStatus(response.ok ? "ok" : "error");\n      })\n      .catch(() => setCreditStatus("error"));\n  }, [selectedCards.length, spread.cards, spreadId, revealing, creditStatus]);\n\n'''
+          text = text.replace(marker, effect + marker)
+          text = text.replace('        <section className="overflow-hidden rounded-[30px]', '        {creditStatus === "checking" ? <div className="mb-4 rounded-2xl border border-amber-300/20 bg-amber-300/10 p-4 text-center text-sm text-amber-100">Açılımın kredisi kontrol ediliyor…</div> : null}\n        {creditStatus === "error" ? <div className="mb-4 rounded-2xl border border-rose-300/20 bg-rose-300/10 p-4 text-center text-sm text-rose-100">Bu açılım için yeterli kredin yok. <Link href="/kredi" className="font-black underline">Kredi Al</Link></div> : null}\n\n        <section className="overflow-hidden rounded-[30px]')
+          tarot.write_text(text)
+          PY
+
+          if git diff --quiet; then
+            echo "No UI changes needed."
+            exit 0
+          fi
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add app/page.tsx app/fal/tarot/tarot-client.tsx
+          git commit -m "Apply credit balance and tarot charging [skip ci]"
+          git push
