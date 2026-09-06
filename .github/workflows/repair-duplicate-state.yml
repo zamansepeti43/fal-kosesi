@@ -22,6 +22,8 @@ jobs:
               'app/page.tsx': [
                   ('  const [credits, setCredits] = useState<number | null>(null);\n  const [credits, setCredits] = useState<number | null>(null);',
                    '  const [credits, setCredits] = useState<number | null>(null);'),
+                  ('  useEffect(() => {\n    fetch("/api/credits", { cache: "no-store" })\n      .then(async (response) => {\n        if (!response.ok) return;\n        const data = (await response.json()) as { credits?: number };\n        setCredits(Number(data.credits ?? 0));\n      })\n      .catch(() => undefined);\n  }, []);\n\n  useEffect(() => {\n    fetch("/api/credits", { cache: "no-store" })\n      .then(async (response) => {\n        if (!response.ok) return;\n        const data = (await response.json()) as { credits?: number };\n        setCredits(Number(data.credits ?? 0));\n      })\n      .catch(() => undefined);\n  }, []);',
+                   '  useEffect(() => {\n    fetch("/api/credits", { cache: "no-store" })\n      .then(async (response) => {\n        if (!response.ok) return;\n        const data = (await response.json()) as { credits?: number };\n        setCredits(Number(data.credits ?? 0));\n      })\n      .catch(() => undefined);\n  }, []);'),
               ],
               'app/fal/tarot/tarot-client.tsx': [
                   ('  const [creditStatus, setCreditStatus] = useState<"idle" | "checking" | "ok" | "error">("idle");\n  const [creditStatus, setCreditStatus] = useState<"idle" | "checking" | "ok" | "error">("idle");',
