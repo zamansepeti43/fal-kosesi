@@ -9,6 +9,7 @@ import {
   ChevronRight,
   Coffee,
   Crown,
+  Coins,
   Heart,
   History,
   Home as HomeIcon,
@@ -41,6 +42,7 @@ const drawerItems = [
   ["Kariyer", "/fal/kariyer", BriefcaseBusiness],
   ["Günlük Fal", "/fal/gunluk", Moon],
   ["Doğum Haritam", "/fal/burc", Star],
+  ["Kredi Mağazası", "/kredi", Coins],
 ] as const;
 
 const bottomItems = [
@@ -54,6 +56,7 @@ const bottomItems = [
 export default function Home() {
   const [name, setName] = useState("Dostum");
   const [menuOpen, setMenuOpen] = useState(false);
+  const [credits, setCredits] = useState<number | null>(null);
 
   useEffect(() => {
     const raw = window.localStorage.getItem("fal-kosesi-profile");
@@ -64,6 +67,16 @@ export default function Home() {
     } catch {
       // Keep the neutral fallback greeting if the saved profile is malformed.
     }
+  }, []);
+
+  useEffect(() => {
+    fetch("/api/credits", { cache: "no-store" })
+      .then(async (response) => {
+        if (!response.ok) return;
+        const data = (await response.json()) as { credits?: number };
+        setCredits(Number(data.credits ?? 0));
+      })
+      .catch(() => undefined);
   }, []);
 
   const firstName = name.split(" ")[0] || "Dostum";
@@ -80,6 +93,7 @@ export default function Home() {
             <div className="leading-none"><div className="font-serif text-[16px] font-bold tracking-tight text-[#f6dda2] sm:text-[18px]">Fal Köşesi</div><div className="mt-1 text-[7px] uppercase tracking-[.22em] text-[#aaa1bd] sm:text-[8px]">Kaderini keşfet</div></div>
           </Link>
           <div className="flex items-center gap-1.5 sm:gap-2">
+            <Link href="/kredi" className="inline-flex items-center gap-1.5 rounded-full border border-amber-300/20 bg-amber-300/10 px-2.5 py-1.5 text-[9px] font-black text-amber-100 sm:px-3 sm:text-[10px]"><Coins className="h-3.5 w-3.5" /> {credits === null ? "—" : credits}</Link>
             <button type="button" className="relative grid h-9 w-9 place-items-center rounded-xl border border-white/10 bg-white/[.035] text-[#f5d78e] sm:h-10 sm:w-10" aria-label="Bildirimler"><Bell className="h-[18px] w-[18px]" /><span className="absolute right-2 top-2 h-1.5 w-1.5 rounded-full bg-[#f2b84b] shadow-[0_0_8px_#f2b84b]" /></button>
             <Link href="/profil" className="flex items-center gap-1.5 rounded-full border border-[#f0cf80]/15 bg-white/[.035] py-1 pl-1 pr-2 sm:gap-2 sm:py-1.5 sm:pl-1.5 sm:pr-3"><div className="grid h-7 w-7 place-items-center rounded-full bg-gradient-to-br from-[#f4d998] to-[#93602f] text-[#1a1020] sm:h-8 sm:w-8"><UserRound className="h-3.5 w-3.5 sm:h-4 sm:w-4" /></div><span className="max-w-[58px] truncate text-[10px] font-semibold text-[#eee5d5] sm:max-w-[80px] sm:text-xs">{firstName}</span></Link>
           </div>
@@ -102,7 +116,7 @@ export default function Home() {
 
         <section className="relative mt-2.5 overflow-hidden rounded-[20px] border border-[#a56fff]/25 bg-[#17132b]/95 p-2.5 shadow-[0_18px_50px_rgba(0,0,0,.30)] sm:mt-4 sm:rounded-[24px] sm:p-3">
           <div className="grid grid-cols-[31%_69%] gap-2.5 sm:grid-cols-[25%_1fr] sm:gap-4 md:grid-cols-[210px_1fr_220px] md:items-center">
-            <div className="relative h-[135px] overflow-hidden rounded-[16px] bg-[#0d0a18] sm:h-[170px] md:h-[180px]"><Image src="/fortune/coffee-reading.jpg" alt="Kahve falı" fill sizes="220px" className="object-cover object-[70%_65%]" /><div className="absolute inset-0 bg-gradient-to-t from-[#0b0815] via-transparent to-transparent" /><div className="absolute bottom-2 left-2 rounded-full border border-white/10 bg-black/45 px-2 py-0.5 text-[7px] font-semibold text-[#f6d98e] backdrop-blur-md sm:text-[9px]">AI ANALİZ</div></div>
+            <div className="relative h-[135px] overflow-hidden rounded-[16px] bg-[#0d0a18] sm:h-[170px] md:h-[180px]"><Image src="/fortune/coffee-reading.jpg" alt="Kahve falı" fill sizes="220px" className="object-cover object-[70%_65%]" /><div className="absolute inset-0 bg-gradient-to-t from-[#0b0815] via-transparent to-transparent" /><div className="absolute bottom-2 left-2 rounded-full border border-white/10 bg-black/45 px-2 py-0.5 text-[7px] font-semibold text-[#f6d98e] backdrop-blur-md sm:text-[9px]">KAHVE FALI</div></div>
             <div className="min-w-0 px-0.5 sm:px-1 md:px-2">
               <div className="flex items-center gap-1.5 text-[#f6d98e]"><Coffee className="h-3.5 w-3.5 sm:h-4 sm:w-4" /><span className="text-[8px] font-bold uppercase tracking-[.18em] sm:text-[10px]">Kahve Falı</span></div>
               <h2 className="mt-1 font-serif text-[17px] font-bold leading-[1.12] text-white sm:text-2xl md:text-3xl">Fincanını gönder, sembollerini keşfet.</h2>
