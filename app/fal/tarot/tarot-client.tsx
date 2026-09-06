@@ -150,6 +150,7 @@ export default function TarotClient() {
   const [liftedCardId, setLiftedCardId] = useState<string | null>(null);
   const [creditStatus, setCreditStatus] = useState<"idle" | "checking" | "ok" | "error">("idle");
   const [creditStatus, setCreditStatus] = useState<"idle" | "checking" | "ok" | "error">("idle");
+  const [creditStatus, setCreditStatus] = useState<"idle" | "checking" | "ok" | "error">("idle");
 
   const spread = useMemo(() => spreads.find((item) => item.id === spreadId) ?? spreads[1], [spreadId]);
   const positions = useMemo(() => getPositionLabels(spreadId), [spreadId]);
@@ -175,6 +176,20 @@ export default function TarotClient() {
       body: JSON.stringify({ type: `tarot_${spreadId}` }),
     })
       .then((response) => setCreditStatus(response.ok ? "ok" : "error"))
+      .catch(() => setCreditStatus("error"));
+  }, [selectedCards.length, spread.cards, spreadId, revealing, creditStatus]);
+
+  useEffect(() => {
+    if (selectedCards.length !== spread.cards || revealing || creditStatus !== "idle") return;
+    setCreditStatus("checking");
+    fetch("/api/credits/spend", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ type: `tarot_${spreadId}` }),
+    })
+      .then(async (response) => {
+        setCreditStatus(response.ok ? "ok" : "error");
+      })
       .catch(() => setCreditStatus("error"));
   }, [selectedCards.length, spread.cards, spreadId, revealing, creditStatus]);
 
@@ -231,6 +246,9 @@ export default function TarotClient() {
           <Link href="/" className="flex items-center gap-1 text-xs text-slate-300 sm:text-sm"><ArrowLeft className="h-4 w-4" /> Ana sayfa</Link>
           <div className="flex items-center gap-2 rounded-full border border-amber-200/15 bg-amber-200/5 px-3 py-1.5 text-[9px] font-bold uppercase tracking-[.2em] text-amber-200"><Crown className="h-3 w-3" /> Premium Tarot</div>
         </header>
+
+        {creditStatus === "checking" ? <div className="mb-4 rounded-2xl border border-amber-300/20 bg-amber-300/10 p-4 text-center text-sm text-amber-100">Açılımın kredisi kontrol ediliyor…</div> : null}
+        {creditStatus === "error" ? <div className="mb-4 rounded-2xl border border-rose-300/20 bg-rose-300/10 p-4 text-center text-sm text-rose-100">Bu açılım için yeterli kredin yok. <Link href="/kredi" className="font-black underline">Kredi Al</Link></div> : null}
 
         {creditStatus === "checking" ? <div className="mb-4 rounded-2xl border border-amber-300/20 bg-amber-300/10 p-4 text-center text-sm text-amber-100">Açılımın kredisi kontrol ediliyor…</div> : null}
         {creditStatus === "error" ? <div className="mb-4 rounded-2xl border border-rose-300/20 bg-rose-300/10 p-4 text-center text-sm text-rose-100">Bu açılım için yeterli kredin yok. <Link href="/kredi" className="font-black underline">Kredi Al</Link></div> : null}
