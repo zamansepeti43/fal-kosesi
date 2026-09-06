@@ -67,6 +67,17 @@ export async function POST(request: Request) {
     `;
 
     const balance = Number(balanceRows[0]?.balance ?? 0);
+
+    await sql`
+      insert into public.notifications (email, title, body, type)
+      values (
+        ${order.email},
+        'Kredi yüklemesi tamamlandı',
+        ${`${Number(order.credits)} kredi hesabına eklendi. Yeni bakiyen ${balance} kredi.`},
+        'purchase'
+      )
+    `;
+
     return NextResponse.redirect(`${siteUrl}/kredi?payment=success&balance=${balance}`, 303);
   } catch (error) {
     console.error("Credit payment callback error:", error);
