@@ -18,8 +18,8 @@ export async function POST(request: Request) {
     if (!email) return NextResponse.json({ error: "Kredi hesabına erişilemedi." }, { status: 401 });
 
     const sql = requireDb();
-    const kind = body.kind ?? "coffee";
-    chargeAmount = READING_COSTS[kind] ?? READING_COSTS.coffee;
+    const kind = String(body.kind ?? "coffee");
+    chargeAmount = READING_COSTS[kind as keyof typeof READING_COSTS] ?? READING_COSTS.coffee;
     chargeReference = `reading-${crypto.randomUUID()}`;
 
     try {
@@ -42,12 +42,44 @@ export async function POST(request: Request) {
 
     try {
       const result = await generateFalResponse({
-        kind,
+        kind: kind as Parameters<typeof generateFalResponse>[0]["kind"],
         focus: body.focus ?? "genel",
         question: body.question ?? "",
         images: Array.isArray(body.images) ? body.images : [],
+        profile: body.profile,
       });
-      return NextResponse.json(result);
+
+      let readingId: string | null = null;
+      try {
+        const savedRows = await sql`
+          insert into public.readings (email, kind, focus, question, result)
+          values (
+            ${email},
+            ${kind},
+            ${String(body.focus ?? "genel")},
+            ${String(body.question ?? "")},
+            ${JSON.stringify(result)}::jsonb
+          )
+          returning id
+        `;
+        readingId = savedRows[0]?.id ? String(savedRows[0].id) : null;
+
+        if (readingId) {
+          await sql`
+            insert into public.notifications (email, title, body, type)
+            values (
+              ${email},
+              'Falın hazır ✦',
+              ${`${kind === "coffee" ? "Kahve falın" : "Fal yorumun"} hazırlandı. Sonuçlarını ve geçmiş okumalarını hesabından görebilirsin.`},
+              'reading'
+            )
+          `;
+        }
+      } catch (saveError) {
+        console.error("Reading persistence error:", saveError);
+      }
+
+      return NextResponse.json({ ...result, readingId });
     } catch (generationError) {
       await sql`
         select public.refund_credits(
