@@ -3,7 +3,7 @@ import { NextResponse } from "next/server";
 import { getCreditPackage } from "@/lib/credits";
 import { getMemberEmail } from "@/lib/member-session";
 import { iyzicoPost } from "@/lib/iyzico";
-import { supabaseAdmin } from "@/lib/supabase/admin";
+import { requireDb } from "@/lib/neon/db";
 
 export const runtime = "nodejs";
 
@@ -11,40 +11,41 @@ export async function POST(request: Request) {
   try {
     const email = await getMemberEmail();
     if (!email) return NextResponse.json({ error: "Önce üye girişi yapmalısın." }, { status: 401 });
-    if (!supabaseAdmin) return NextResponse.json({ error: "Supabase sunucu bağlantısı hazır değil." }, { status: 503 });
 
     const body = (await request.json().catch(() => null)) as { packageId?: string } | null;
     const pack = getCreditPackage(body?.packageId || "");
     if (!pack) return NextResponse.json({ error: "Geçersiz kredi paketi." }, { status: 400 });
 
-    const { data: member } = await supabaseAdmin
-      .from("profiles")
-      .select("full_name, phone")
-      .eq("email", email)
-      .maybeSingle();
+    const sql = requireDb();
+    const memberRows = await sql`
+      select full_name, phone
+      from public.profiles
+      where email = ${email}
+      limit 1
+    `;
+    const member = memberRows[0];
 
-    await supabaseAdmin.rpc("ensure_credit_profile", {
-      p_email: email,
-      p_name: member?.full_name ?? null,
-      p_phone: member?.phone ?? null,
-    });
+    await sql`
+      select public.ensure_credit_profile(
+        ${email},
+        ${member?.full_name ?? null},
+        ${member?.phone ?? null}
+      ) as credits
+    `;
 
     const orderId = crypto.randomUUID();
     const conversationId = `FK-${orderId}`;
     const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || new URL(request.url).origin;
     const callbackUrl = `${siteUrl}/api/credits/callback`;
 
-    const { error: orderError } = await supabaseAdmin.from("credit_orders").insert({
-      id: orderId,
-      email,
-      package_id: pack.id,
-      credits: pack.credits,
-      price_try: pack.priceTry,
-      conversation_id: conversationId,
-    });
-    if (orderError) throw new Error(orderError.message);
+    await sql`
+      insert into public.credit_orders
+        (id, email, package_id, credits, price_try, conversation_id)
+      values
+        (${orderId}, ${email}, ${pack.id}, ${pack.credits}, ${pack.priceTry}, ${conversationId})
+    `;
 
-    const fullName = member?.full_name?.trim() || email.split("@")[0] || "Fal Köşesi Üyesi";
+    const fullName = String(member?.full_name || email.split("@")[0] || "Fal Köşesi Üyes").trim();
     const nameParts = fullName.split(/\s+/);
     const surname = nameParts.length > 1 ? nameParts.pop()! : "Üye";
     const name = nameParts.join(" ") || "Fal Köşesi";
@@ -102,10 +103,11 @@ export async function POST(request: Request) {
 
     if (!result.paymentPageUrl || !result.token) throw new Error("iyzico ödeme sayfası oluşturulamadı.");
 
-    await supabaseAdmin
-      .from("credit_orders")
-      .update({ iyzico_token: result.token })
-      .eq("id", orderId);
+    await sql`
+      update public.credit_orders
+      set iyzico_token = ${result.token}
+      where id = ${orderId}
+    `;
 
     return NextResponse.json({ paymentUrl: result.paymentPageUrl, orderId });
   } catch (error) {
