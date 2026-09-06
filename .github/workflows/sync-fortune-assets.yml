@@ -40,6 +40,7 @@ jobs:
             '/fortune/money.svg': '/fortune/money-abundance.jpg',
             '/fortune/career.svg': '/fortune/career-success.jpg',
             '/fortune/daily.svg': '/fortune/daily-moon.jpg',
+            '/fortune/daily-moon.jpg': '/fortune/daily-moon-premium.jpg',
             '/fortune/astrology.svg': '/fortune/birth-chart.jpg',
             '/fortune/dream.svg': '/fortune/dream-sleep.jpg',
             '/fortune/numerology.svg': '/fortune/numerology-number.jpg',
