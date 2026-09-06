@@ -18,36 +18,67 @@ jobs:
           python - <<'PY'
           from pathlib import Path
 
-          replacements = {
-              'app/page.tsx': [
-                  ('  const [credits, setCredits] = useState<number | null>(null);\n  const [credits, setCredits] = useState<number | null>(null);',
-                   '  const [credits, setCredits] = useState<number | null>(null);'),
-                  ('  useEffect(() => {\n    fetch("/api/credits", { cache: "no-store" })\n      .then(async (response) => {\n        if (!response.ok) return;\n        const data = (await response.json()) as { credits?: number };\n        setCredits(Number(data.credits ?? 0));\n      })\n      .catch(() => undefined);\n  }, []);\n\n  useEffect(() => {\n    fetch("/api/credits", { cache: "no-store" })\n      .then(async (response) => {\n        if (!response.ok) return;\n        const data = (await response.json()) as { credits?: number };\n        setCredits(Number(data.credits ?? 0));\n      })\n      .catch(() => undefined);\n  }, []);',
-                   '  useEffect(() => {\n    fetch("/api/credits", { cache: "no-store" })\n      .then(async (response) => {\n        if (!response.ok) return;\n        const data = (await response.json()) as { credits?: number };\n        setCredits(Number(data.credits ?? 0));\n      })\n      .catch(() => undefined);\n  }, []);'),
-              ],
-              'app/fal/tarot/tarot-client.tsx': [
-                  ('  const [creditStatus, setCreditStatus] = useState<"idle" | "checking" | "ok" | "error">("idle");\n  const [creditStatus, setCreditStatus] = useState<"idle" | "checking" | "ok" | "error">("idle");',
-                   '  const [creditStatus, setCreditStatus] = useState<"idle" | "checking" | "ok" | "error">("idle");'),
-                  ('  useEffect(() => {\n    if (selectedCards.length !== spread.cards || revealing || creditStatus !== "idle") return;\n    setCreditStatus("checking");\n    fetch("/api/credits/spend", {\n      method: "POST",\n      headers: { "Content-Type": "application/json" },\n      body: JSON.stringify({ type: `tarot_${spreadId}` }),\n    })\n      .then(async (response) => {\n        setCreditStatus(response.ok ? "ok" : "error");\n      })\n      .catch(() => setCreditStatus("error"));\n  }, [selectedCards.length, spread.cards, spreadId, revealing, creditStatus]);\n\n  useEffect(() => {\n    if (selectedCards.length !== spread.cards || revealing || creditStatus !== "idle") return;\n    setCreditStatus("checking");\n    fetch("/api/credits/spend", {\n      method: "POST",\n      headers: { "Content-Type": "application/json" },\n      body: JSON.stringify({ type: `tarot_${spreadId}` }),\n    })\n      .then(async (response) => {\n        setCreditStatus(response.ok ? "ok" : "error");\n      })\n      .catch(() => setCreditStatus("error"));\n  }, [selectedCards.length, spread.cards, spreadId, revealing, creditStatus]);\n\n  useEffect(() => {\n    if (selectedCards.length !== spread.cards || revealing || creditStatus !== "idle") return;\n    setCreditStatus("checking");\n    fetch("/api/credits/spend", {\n      method: "POST",\n      headers: { "Content-Type": "application/json" },\n      body: JSON.stringify({ type: `tarot_${spreadId}` }),\n    })\n      .then(async (response) => {\n        setCreditStatus(response.ok ? "ok" : "error");\n      })\n      .catch(() => setCreditStatus("error"));\n  }, [selectedCards.length, spread.cards, spreadId, revealing, creditStatus]);',
-                   '  useEffect(() => {\n    if (selectedCards.length !== spread.cards || revealing || creditStatus !== "idle") return;\n    setCreditStatus("checking");\n    fetch("/api/credits/spend", {\n      method: "POST",\n      headers: { "Content-Type": "application/json" },\n      body: JSON.stringify({ type: `tarot_${spreadId}` }),\n    })\n      .then(async (response) => {\n        setCreditStatus(response.ok ? "ok" : "error");\n      })\n      .catch(() => setCreditStatus("error"));\n  }, [selectedCards.length, spread.cards, spreadId, revealing, creditStatus]);'),
-              ],
-          }
+          files = [Path('app/page.tsx'), Path('app/fal/tarot/tarot-client.tsx')]
+
+          credit_state_home = '  const [credits, setCredits] = useState<number | null>(null);'
+          credit_state_tarot = '  const [creditStatus, setCreditStatus] = useState<"idle" | "checking" | "ok" | "error">("idle");'
+
+          credit_effect_home = '''  useEffect(() => {
+    fetch("/api/credits", { cache: "no-store" })
+      .then(async (response) => {
+        if (!response.ok) return;
+        const data = (await response.json()) as { credits?: number };
+        setCredits(Number(data.credits ?? 0));
+      })
+      .catch(() => undefined);
+  }, []);'''
+
+          credit_effect_tarot = '''  useEffect(() => {
+    if (selectedCards.length !== spread.cards || revealing || creditStatus !== "idle") return;
+    setCreditStatus("checking");
+    fetch("/api/credits/spend", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ type: `tarot_${spreadId}` }),
+    })
+      .then(async (response) => {
+        setCreditStatus(response.ok ? "ok" : "error");
+      })
+      .catch(() => setCreditStatus("error"));
+  }, [selectedCards.length, spread.cards, spreadId, revealing, creditStatus]);'''
 
           changed = False
-          for filename, pairs in replacements.items():
-              path = Path(filename)
+          for path in files:
               text = path.read_text()
               original = text
-              for old, new in pairs:
-                  text = text.replace(old, new)
+
+              if path.as_posix() == 'app/page.tsx':
+                  lines = text.splitlines()
+                  out = []
+                  for line in lines:
+                      if line == credit_state_home and out and out[-1] == credit_state_home:
+                          continue
+                      out.append(line)
+                  text = '\n'.join(out) + ('\n' if text.endswith('\n') else '')
+                  while credit_effect_home + '\n\n' + credit_effect_home in text:
+                      text = text.replace(credit_effect_home + '\n\n' + credit_effect_home, credit_effect_home)
+
+              if path.as_posix() == 'app/fal/tarot/tarot-client.tsx':
+                  lines = text.splitlines()
+                  out = []
+                  for line in lines:
+                      if line == credit_state_tarot and out and out[-1] == credit_state_tarot:
+                          continue
+                      out.append(line)
+                  text = '\n'.join(out) + ('\n' if text.endswith('\n') else '')
+                  while credit_effect_tarot + '\n\n' + credit_effect_tarot in text:
+                      text = text.replace(credit_effect_tarot + '\n\n' + credit_effect_tarot, credit_effect_tarot)
+
               if text != original:
                   path.write_text(text)
                   changed = True
 
-          if changed:
-              print('Duplicate state/effect blocks repaired')
-          else:
-              print('No duplicate state/effect blocks found')
+          print('Duplicate state/effect repair complete' if changed else 'No duplicate state/effect blocks found')
           PY
 
       - name: Commit repair
@@ -59,5 +90,5 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add app/page.tsx app/fal/tarot/tarot-client.tsx
-          git commit -m "Fix duplicate credit effects"
+          git commit -m "Fix duplicate credit state and effects"
           git push
