@@ -42,6 +42,56 @@ jobs:
             fi
           done
 
+      - name: Restyle tarot card fronts
+        run: |
+          node <<'NODE'
+          const fs = require('node:fs');
+          const file = 'app/fal/tarot/tarot-client.tsx';
+          let source = fs.readFileSync(file, 'utf8');
+          const start = source.indexOf('function CardFront({ card }: { card: TarotCard }) {');
+          const end = source.indexOf('function FlipCard', start);
+          if (start < 0 || end < 0) throw new Error('Tarot CardFront block not found; aborting restyle.');
+
+          const newCardFront = String.raw`function CardFront({ card }: { card: TarotCard }) {
+            const file = imageByCardId[String(card.id)] ?? "00-fool";
+            const number = file.slice(0, 2);
+            const palettes = [
+              "from-fuchsia-600 via-violet-600 to-indigo-700",
+              "from-cyan-500 via-blue-600 to-violet-700",
+              "from-rose-500 via-orange-500 to-yellow-500",
+              "from-emerald-500 via-teal-500 to-cyan-600",
+              "from-purple-600 via-pink-500 to-rose-500",
+              "from-indigo-600 via-blue-500 to-cyan-500",
+            ];
+            const palette = palettes[Number(number) % palettes.length];
+
+            return (
+              <div className={\`relative h-full w-full overflow-hidden rounded-[18px] bg-gradient-to-br ${palette} shadow-inner\`} draggable={false}>
+                <img
+                  src={getTarotImage(card)}
+                  alt={\`${card.name} tarot kartı\`}
+                  className="absolute inset-0 h-full w-full object-cover saturate-[1.45] contrast-[1.08]"
+                  draggable={false}
+                />
+                <div className={\`absolute inset-0 bg-gradient-to-br ${palette} opacity-25 mix-blend-color\`} />
+                <div className="absolute inset-[5px] rounded-[15px] border-2 border-white/55 shadow-[inset_0_0_0_1px_rgba(255,255,255,.22),0_0_20px_rgba(255,255,255,.12)]" />
+                <div className="absolute left-2.5 top-2.5 rounded-full border border-white/45 bg-black/30 px-2 py-1 text-[8px] font-black tracking-[.12em] text-white shadow-lg backdrop-blur-sm">
+                  {number}
+                </div>
+                <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/85 via-black/45 to-transparent px-3 pb-3 pt-12 text-center">
+                  <p className="text-[7px] font-bold uppercase tracking-[.2em] text-white/75">BÜYÜK ARKANA</p>
+                  <h3 className="mt-1 font-serif text-[16px] font-black leading-tight text-white drop-shadow-lg sm:text-[18px]">{card.name}</h3>
+                  <p className="mt-1 text-[7px] font-bold uppercase tracking-[.12em] text-amber-100/90">{card.keywords.slice(0, 3).join(" • ")}</p>
+                </div>
+              </div>
+            );
+          }
+
+          `;
+          source = source.slice(0, start) + newCardFront + source.slice(end);
+          fs.writeFileSync(file, source);
+          NODE
+
       - name: Wire real photos into homepage
         run: |
           node <<'NODE'
@@ -67,10 +117,10 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add public/fortune/*.jpg public/fortune/tarot/*.jpg app/page.tsx
+          git add public/fortune/*.jpg public/fortune/tarot/*.jpg app/page.tsx app/fal/tarot/tarot-client.tsx
           if git diff --cached --quiet; then
             echo "No new visual asset changes."
             exit 0
           fi
-          git commit -m "Use modern Frideborg tarot artwork and premium fortune photos [skip ci]"
+          git commit -m "Use vibrant modern tarot card fronts [skip ci]"
           git push origin main
