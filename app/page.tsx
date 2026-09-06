@@ -57,7 +57,6 @@ export default function Home() {
   const [name, setName] = useState("Dostum");
   const [menuOpen, setMenuOpen] = useState(false);
   const [credits, setCredits] = useState<number | null>(null);
-  const [credits, setCredits] = useState<number | null>(null);
 
   useEffect(() => {
     const raw = window.localStorage.getItem("fal-kosesi-profile");
