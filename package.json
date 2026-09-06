@@ -9,7 +9,7 @@
     "lint": "next lint"
   },
   "dependencies": {
-    "@supabase/supabase-js": "^2.115.0",
+    "@neondatabase/serverless": "latest",
     "lucide-react": "latest",
     "next": "latest",
     "openai": "^7.10.0",
