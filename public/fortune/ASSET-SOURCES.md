@@ -1,6 +1,6 @@
 # Fal Köşesi visual asset sources
 
-These visual assets are downloaded at build time by `scripts/download-fortune-assets.mjs` and served locally from `/public/fortune`.
+These visual assets are downloaded by `scripts/download-fortune-assets.mjs`. GitHub Actions syncs the downloaded binaries into `public/fortune` so the actual visual files are versioned in the repository; Vercel can also download them during a clean build.
 
 ## Coffee fortune imagery
 - Pexels — Idil Ceren Çelikler, “Traditional Turkish Coffee Fortune Reading”: https://www.pexels.com/photo/traditional-turkish-coffee-fortune-reading-37823298/
