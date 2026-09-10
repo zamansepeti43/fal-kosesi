@@ -8,8 +8,12 @@ import { DIGITAL_COMMENTATORS } from "@/lib/fortune/catalog";
 type Commentator = (typeof DIGITAL_COMMENTATORS)[number] & { favorite?: boolean; type?: string; bio?: string | null };
 type Props = { kind: FortuneKind; selectedId?: string | null; onSelect: (commentator: Commentator | null) => void };
 
+const AVATAR_FILES = ["tarotella.svg", "arcanessa.svg", "noctara.svg", "elowena.svg", "zoryelle.svg"] as const;
+
 function characterAvatar(id: string) {
-  return `/api/fal/avatar?id=${encodeURIComponent(id)}&v=3d-human-2`;
+  let result = 0;
+  for (let i = 0; i < id.length; i += 1) result = (result * 31 + id.charCodeAt(i)) >>> 0;
+  return `/fortune/avatars/${AVATAR_FILES[result % AVATAR_FILES.length]}`;
 }
 
 function availabilityLabel(status: Commentator["availability"]) {
@@ -68,7 +72,7 @@ export default function CommentatorPicker({ kind, selectedId, onSelect }: Props)
           <div className="min-w-0">
             <p className="text-xs font-black text-white">Bana en uygun karakteri seç</p>
             <p className="mt-0.5 truncate text-[9px] text-slate-400">
-              {recommended ? `${recommended.name} · ${recommended.priceCredits} kredi · ${recommended.etaMinutes} dk` : "Uygun karakter aranıyor…"}
+              {recommended ? `${recommended.name} · ${recommended.priceCredits} coin · ${recommended.etaMinutes} dk` : "Uygun karakter aranıyor…"}
             </p>
           </div>
         </div>
@@ -94,7 +98,7 @@ export default function CommentatorPicker({ kind, selectedId, onSelect }: Props)
             >
               {isRecommended && <span className="absolute left-2 top-2 z-10 rounded-full border border-amber-200/20 bg-[#17111e]/90 px-2 py-1 text-[7px] font-black uppercase tracking-wider text-amber-200">Önerilen</span>}
               <div className="relative aspect-[.78] overflow-hidden rounded-[18px] border border-white/10 bg-[radial-gradient(circle_at_50%_30%,rgba(139,92,246,.14),transparent_65%),#100d18]">
-                <img src={characterAvatar(item.id)} alt={`${item.name} 3D sanal tarot karakteri`} loading="eager" className="h-full w-full object-contain px-1 pt-1 transition duration-500 group-hover:scale-[1.035]" />
+                <img src={characterAvatar(item.id)} alt={`${item.name} sanal karakteri`} loading="eager" className="h-full w-full object-contain px-1 pt-1 transition duration-500 group-hover:scale-[1.035]" />
                 <span className="absolute bottom-1.5 right-1.5 rounded-full border border-white/10 bg-black/75 px-1.5 py-0.5 text-[7px] font-black tracking-wider text-white">AI</span>
                 {isSelected && <span className="absolute right-1.5 top-1.5 rounded-full bg-amber-300 px-2 py-1 text-[7px] font-black uppercase text-slate-950">Seçildi</span>}
               </div>
@@ -105,7 +109,7 @@ export default function CommentatorPicker({ kind, selectedId, onSelect }: Props)
                     <p className="truncate font-serif text-sm font-bold text-white sm:text-base">{item.name}</p>
                     <p className="mt-0.5 truncate text-[9px] font-medium text-violet-200">{item.title}</p>
                   </div>
-                  <strong className="shrink-0 text-[10px] font-black text-amber-200">{item.priceCredits} kr.</strong>
+                  <strong className="shrink-0 text-[10px] font-black text-amber-200">{item.priceCredits} coin</strong>
                 </div>
 
                 <p className="mt-2 line-clamp-2 min-h-[30px] text-[9px] leading-4 text-slate-400">{item.description}</p>
