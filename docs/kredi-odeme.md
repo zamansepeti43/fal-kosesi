@@ -2,13 +2,17 @@
 
 ## Kredi paketleri
 
-- 50 kredi — 50 TL
-- 120 kredi — 100 TL (+20 hediye)
-- 250 kredi — 200 TL (+50 hediye)
-- 700 kredi — 500 TL (+200 hediye)
-- 1.500 kredi — 1.000 TL (+500 hediye)
+| Paket | Kullanıcıya geçen toplam kredi | Hediye | Fiyat |
+|---|---:|---:|---:|
+| Başlangıç | 50 | 0 | 50 TL |
+| En çok tercih edilen | 120 | 20 | 100 TL |
+| Avantajlı | 250 | 50 | 200 TL |
+| Büyük paket | 700 | 200 | 500 TL |
+| En avantajlı | 1.500 | 500 | 1.000 TL |
 
-Yeni üye hesabına 50 hoş geldin kredisi tanımlanır.
+`credits` değeri satın alma sonunda hesaba eklenecek **toplam** bakiyeyi ifade eder. Örneğin 100 TL'lik paket 100 satın alınan + 20 hediye = 120 kredi verir. Ödeme sağlayıcısına gönderilen tutar her zaman `priceTry` değeridir.
+
+Yeni üye hesabına 50 hoş geldin kredisi tanımlanır ve bu işlem kredi hareketleri defterine `welcome` olarak yazılır.
 
 ## Fal ücretleri
 
@@ -21,31 +25,39 @@ Yeni üye hesabına 50 hoş geldin kredisi tanımlanır.
 - Yıldızname / astroloji — 15 kredi
 - Numeroloji — 8 kredi
 - Günlük — 3 kredi
+- Odak — 8 kredi
 - Tarot Tek Kart — 5 kredi
 - Tarot 3 Kart — 12 kredi
 - Tarot Aşk / Kariyer / Para — 15 kredi
 
+## Fiyatlandırma mantığı
+
+- Fiyatlar ve kredi maliyetleri tek kaynak olarak `lib/credits.ts` içinde tutulur.
+- Kullanıcı arayüzü ve sunucu tarafı ödeme siparişi aynı paket kataloğunu kullanır.
+- İstemci yalnızca `packageId` gönderir; sunucu fiyatı istemciden kabul etmez, paketi kendi katalogundan çözer.
+- Ödeme callback'i siparişte kayıtlı fiyat, ödeme tutarı ve TRY para birimini tekrar doğrular.
+- Aynı ödeme ID'si ikinci kez kredi yazamaz.
+- Başarısız bir fal üretiminde kredi iadesi ayrı `refund` hareketi olarak tutulur.
+
 ## Canlı ödeme kurulumu
 
-Fal Köşesi artık veritabanı olarak Neon PostgreSQL kullanır. Supabase bu ödeme/kredi akışının parçası değildir.
+Fal Köşesi Neon PostgreSQL kullanır. Supabase bu ödeme/kredi akışının parçası değildir.
 
 ### Vercel Production ortamına
 
 - `NEXT_PUBLIC_SITE_URL=https://fal-kosesi.vercel.app`
 - `MEMBER_SESSION_SECRET=<uzun-rastgele-secret>`
 - `DATABASE_URL=<Neon pooled connection string>`
-- `IYZICO_API_KEY=<iyzico-api-key>`
-- `IYZICO_SECRET_KEY=<iyzico-secret-key>`
-- `IYZICO_API_URL=https://api.iyzipay.com`
+- Ödeme sağlayıcısının API anahtarları yalnızca Vercel Environment Variables içinde tutulmalıdır.
 
-Test ortamı için `IYZICO_API_URL=https://sandbox-api.iyzipay.com` kullanılabilir.
+Mevcut iyzico entegrasyonu sağlayıcıya özel bir adaptördür; yeni ödeme sağlayıcısı seçildiğinde kredi kataloğu ve Neon sipariş/ledger yapısı değişmeden yeni checkout/callback adaptörü eklenebilir.
 
 ### Neon veritabanı kurulumu
 
-Neon SQL Editor içinde `neon/schema.sql` dosyası bir kez çalıştırılmalıdır. Bu dosya üyeler, kredi bakiyeleri, kredi hareketleri ve iyzico siparişleri için gerekli tabloları ve atomik PostgreSQL fonksiyonlarını oluşturur.
+Yeni veritabanında `neon/schema.sql` bir kez çalıştırılmalıdır. Mevcut veritabanında `neon/migrations/2026-09-credit-ledger-hardening.sql` bir kez çalıştırılmalıdır.
 
-Ödeme callback'i iyzico üzerinden ödeme durumunu yeniden doğrular; başarılı ve fraud kontrolünden geçen ödemelerde kredi verir. Aynı iyzico payment ID ikinci kez kredi yazmaz.
+Migration, hoş geldin kredisi hareketinin aynı referansla tekrar yazılmasını engelleyen benzersiz indeksi ekler.
 
 ### Güvenlik
 
-`DATABASE_URL`, `MEMBER_SESSION_SECRET`, `IYZICO_API_KEY` ve `IYZICO_SECRET_KEY` yalnızca Vercel Environment Variables içinde tutulmalıdır. Kaynak koda veya istemci tarafına yazılmamalıdır.
+`DATABASE_URL`, `MEMBER_SESSION_SECRET` ve ödeme sağlayıcısının gizli anahtarları kaynak koda veya istemci tarafına yazılmamalıdır.
