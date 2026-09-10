@@ -2,28 +2,26 @@ import { NextResponse } from "next/server";
 import { getMemberEmail } from "@/lib/member-session";
 import { requireDb } from "@/lib/neon/db";
 import { generateQualityFortune } from "@/lib/fortune/generate";
+import { ensureFortuneQueueSchema } from "@/lib/fortune/bootstrap";
 
 export const runtime = "nodejs";
-
 type RouteContext = { params: Promise<{ id: string }> };
 
 export async function GET(_request: Request, context: RouteContext) {
   const email = await getMemberEmail();
   if (!email) return NextResponse.json({ error: "Önce üye girişi yapmalısın." }, { status: 401 });
-
   const { id } = await context.params;
   if (!id) return NextResponse.json({ error: "Fal kaydı bulunamadı." }, { status: 400 });
 
   try {
     const sql = requireDb();
-    const rows = await sql`
-      select id, email, kind, focus, question, result, is_favorite, status, available_at,
-             queued_at, started_at, completed_at, delivery_mode, commentator_id, commentator_name,
-             price_credits, error_message, created_at, updated_at
-      from public.readings
-      where id = ${id} and email = ${email}
-      limit 1
+    await ensureFortuneQueueSchema(sql as never);
+    const selectReading = async () => sql`
+      select id, email, kind, focus, question, result, is_favorite, status, available_at, queued_at, started_at,
+             completed_at, delivery_mode, commentator_id, commentator_name, price_credits, error_message, created_at, updated_at
+      from public.readings where id = ${id} and email = ${email} limit 1
     `;
+    let rows = await selectReading();
     const reading = rows[0];
     if (!reading) return NextResponse.json({ error: "Fal kaydı bulunamadı." }, { status: 404 });
 
@@ -47,36 +45,22 @@ export async function GET(_request: Request, context: RouteContext) {
           });
           await sql`
             update public.readings
-            set result = ${JSON.stringify(result)}::jsonb,
-                status = 'ready', completed_at = now(), updated_at = now(), error_message = null
+            set result = ${JSON.stringify(result)}::jsonb, status = 'ready', completed_at = now(), updated_at = now(), error_message = null
             where id = ${id} and email = ${email}
           `;
           await sql`
             insert into public.notifications (email, title, body, type)
-            values (${email}, 'Falın hazır ✦', ${`${String(job.commentator_name ?? "Yorumcunun")} hazırladığı falın hazır. Sonuç ekranından okumaya devam edebilirsin.`}, 'reading_ready')
+            values (${email}, 'Falın hazır ✦', ${`${String(job.commentator_name ?? "Yorumcunun")} hazırladığı falın hazır. Sonuç ekranından okuyabilirsin.`}, 'reading_ready')
           `;
         } catch (generationError) {
           const detail = generationError instanceof Error ? generationError.message : "Yorum üretilemedi.";
-          await sql`
-            update public.readings
-            set status = 'failed', error_message = ${detail.slice(0, 500)}, updated_at = now()
-            where id = ${id} and email = ${email}
-          `;
-          await sql`
-            select public.refund_credits(${email}, ${Number(job.price_credits ?? 0)}, ${`refund-${id}`}, 'Kuyrukta fal üretimi başarısız olduğu için kredi iadesi') as credits
-          `;
+          await sql`update public.readings set status='failed', error_message=${detail.slice(0, 500)}, updated_at=now() where id=${id} and email=${email}`;
+          await sql`select public.refund_credits(${email}, ${Number(job.price_credits ?? 0)}, ${`refund-${id}`}, 'Kuyrukta fal üretimi başarısız olduğu için kredi iadesi') as credits`;
         }
       }
-
-      const refreshed = await sql`
-        select id, email, kind, focus, question, result, is_favorite, status, available_at,
-               queued_at, started_at, completed_at, delivery_mode, commentator_id, commentator_name,
-               price_credits, error_message, created_at, updated_at
-        from public.readings where id = ${id} and email = ${email} limit 1
-      `;
-      return NextResponse.json({ reading: refreshed[0] });
+      rows = await selectReading();
+      return NextResponse.json({ reading: rows[0] });
     }
-
     return NextResponse.json({ reading });
   } catch (error) {
     console.error("Reading detail error:", error);
