@@ -8,19 +8,18 @@ function hash(value: string) {
   return result;
 }
 
-function escapeXml(value: string) {
-  return value.replace(/[&<>\"']/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&apos;" })[char] || char);
-}
-
-function fallbackSvg(id: string) {
-  const themes = [
-    ["#2a1c3f", "#5b2d78"],
-    ["#172b31", "#245f65"],
-    ["#302019", "#7b3d23"],
-    ["#28172d", "#713b78"],
+function fallbackUrl(id: string) {
+  // Stable three.ws renders of human Mixamo characters. These are used only as
+  // visual renders; the raw character files are never redistributed by Fal Köşesi.
+  const fallback = [
+    "68c2e4b0-1ad6-4e53-b67d-161b8f4ccfbf", // Louise
+    "d13cd86b-a90f-4c8a-81c9-18fc490b40ba", // James
+    "f7b85d05-5f1c-47d8-9770-9a1a054bd6f6", // Ely
+    "d0496a75-08b9-4f4e-9f1d-f65820323cc2", // Erika Archer
+    "e89ec3c3-47b4-4d55-87f5-83d91e537136", // Maria J J Ong
   ];
-  const [bg, outfit] = themes[hash(id) % themes.length];
-  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 420"><defs><radialGradient id="g"><stop stop-color="${bg}"/><stop offset="1" stop-color="#08070f"/></radialGradient></defs><rect width="360" height="420" rx="48" fill="url(#g)"/><circle cx="180" cy="145" r="82" fill="#e8b9a7"/><path d="M98 154 Q86 50 180 48 Q274 50 262 154 Q235 101 180 102 Q125 101 98 154Z" fill="#201824"/><path d="M80 420 Q92 270 180 270 Q268 270 280 420Z" fill="${outfit}"/><circle cx="150" cy="145" r="6" fill="#17121c"/><circle cx="210" cy="145" r="6" fill="#17121c"/><path d="M154 194 Q180 210 206 194" fill="none" stroke="#9d4f64" stroke-width="6" stroke-linecap="round"/><circle cx="42" cy="52" r="5" fill="#facc15"/><circle cx="318" cy="78" r="4" fill="#c084fc"/></svg>`;
+  const avatar = fallback[hash(id) % fallback.length];
+  return `https://three.ws/api/avatar/render?avatar=${avatar}&scene=portrait&size=720&bg=transparent`;
 }
 
 export async function GET(request: Request) {
@@ -35,16 +34,35 @@ export async function GET(request: Request) {
     if (!response.ok) throw new Error(`avatar library ${response.status}`);
 
     const data = await response.json() as {
-      avatars?: Array<{ name?: string; label?: string; thumb?: string; license?: string; bytes?: number }>;
+      avatars?: Array<{
+        name?: string;
+        label?: string;
+        thumb?: string;
+        license?: string;
+        bytes?: number;
+      }>;
     };
 
-    // Only use characters explicitly marked CC0: suitable for AGT Studio's commercial use.
-    const candidates = (data.avatars || []).filter((avatar) =>
-      avatar.license === "CC0" &&
-      typeof avatar.thumb === "string" &&
-      avatar.thumb.startsWith("https://") &&
-      (avatar.bytes ?? 0) <= 10_000_000,
-    );
+    // Prefer distinct, human-looking Mixamo characters instead of the single
+    // CC0 Quaternius model. Mixamo permits royalty-free commercial use of its
+    // characters in finished creative work; we never expose the raw GLB files.
+    const preferred = [
+      "louise",
+      "james",
+      "ely-by-k-atienza",
+      "erika-archer",
+      "maria-j-j-ong",
+    ];
+
+    const candidates = preferred
+      .map((name) => (data.avatars || []).find((avatar) =>
+        avatar.name === name &&
+        avatar.license === "Mixamo" &&
+        typeof avatar.thumb === "string" &&
+        avatar.thumb.startsWith("https://") &&
+        (avatar.bytes ?? 0) <= 60_000_000,
+      ))
+      .filter((avatar): avatar is NonNullable<typeof avatar> => Boolean(avatar));
 
     if (candidates.length) {
       const selected = candidates[hash(id) % candidates.length];
@@ -54,13 +72,11 @@ export async function GET(request: Request) {
       });
     }
   } catch {
-    // The local fallback prevents a broken picker if the remote library is temporarily unavailable.
+    // Keep the picker alive if the upstream manifest is temporarily unavailable.
   }
 
-  return new NextResponse(fallbackSvg(id), {
-    headers: {
-      "Content-Type": "image/svg+xml; charset=utf-8",
-      "Cache-Control": cache,
-    },
+  return NextResponse.redirect(fallbackUrl(id), {
+    status: 302,
+    headers: { "Cache-Control": cache },
   });
 }
