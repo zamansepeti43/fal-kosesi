@@ -7,6 +7,30 @@ export const runtime = "nodejs";
 
 type Row = Record<string, unknown>;
 
+// AI characters use deterministic, per-character portraits. This deliberately ignores
+// stale avatar_url values that may have been seeded into the DB in earlier versions.
+const AVATAR_STYLES: Record<FortuneKind, string> = {
+  coffee: "lorelei",
+  love: "lorelei",
+  money: "adventurer",
+  career: "notionists",
+  future: "personas",
+  daily: "micah",
+  dream: "big-ears",
+  astrology: "open-peeps",
+  numerology: "avataaars",
+  general: "lorelei",
+  tarot: "lorelei",
+  katina: "adventurer",
+  lenormand: "notionists",
+  angel: "personas",
+};
+
+function generatedAvatar(id: string, kind: FortuneKind) {
+  const style = AVATAR_STYLES[kind] ?? "lorelei";
+  return `https://api.dicebear.com/9.x/${style}/svg?seed=${encodeURIComponent(id)}&backgroundColor=161326`;
+}
+
 export async function GET(request: Request) {
   const url = new URL(request.url);
   const rawKind = url.searchParams.get("kind");
@@ -20,7 +44,6 @@ export async function GET(request: Request) {
   try {
     const sql = requireDb();
 
-    // Keep production logs clean while the optional commentator migration is not installed yet.
     const tableCheck = await sql`select to_regclass('public.commentators') as table_name`;
     if (!tableCheck[0]?.table_name) {
       return NextResponse.json({
@@ -45,14 +68,20 @@ export async function GET(request: Request) {
     return NextResponse.json({
       commentators: rows.map((raw) => {
         const row = raw as Row;
+        const id = String(row.id);
         const specialties = Array.isArray(row.specialties) ? row.specialties.map(String) : [];
+        const commentatorType = String(row.commentator_type ?? "ai");
+        const avatarKind = (specialties[0] as FortuneKind) || kind || "general";
+        const avatarUrl = commentatorType === "ai"
+          ? generatedAvatar(id, avatarKind)
+          : String(row.avatar_url ?? generatedAvatar(id, avatarKind));
         return {
-          id: String(row.id),
+          id,
           name: String(row.display_name ?? "AI Yorumcu"),
           title: String(row.title ?? "Sanal Falcı"),
           bio: row.bio ?? null,
           specialties,
-          type: String(row.commentator_type ?? "ai"),
+          type: commentatorType,
           rating: Number(row.rating ?? 5),
           readingCount: Number(row.reading_count ?? 0),
           etaMinutes: Number(row.avg_minutes ?? 5),
@@ -60,8 +89,8 @@ export async function GET(request: Request) {
           voiceCredits: Number(row.voice_price_credits ?? 5),
           availability: String(row.status ?? "offline"),
           verified: Boolean(row.verified),
-          avatarUrl: String(row.avatar_url ?? `https://api.dicebear.com/9.x/lorelei/svg?seed=${encodeURIComponent(String(row.id))}&backgroundColor=161326`),
-          favorite: favorites.has(String(row.id)),
+          avatarUrl,
+          favorite: favorites.has(id),
         };
       }),
     });
