@@ -20,7 +20,7 @@ const HUMAN_3D_CHARACTERS = [
 
 export async function GET(request: Request) {
   const url = new URL(request.url);
-  const id = url.searchParams.get("id") || "tarotella";
+  const id = url.searchParams.get("id") || "fortune-character";
   const requestedSlot = Number.parseInt(url.searchParams.get("slot") || "", 10);
   const slot = Number.isInteger(requestedSlot) && requestedSlot >= 0 && requestedSlot < HUMAN_3D_CHARACTERS.length
     ? requestedSlot
@@ -32,10 +32,29 @@ export async function GET(request: Request) {
   renderUrl.searchParams.set("size", "720");
   renderUrl.searchParams.set("bg", "transparent");
 
-  return NextResponse.redirect(renderUrl.toString(), {
-    status: 302,
-    headers: {
-      "Cache-Control": "public, max-age=86400, s-maxage=604800, stale-while-revalidate=2592000",
-    },
-  });
+  try {
+    // Proxy the image through Fal Köşesi instead of redirecting the browser to a
+    // third-party image endpoint. This prevents mobile/browser hotlink failures
+    // from triggering the old Tarot fallback and keeps every non-Tarot portrait
+    // on its assigned slot.
+    const response = await fetch(renderUrl.toString(), {
+      headers: { Accept: "image/avif,image/webp,image/png,image/jpeg,image/*,*/*" },
+      cache: "force-cache",
+    });
+
+    if (!response.ok || !response.body) {
+      return new NextResponse(null, { status: 502 });
+    }
+
+    const contentType = response.headers.get("content-type") || "image/png";
+    return new NextResponse(response.body, {
+      status: 200,
+      headers: {
+        "Content-Type": contentType,
+        "Cache-Control": "public, max-age=86400, s-maxage=604800, stale-while-revalidate=2592000",
+      },
+    });
+  } catch {
+    return new NextResponse(null, { status: 502 });
+  }
 }
