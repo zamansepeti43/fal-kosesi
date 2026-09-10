@@ -7,28 +7,34 @@ export const runtime = "nodejs";
 
 type Row = Record<string, unknown>;
 
-// AI characters use deterministic, per-character portraits. This deliberately ignores
-// stale avatar_url values that may have been seeded into the DB in earlier versions.
-const AVATAR_STYLES: Record<FortuneKind, string> = {
-  coffee: "lorelei",
-  love: "lorelei",
-  money: "adventurer",
-  career: "notionists",
-  future: "personas",
-  daily: "micah",
-  dream: "big-ears",
-  astrology: "open-peeps",
-  numerology: "avataaars",
-  general: "lorelei",
-  tarot: "lorelei",
-  katina: "adventurer",
-  lenormand: "notionists",
-  angel: "personas",
+// Non-Tarot AI characters use stable portrait photos instead of DiceBear cartoons.
+// Tarot keeps its existing local artwork and is intentionally excluded here.
+const PORTRAIT_START: Record<Exclude<FortuneKind, "tarot">, number> = {
+  coffee: 1,
+  love: 6,
+  money: 11,
+  career: 16,
+  future: 21,
+  daily: 26,
+  dream: 31,
+  astrology: 36,
+  numerology: 41,
+  general: 46,
+  katina: 51,
+  lenormand: 56,
+  angel: 61,
 };
 
 function generatedAvatar(id: string, kind: FortuneKind) {
-  const style = AVATAR_STYLES[kind] ?? "lorelei";
-  return `https://api.dicebear.com/9.x/${style}/svg?seed=${encodeURIComponent(id)}&backgroundColor=161326`;
+  if (kind === "tarot") {
+    const tarot = DIGITAL_COMMENTATORS.find((item) => item.id === id && item.specialties.includes("tarot"));
+    return tarot?.avatarUrl ?? "";
+  }
+
+  const start = PORTRAIT_START[kind] ?? 1;
+  const index = Math.max(0, Math.min(4, Number(id.split("-").pop()?.length ?? 0)));
+  const portraitId = start + index;
+  return `https://randomuser.me/api/portraits/large/women/${portraitId}.jpg`;
 }
 
 export async function GET(request: Request) {
@@ -49,7 +55,12 @@ export async function GET(request: Request) {
       return NextResponse.json({
         commentators: DIGITAL_COMMENTATORS
           .filter((item) => !kind || item.specialties.includes(kind))
-          .map((item) => ({ ...item, type: "ai", favorite: false })),
+          .map((item) => ({
+            ...item,
+            type: "ai",
+            favorite: false,
+            avatarUrl: item.specialties.includes("tarot") ? item.avatarUrl : generatedAvatar(item.id, item.specialties[0]),
+          })),
       });
     }
 
@@ -99,7 +110,12 @@ export async function GET(request: Request) {
     return NextResponse.json({
       commentators: DIGITAL_COMMENTATORS
         .filter((item) => !kind || item.specialties.includes(kind))
-        .map((item) => ({ ...item, type: "ai", favorite: false })),
+        .map((item) => ({
+          ...item,
+          type: "ai",
+          favorite: false,
+          avatarUrl: item.specialties.includes("tarot") ? item.avatarUrl : generatedAvatar(item.id, item.specialties[0]),
+        })),
     });
   }
 }
