@@ -25,12 +25,28 @@ const TAROT_FALLBACK_BY_ID: Record<string, string> = {
   "tarot-zoryelle": "zoryelle.svg",
 };
 
+// If the remote 3D renderer is temporarily unavailable, use an existing local
+// project portrait instead of ever showing a broken-image icon. This fallback
+// does not change the Tarot picker or its approved portraits.
+const LOCAL_VISUAL_FALLBACKS = [
+  "/fortune/avatars/tarotella-reference.jpg",
+  "/fortune/avatars/arcanessa-reference.jpg",
+  "/fortune/avatars/noctara-reference.jpg",
+  "/fortune/avatars/elowena-reference.jpg",
+  "/fortune/avatars/zoryelle-reference.jpg",
+] as const;
+
+function stableIndex(value: string) {
+  let result = 0;
+  for (let i = 0; i < value.length; i += 1) result = (result * 31 + value.charCodeAt(i)) >>> 0;
+  return result % LOCAL_VISUAL_FALLBACKS.length;
+}
+
 function characterAvatar(item: Commentator) {
   if (item.id.startsWith("tarot-") && TAROT_AVATAR_BY_ID[item.id]) {
     return `/fortune/avatars/${TAROT_AVATAR_BY_ID[item.id]}?v=10`;
   }
-  // Non-Tarot characters always use the project's curated renderer.
-  // Never render catalog/DB DiceBear or other stale remote avatar URLs.
+  // Non-Tarot characters use the project's curated renderer first.
   return `/api/fal/avatar?id=${encodeURIComponent(item.id)}`;
 }
 
@@ -38,7 +54,8 @@ function characterFallback(item: Commentator) {
   if (item.id.startsWith("tarot-") && TAROT_FALLBACK_BY_ID[item.id]) {
     return `/fortune/avatars/${TAROT_FALLBACK_BY_ID[item.id]}?v=10`;
   }
-  return `/api/fal/avatar?id=${encodeURIComponent(item.id)}`;
+  // Never point the error fallback back at the same failing URL.
+  return `${LOCAL_VISUAL_FALLBACKS[stableIndex(item.id)]}?v=10`;
 }
 
 function availabilityLabel(status: Commentator["availability"]) {
