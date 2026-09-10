@@ -8,12 +8,16 @@ import { DIGITAL_COMMENTATORS } from "@/lib/fortune/catalog";
 type Commentator = (typeof DIGITAL_COMMENTATORS)[number] & { favorite?: boolean; type?: string; bio?: string | null };
 type Props = { kind: FortuneKind; selectedId?: string | null; onSelect: (commentator: Commentator | null) => void };
 
-const AVATAR_FILES = ["tarotella.svg", "arcanessa.svg", "noctara.svg", "elowena.svg", "zoryelle.svg"] as const;
+const AVATAR_BY_ID: Record<string, string> = {
+  "tarot-tarotella": "tarotella.svg",
+  "tarot-arcanessa": "arcanessa.svg",
+  "tarot-noctara": "noctara.svg",
+  "tarot-elowena": "elowena.svg",
+  "tarot-zoryelle": "zoryelle.svg",
+};
 
 function characterAvatar(id: string) {
-  let result = 0;
-  for (let i = 0; i < id.length; i += 1) result = (result * 31 + id.charCodeAt(i)) >>> 0;
-  return `/fortune/avatars/${AVATAR_FILES[result % AVATAR_FILES.length]}`;
+  return `/fortune/avatars/${AVATAR_BY_ID[id] ?? "tarotella.svg"}`;
 }
 
 function availabilityLabel(status: Commentator["availability"]) {
@@ -38,100 +42,51 @@ export default function CommentatorPicker({ kind, selectedId, onSelect }: Props)
 
   const visible = useMemo(() => items.slice(0, 5), [items]);
   const recommended = useMemo(() => [...visible].sort((a, b) => {
-    const availabilityScore = (x: Commentator) => x.availability === "online" ? 30 : x.availability === "busy" ? 10 : 0;
-    return (availabilityScore(b) + b.rating * 8 - b.priceCredits * 0.45 - b.etaMinutes * 0.8)
-      - (availabilityScore(a) + a.rating * 8 - a.priceCredits * 0.45 - a.etaMinutes * 0.8);
+    const score = (x: Commentator) => (x.availability === "online" ? 30 : x.availability === "busy" ? 10 : 0) + x.rating * 8 - x.priceCredits * 0.45 - x.etaMinutes * 0.8;
+    return score(b) - score(a);
   })[0] ?? null, [visible]);
 
-  const chooseRecommended = () => {
-    if (recommended) onSelect(recommended);
-  };
-
   return (
-    <div className="rounded-[28px] border border-white/10 bg-black/20 p-3 shadow-xl sm:p-5">
-      <div className="mb-4 text-center">
-        <p className="font-serif text-xl font-bold text-white">Sana eşlik edecek karakteri seç ✨</p>
-        <p className="mx-auto mt-1 max-w-lg text-[10px] leading-5 text-slate-500">
-          Her karakter farklı bir yorum tarzına sahip sanal AI karakteridir; gerçek kişi değildir.
-        </p>
+    <div className="rounded-[30px] border border-white/10 bg-black/25 p-3 shadow-2xl sm:p-5">
+      <div className="mb-5 text-center">
+        <p className="font-serif text-2xl font-bold text-white">Sana eşlik edecek karakteri seç ✨</p>
+        <p className="mx-auto mt-1 max-w-lg text-[11px] leading-5 text-slate-500">Her karakter farklı bir yorum tarzına sahip sanal AI karakteridir; gerçek kişi değildir.</p>
       </div>
 
-      <button
-        type="button"
-        onClick={chooseRecommended}
-        className={`mb-4 flex w-full items-center justify-between gap-3 rounded-2xl border px-4 py-3 text-left transition ${
-          recommended?.id === selectedId
-            ? "border-amber-300/70 bg-amber-300/[.09]"
-            : "border-amber-200/25 bg-gradient-to-r from-amber-300/[.10] to-violet-400/[.07] hover:border-amber-200/45"
-        }`}
-      >
+      <button type="button" onClick={() => recommended && onSelect(recommended)} className={`mb-5 flex w-full items-center justify-between gap-3 rounded-2xl border px-4 py-3 text-left transition ${recommended?.id === selectedId ? "border-amber-300/70 bg-amber-300/[.09]" : "border-amber-200/25 bg-gradient-to-r from-amber-300/[.10] to-violet-400/[.07] hover:border-amber-200/45"}`}>
         <div className="flex min-w-0 items-center gap-3">
-          <div className="grid h-10 w-10 shrink-0 place-items-center rounded-xl border border-amber-200/20 bg-amber-200/10 text-amber-200">
-            <Zap className="h-5 w-5" />
-          </div>
-          <div className="min-w-0">
-            <p className="text-xs font-black text-white">Bana en uygun karakteri seç</p>
-            <p className="mt-0.5 truncate text-[9px] text-slate-400">
-              {recommended ? `${recommended.name} · ${recommended.priceCredits} coin · ${recommended.etaMinutes} dk` : "Uygun karakter aranıyor…"}
-            </p>
-          </div>
+          <div className="grid h-11 w-11 shrink-0 place-items-center rounded-xl border border-amber-200/20 bg-amber-200/10 text-amber-200"><Zap className="h-5 w-5" /></div>
+          <div className="min-w-0"><p className="text-sm font-black text-white">Bana en uygun karakteri seç</p><p className="mt-0.5 truncate text-[10px] text-slate-400">{recommended ? `${recommended.name} · ${recommended.priceCredits} coin · ${recommended.etaMinutes} dk` : "Uygun karakter aranıyor…"}</p></div>
         </div>
-        <span className="shrink-0 rounded-full border border-amber-200/20 px-2 py-1 text-[8px] font-black uppercase tracking-wider text-amber-200">Önerilen</span>
+        <span className="shrink-0 rounded-full border border-amber-200/20 px-2.5 py-1 text-[8px] font-black uppercase tracking-wider text-amber-200">Önerilen</span>
       </button>
 
-      <div className="grid grid-cols-6 gap-2 sm:gap-3">
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4">
         {visible.map((item, index) => {
           const isSelected = selectedId === item.id;
           const isRecommended = item.id === recommended?.id;
-          const centeredStart = index === 3 ? "col-start-2" : index === 4 ? "col-start-4" : "";
+          const centeredLast = index === 4 ? "col-span-2 mx-auto w-[calc(50%-6px)] sm:col-span-1 sm:col-start-2 sm:mx-0 sm:w-full" : "";
           return (
-            <button
-              key={item.id}
-              type="button"
-              onClick={() => onSelect(item)}
-              aria-pressed={isSelected}
-              className={`group relative col-span-2 ${centeredStart} rounded-[22px] border p-2 text-left transition duration-300 sm:p-3 ${
-                isSelected
-                  ? "border-amber-300/70 bg-amber-300/[.08] shadow-[0_0_28px_rgba(251,191,36,.10)] -translate-y-0.5"
-                  : "border-white/8 bg-white/[.025] hover:-translate-y-1 hover:border-amber-200/30 hover:bg-white/[.045]"
-              }`}
-            >
-              {isRecommended && <span className="absolute left-2 top-2 z-10 rounded-full border border-amber-200/20 bg-[#17111e]/90 px-2 py-1 text-[7px] font-black uppercase tracking-wider text-amber-200">Önerilen</span>}
-              <div className="relative aspect-[.78] overflow-hidden rounded-[18px] border border-white/10 bg-[radial-gradient(circle_at_50%_30%,rgba(139,92,246,.14),transparent_65%),#100d18]">
-                <img src={characterAvatar(item.id)} alt={`${item.name} sanal karakteri`} loading="eager" className="h-full w-full object-contain px-1 pt-1 transition duration-500 group-hover:scale-[1.035]" />
-                <span className="absolute bottom-1.5 right-1.5 rounded-full border border-white/10 bg-black/75 px-1.5 py-0.5 text-[7px] font-black tracking-wider text-white">AI</span>
-                {isSelected && <span className="absolute right-1.5 top-1.5 rounded-full bg-amber-300 px-2 py-1 text-[7px] font-black uppercase text-slate-950">Seçildi</span>}
+            <button key={item.id} type="button" onClick={() => onSelect(item)} aria-pressed={isSelected} className={`group relative ${centeredLast} rounded-[24px] border p-2.5 text-left transition duration-300 sm:p-3 ${isSelected ? "-translate-y-0.5 border-amber-300/70 bg-amber-300/[.08] shadow-[0_0_30px_rgba(251,191,36,.12)]" : "border-white/8 bg-white/[.025] hover:-translate-y-1 hover:border-amber-200/30 hover:bg-white/[.045]"}`}>
+              {isRecommended && <span className="absolute left-3 top-3 z-10 rounded-full border border-amber-200/25 bg-[#17111e]/90 px-2.5 py-1 text-[7px] font-black uppercase tracking-wider text-amber-200">Önerilen</span>}
+              <div className="relative aspect-[.88] overflow-hidden rounded-[19px] border border-white/10 bg-[#100d18] shadow-inner">
+                <img src={characterAvatar(item.id)} alt={`${item.name} sanal karakteri`} loading="eager" className="h-full w-full object-cover transition duration-500 group-hover:scale-[1.025]" />
+                <div className="pointer-events-none absolute inset-x-0 bottom-0 h-14 bg-gradient-to-t from-black/55 to-transparent" />
+                <span className="absolute bottom-2 right-2 rounded-full border border-white/10 bg-black/75 px-2 py-1 text-[7px] font-black tracking-wider text-white">AI</span>
+                {isSelected && <span className="absolute right-2 top-2 rounded-full bg-amber-300 px-2 py-1 text-[7px] font-black uppercase text-slate-950">Seçildi</span>}
               </div>
 
-              <div className="px-0.5 pb-0.5 pt-2">
-                <div className="flex items-start justify-between gap-1">
-                  <div className="min-w-0">
-                    <p className="truncate font-serif text-sm font-bold text-white sm:text-base">{item.name}</p>
-                    <p className="mt-0.5 truncate text-[9px] font-medium text-violet-200">{item.title}</p>
-                  </div>
-                  <strong className="shrink-0 text-[10px] font-black text-amber-200">{item.priceCredits} coin</strong>
-                </div>
-
-                <p className="mt-2 line-clamp-2 min-h-[30px] text-[9px] leading-4 text-slate-400">{item.description}</p>
-
-                <div className="mt-2 flex items-center justify-between gap-1 border-t border-white/5 pt-2 text-[8px] text-slate-500">
-                  <span className="inline-flex items-center gap-1"><Star className="h-2.5 w-2.5 fill-current text-amber-300" />{item.rating}</span>
-                  <span className="inline-flex items-center gap-1"><Clock3 className="h-2.5 w-2.5" />{item.etaMinutes} dk</span>
-                  <span className={item.availability === "online" ? "text-emerald-200" : item.availability === "busy" ? "text-amber-200" : "text-slate-500"}>
-                    ● {availabilityLabel(item.availability)}
-                  </span>
-                </div>
+              <div className="px-0.5 pb-0.5 pt-3">
+                <div className="flex items-start justify-between gap-2"><div className="min-w-0"><p className="font-serif text-[17px] font-bold leading-tight text-white sm:text-lg">{item.name}</p><p className="mt-1 line-clamp-1 text-[10px] font-semibold text-violet-200">{item.title}</p></div><strong className="shrink-0 pt-0.5 text-[10px] font-black text-amber-200">{item.priceCredits} coin</strong></div>
+                <p className="mt-2 line-clamp-2 min-h-[32px] text-[10px] leading-4 text-slate-400">{item.description}</p>
+                <div className="mt-3 flex items-center justify-between gap-1 border-t border-white/5 pt-2.5 text-[9px] text-slate-500"><span className="inline-flex items-center gap-1"><Star className="h-3 w-3 fill-current text-amber-300" />{item.rating}</span><span className="inline-flex items-center gap-1"><Clock3 className="h-3 w-3" />{item.etaMinutes} dk</span><span className={item.availability === "online" ? "text-emerald-200" : item.availability === "busy" ? "text-amber-200" : "text-slate-500"}>● {availabilityLabel(item.availability)}</span></div>
               </div>
             </button>
           );
         })}
       </div>
 
-      <div className="mt-4 flex flex-wrap items-center justify-center gap-x-4 gap-y-1 text-[9px] text-slate-500">
-        <span>⚡ Hızlı seçim</span>
-        <span>✦ 78 kartlık deste</span>
-        <span>🔒 Ödeme adımına kadar ücret alınmaz</span>
-      </div>
+      <div className="mt-5 flex flex-wrap items-center justify-center gap-x-5 gap-y-1 text-[9px] text-slate-500"><span>⚡ Hızlı seçim</span><span>✦ 78 kartlık deste</span><span>🔒 Ödeme adımına kadar ücret alınmaz</span></div>
     </div>
   );
 }
