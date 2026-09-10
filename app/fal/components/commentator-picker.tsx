@@ -8,7 +8,6 @@ import { DIGITAL_COMMENTATORS } from "@/lib/fortune/catalog";
 type Commentator = (typeof DIGITAL_COMMENTATORS)[number] & { favorite?: boolean; type?: string; bio?: string | null };
 type Props = { kind: FortuneKind; selectedId?: string | null; onSelect: (commentator: Commentator | null) => void };
 
-// Tarot is intentionally locked to its approved five portraits. Never change these.
 const TAROT_AVATAR_BY_ID: Record<string, string> = {
   "tarot-tarotella": "tarotella-reference.jpg",
   "tarot-arcanessa": "arcanessa-reference.jpg",
@@ -25,27 +24,15 @@ const TAROT_FALLBACK_BY_ID: Record<string, string> = {
   "tarot-zoryelle": "zoryelle.svg",
 };
 
-const HUMAN_3D_AVATAR_IDS = [
-  "68c2e4b0-1ad6-4e53-b67d-161b8f4ccfbf",
-  "d13cd86b-a90f-4c8a-81c9-18fc490b40ba",
-  "f7b85d05-5f1c-47d8-9770-9a1a054bd6f6",
-  "d0496a75-08b9-4f4e-9f1d-f65820323cc2",
-  "e89ec3c3-47b4-4d55-87f5-83d91e537136",
-] as const;
-
 function characterAvatar(item: Commentator, slot: number) {
   if (item.id.startsWith("tarot-") && TAROT_AVATAR_BY_ID[item.id]) {
     return `/fortune/avatars/${TAROT_AVATAR_BY_ID[item.id]}?v=10`;
   }
-  const avatarId = HUMAN_3D_AVATAR_IDS[slot] ?? HUMAN_3D_AVATAR_IDS[0];
-  return `https://three.ws/api/avatar/render?avatar=${avatarId}&scene=portrait&size=720&bg=transparent`;
+  return `/api/fal/avatar?id=${encodeURIComponent(item.id)}&slot=${slot}&v=2`;
 }
 
 function characterFallback(item: Commentator) {
-  if (item.id.startsWith("tarot-") && TAROT_FALLBACK_BY_ID[item.id]) {
-    return `/fortune/avatars/${TAROT_FALLBACK_BY_ID[item.id]}?v=10`;
-  }
-  // Never reuse Tarot artwork for non-Tarot characters.
+  if (item.id.startsWith("tarot-") && TAROT_FALLBACK_BY_ID[item.id]) return `/fortune/avatars/${TAROT_FALLBACK_BY_ID[item.id]}?v=10`;
   return "";
 }
 
@@ -73,8 +60,7 @@ export default function CommentatorPicker({ kind, selectedId, onSelect }: Props)
   return <div className="w-full px-0 py-1">
     <div className="mb-5 text-center"><p className="font-serif text-2xl font-bold text-white">Sana eşlik edecek karakteri seç ✨</p><p className="mx-auto mt-1 max-w-lg text-[11px] leading-5 text-slate-500">Her karakter farklı bir yorum tarzına sahip sanal AI karakteridir; gerçek kişi değildir.</p></div>
     <button type="button" onClick={() => recommended && onSelect(recommended)} className={`mb-5 flex w-full items-center justify-between gap-3 rounded-2xl border px-4 py-3 text-left transition ${recommended?.id === selectedId ? "border-amber-300/70 bg-amber-300/[.09]" : "border-amber-200/25 bg-gradient-to-r from-amber-300/[.10] to-violet-400/[.07] hover:border-amber-200/45"}`}>
-      <div className="flex min-w-0 items-center gap-3"><div className="grid h-11 w-11 shrink-0 place-items-center rounded-xl border border-amber-200/20 bg-amber-200/10 text-amber-200"><Zap className="h-5 w-5" /></div><div className="min-w-0"><p className="text-sm font-black text-white">Bana en uygun karakteri seç</p><p className="mt-0.5 truncate text-[10px] text-slate-400">{recommended ? `${recommended.name} · ${recommended.priceCredits} coin · ${recommended.etaMinutes} dk` : "Uygun karakter aranıyor…"}</p></div></div>
-      <span className="shrink-0 rounded-full border border-amber-200/20 px-2.5 py-1 text-[8px] font-black uppercase tracking-wider text-amber-200">ÖNERİLEN</span>
+      <div className="flex min-w-0 items-center gap-3"><div className="grid h-11 w-11 shrink-0 place-items-center rounded-xl border border-amber-200/20 bg-amber-200/10 text-amber-200"><Zap className="h-5 w-5" /></div><div className="min-w-0"><p className="text-sm font-black text-white">Bana en uygun karakteri seç</p><p className="mt-0.5 truncate text-[10px] text-slate-400">{recommended ? `${recommended.name} · ${recommended.priceCredits} coin · ${recommended.etaMinutes} dk` : "Uygun karakter aranıyor…"}</p></div></div><span className="shrink-0 rounded-full border border-amber-200/20 px-2.5 py-1 text-[8px] font-black uppercase tracking-wider text-amber-200">ÖNERİLEN</span>
     </button>
     <div className="-mx-1 grid grid-cols-2 items-start gap-4 sm:mx-0 sm:gap-5">
       {visible.map((item, index) => {

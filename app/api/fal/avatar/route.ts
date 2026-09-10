@@ -32,10 +32,24 @@ export async function GET(request: Request) {
   renderUrl.searchParams.set("size", "720");
   renderUrl.searchParams.set("bg", "transparent");
 
-  return NextResponse.redirect(renderUrl.toString(), {
-    status: 302,
-    headers: {
-      "Cache-Control": "public, max-age=86400, s-maxage=604800, stale-while-revalidate=2592000",
-    },
-  });
+  try {
+    // Do not redirect the phone to three.ws. Some mobile browsers/webviews block
+    // the third-party image response and leave the card blank. Fetch it server-side
+    // and serve it from the same Fal Köşesi origin instead.
+    const response = await fetch(renderUrl.toString(), {
+      headers: { Accept: "image/avif,image/webp,image/png,image/jpeg,image/*,*/*" },
+      cache: "force-cache",
+    });
+    if (!response.ok || !response.body) return new NextResponse(null, { status: 502 });
+
+    return new NextResponse(response.body, {
+      status: 200,
+      headers: {
+        "Content-Type": response.headers.get("content-type") || "image/png",
+        "Cache-Control": "public, max-age=86400, s-maxage=604800, stale-while-revalidate=2592000",
+      },
+    });
+  } catch {
+    return new NextResponse(null, { status: 502 });
+  }
 }
