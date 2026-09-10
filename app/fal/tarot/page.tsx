@@ -1,5 +1,5 @@
-import TarotPage from "./tarot78-client";
+import TarotRoomClient from "./tarot-room-client";
 
 export default function Page() {
-  return <TarotPage />;
+  return <TarotRoomClient />;
 }
