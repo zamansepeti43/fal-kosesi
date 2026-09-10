@@ -1,0 +1,22 @@
+import type { FortuneKind } from "@/lib/fortune/catalog";
+
+const METHOD_GUIDES: Record<FortuneKind, string> = {
+  coffee: `KAHVE METODOLOJİSİ: Fotoğraflarda gerçekten görülen şekilleri kullan. Önce fincanı bölgelere ayır: ağız/üst = yakın dönem ve dış dünyaya açılan gelişmeler; orta = aktif süreçler; dip = kök nedenler ve henüz çözülmemiş temalar; sap yönü = kullanıcıya yakın/kişisel alan. Sembolleri tek tek saymak yerine kümeler ve tekrar eden çizgiler üzerinden bağla. Aynı şekli farklı kelimelerle tekrar etme. Görsel net değilse kesin sembol iddia etme. Her ana çıkarımı bir gözleme bağla ve sonra soru/profil ile kişiselleştir.`,
+  love: `AŞK METODOLOJİSİ: Önce ilişki durumunu belirle: mevcut ilişki, eski partner, hoşlanılan kişi, yeni tanışma veya belirsizlik. 'Ne hissediyor?' ile 'nasıl davranıyor?' ayrımını yap. Kullanıcının korkusunu gerçek kabul etme. Yakın dönem için iletişim, engel, karşılıklılık ve olası bir karar düğümünü ayrı ayrı ele al. Barışma gibi konularda garanti verme; davranışsal işaretleri ve kullanıcının sınırlarını öne çıkar.`,
+  money: `PARA METODOLOJİSİ: Falı finansal tavsiye gibi değil sembolik eğlence okuması olarak yaz. Beklenen ödeme, ek gelir, iş fırsatı, gereksiz gider ve düzen temalarını birbirinden ayır. Büyük kazanç vaatlerinden kaçın; bunun yerine fırsatın hangi koşulda anlamlı olabileceğini ve acele harcamanın riskini belirt.`,
+  career: `KARİYER METODOLOJİSİ: Başvuru, görüşme, yeni görev, görünürlük, yönetici/ekip ilişkisi ve yön değişimi başlıklarını ayrı düşün. Kullanıcının mevcut iş durumunu merkeze al. Sonucu garanti etme; hazırlık, iletişim ve seçenekleri artıran eylemler ver.`,
+  future: `GELECEK METODOLOJİSİ: Kesin kehanet yerine yakın dönem işaretleri ve olasılıkları anlat. Önce görünen tema, sonra bunu tetikleyebilecek gelişme, sonra kullanıcının hazırlayabileceği adım. Zaman ifadeleri mümkünse yakın dönem/önümüzdeki haftalar/önümüzdeki birkaç ay gibi yumuşak aralıklarla ver.`,
+  daily: `GÜNLÜK METODOLOJİSİ: Tek günlük bir tema seç. Günün fırsatı, dikkat edilmesi gereken nokta ve küçük eylem önerisi ver. Çok uzak gelecek veya dramatik kehanetlere gitme.`,
+  dream: `RÜYA METODOLOJİSİ: Önce rüyadaki en güçlü üç sembolü ve bunların rüyadaki duygusunu ayır. Ardından kullanıcının güncel hayat bağlamına bağla. Tek bir 'gizli anlam' dayatma; sembolik, psikolojik ve kişisel çağrışım katmanlarını ayrı fakat kısa sun. Tekrarlayan rüyalar için tekrar eden tema öner.`,
+  astrology: `ASTROLOJİ METODOLOJİSİ: Doğum verisi varsa gezegen + burç + ev + önemli açı kombinasyonlarını birlikte ele al. Tek bir yerleşimden kişilik hükmü çıkarma. Transit bilgisi verilmediyse transit varmış gibi davranma.`,
+  numerology: `NUMEROLOJİ METODOLOJİSİ: Doğum tarihinden hesaplanan yaşam yolu, kişisel yıl ve mümkünse isim bazlı sayı temalarını ayır. Hesaplama verilmediyse sayı uydurma. Sayıyı karakter kaderi gibi kesin sunma; tema ve farkındalık çerçevesinde yorumla.`,
+  general: `FALCIYA SOR METODOLOJİSİ: Kullanıcının tek sorusunu tek cümleyle yeniden çerçevele. Sorudaki kişi/karar/zaman öğelerini çıkar. Ardından baskın enerji, engel, görünmeyen değişken ve kullanıcının atabileceği en yararlı adımı sırala. Soru cevaplanamayacak kadar kesin bir gelecek istiyorsa olasılık dili kullan.`,
+  tarot: `TAROT METODOLOJİSİ: Her kartı yalnız anlamından değil pozisyonundan oku. Düz/ters yönü dikkate al. Ardışık kartlar arasında tekrar eden suit, majör arkana yoğunluğu ve sembolik karşıtlıkları not et. Sonucu önce kartların ortak hikâyesi, sonra her pozisyon, sonra netleştirici mesaj şeklinde kur.`,
+  katina: `KATİNA METODOLOJİSİ: Özellikle aşk ilişkisi için kişi, duygu, niyet, engel ve yakın dönem akışını ayır. Tek kartı mutlak sonuç sayma; kartların birbirini nasıl daralttığına bak.`,
+  lenormand: `LENORMAND METODOLOJİSİ: Kartları bağımsız aforizmalar gibi yorumlama. Özellikle ikili ve üçlü kombinasyonlardan somut tema çıkar. Kart zinciri ve merkez kart varsa onu ana konu kabul et.`,
+  angel: `MELEK/ORACLE METODOLOJİSİ: Kart mesajını sakin ve destekleyici biçimde yorumla. Kullanıcının seçtiği konuya göre mesaj, engel, destek ve tek uygulanabilir adım üret. Mutlak ruhsal otorite iddiasından kaçın.`,
+};
+
+export function methodologyFor(kind: FortuneKind) {
+  return METHOD_GUIDES[kind];
+}

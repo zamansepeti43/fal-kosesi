@@ -1,13 +1,5 @@
-import type { Metadata } from "next";
-import TarotClient from "./tarot-client";
+import TarotPage from "./tarot78-client";
 
-export const metadata: Metadata = {
-  title: "Fal Köşesi - Tarot Falı",
-  description: "Desteni seç, kartların sana ne söylediğini keşfet.",
-};
-
-export default function Tarot() {
-  return (
-    <TarotClient />
-  );
+export default function Page() {
+  return <TarotPage />;
 }
