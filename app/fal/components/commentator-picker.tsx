@@ -10,14 +10,14 @@ type Props = { kind: FortuneKind; selectedId?: string | null; onSelect: (comment
 
 const AVATAR_BY_ID: Record<string, string> = {
   "tarot-tarotella": "tarotella.webp",
-  "tarot-arcanessa": "arcanessa.webp",
+  "tarot-arcanessa": "arcanessa-v2.webp",
   "tarot-noctara": "noctara.webp",
   "tarot-elowena": "elowena.webp",
-  "tarot-zoryelle": "zoryelle.webp",
+  "tarot-zoryelle": "zoryelle-v2.webp",
 };
 
 function characterAvatar(id: string) {
-  return `/fortune/avatars/${AVATAR_BY_ID[id] ?? "tarotella.webp"}?v=4`;
+  return `/fortune/avatars/${AVATAR_BY_ID[id] ?? "tarotella.webp"}?v=5`;
 }
 
 function availabilityLabel(status: Commentator["availability"]) {
@@ -70,7 +70,7 @@ export default function CommentatorPicker({ kind, selectedId, onSelect }: Props)
             <button key={item.id} type="button" onClick={() => onSelect(item)} aria-pressed={isSelected} className={`group relative ${centeredLast} rounded-[24px] border p-2.5 text-left transition duration-300 sm:p-3 ${isSelected ? "-translate-y-0.5 border-amber-300/70 bg-amber-300/[.08] shadow-[0_0_30px_rgba(251,191,36,.12)]" : "border-white/8 bg-white/[.025] hover:-translate-y-1 hover:border-amber-200/30 hover:bg-white/[.045]"}`}>
               {isRecommended && <span className="absolute left-3 top-3 z-10 rounded-full border border-amber-200/25 bg-[#17111e]/90 px-2.5 py-1 text-[7px] font-black uppercase tracking-wider text-amber-200">ÖNERİLEN</span>}
               <div className="relative flex aspect-square items-center justify-center overflow-hidden rounded-[20px] border border-white/10 bg-[#100d18] shadow-inner">
-                <img src={characterAvatar(item.id)} alt={`${item.name} sanal karakteri`} loading="eager" decoding="async" className="block h-auto w-auto max-h-full max-w-full object-contain" />
+                <img src={characterAvatar(item.id)} alt={`${item.name} sanal karakteri`} loading="eager" decoding="async" className="block h-full w-full object-contain" />
                 <div className="pointer-events-none absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-black/45 to-transparent" />
                 <span className="absolute bottom-2 right-2 rounded-full border border-white/10 bg-black/75 px-2 py-1 text-[7px] font-black tracking-wider text-white">AI</span>
                 {isSelected && <span className="absolute right-2 top-2 rounded-full bg-amber-300 px-2 py-1 text-[7px] font-black uppercase text-slate-950">Seçildi</span>}
