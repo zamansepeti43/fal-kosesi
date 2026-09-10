@@ -5,6 +5,8 @@ import { DIGITAL_COMMENTATORS, type FortuneKind } from "@/lib/fortune/catalog";
 
 export const runtime = "nodejs";
 
+type Row = Record<string, unknown>;
+
 export async function GET(request: Request) {
   const url = new URL(request.url);
   const kind = url.searchParams.get("kind") as FortuneKind | null;
@@ -12,50 +14,42 @@ export async function GET(request: Request) {
 
   try {
     const sql = requireDb();
-    const rows = await sql`
-      select id, display_name, title, bio, avatar_url, specialties, commentator_type, rating,
-             reading_count, avg_minutes, price_credits, voice_price_credits, status, verified
-      from public.commentators
-      where ${kind ? sql`${kind} = any(specialties)` : sql`true`}
-      order by (status = 'online') desc, rating desc, reading_count desc
-    `;
-
-    const values = rows.length
-      ? rows
-      : DIGITAL_COMMENTATORS.filter((item) => !kind || item.specialties.includes(kind));
+    const rows = kind
+      ? await sql`select id, display_name, title, bio, avatar_url, specialties, commentator_type, rating, reading_count, avg_minutes, price_credits, voice_price_credits, status, verified from public.commentators where ${kind} = any(specialties) order by (status = 'online') desc, rating desc, reading_count desc`
+      : await sql`select id, display_name, title, bio, avatar_url, specialties, commentator_type, rating, reading_count, avg_minutes, price_credits, voice_price_credits, status, verified from public.commentators order by (status = 'online') desc, rating desc, reading_count desc`;
 
     let favorites = new Set<string>();
     if (email) {
       try {
         const favoriteRows = await sql`select commentator_id from public.commentator_favorites where email = ${email}`;
-        favorites = new Set(favoriteRows.map((row) => String(row.commentator_id)));
-      } catch { /* migration may not be applied yet */ }
+        favorites = new Set(favoriteRows.map((row) => String((row as Row).commentator_id)));
+      } catch { /* optional migration */ }
     }
 
     return NextResponse.json({
-      commentators: values.map((row) => ({
-        id: String(row.id),
-        name: String(row.display_name),
-        title: String(row.title),
-        bio: row.bio ?? null,
-        specialties: Array.isArray(row.specialties) ? row.specialties : [],
-        type: String(row.commentator_type ?? "ai"),
-        rating: Number(row.rating ?? 5),
-        readingCount: Number(row.reading_count ?? 0),
-        etaMinutes: Number(row.avg_minutes ?? 5),
-        priceCredits: Number(row.price_credits ?? 10),
-        voicePriceCredits: Number(row.voice_price_credits ?? 5),
-        status: String(row.status ?? "offline"),
-        verified: Boolean(row.verified),
-        favorite: favorites.has(String(row.id)),
-      })),
+      commentators: rows.map((raw) => {
+        const row = raw as Row;
+        const specialties = Array.isArray(row.specialties) ? row.specialties.map(String) : [];
+        return {
+          id: String(row.id),
+          name: String(row.display_name),
+          title: String(row.title),
+          bio: row.bio ?? null,
+          specialties,
+          type: String(row.commentator_type ?? "ai"),
+          rating: Number(row.rating ?? 5),
+          readingCount: Number(row.reading_count ?? 0),
+          etaMinutes: Number(row.avg_minutes ?? 5),
+          priceCredits: Number(row.price_credits ?? 10),
+          voicePriceCredits: Number(row.voice_price_credits ?? 5),
+          status: String(row.status ?? "offline"),
+          verified: Boolean(row.verified),
+          favorite: favorites.has(String(row.id)),
+        };
+      }),
     });
   } catch (error) {
     console.error("Commentators API error:", error);
-    return NextResponse.json({
-      commentators: DIGITAL_COMMENTATORS
-        .filter((item) => !kind || item.specialties.includes(kind))
-        .map((item) => ({ ...item, type: "ai", favorite: false })),
-    });
+    return NextResponse.json({ commentators: DIGITAL_COMMENTATORS.filter((item) => !kind || item.specialties.includes(kind)).map((item) => ({ ...item, type: "ai", favorite: false })) });
   }
 }
