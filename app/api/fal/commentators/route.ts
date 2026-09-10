@@ -19,6 +19,17 @@ export async function GET(request: Request) {
 
   try {
     const sql = requireDb();
+
+    // Keep production logs clean while the optional commentator migration is not installed yet.
+    const tableCheck = await sql`select to_regclass('public.commentators') as table_name`;
+    if (!tableCheck[0]?.table_name) {
+      return NextResponse.json({
+        commentators: DIGITAL_COMMENTATORS
+          .filter((item) => !kind || item.specialties.includes(kind))
+          .map((item) => ({ ...item, type: "ai", favorite: false })),
+      });
+    }
+
     const rows = kind
       ? await sql`select id, display_name, title, bio, avatar_url, specialties, commentator_type, rating, reading_count, avg_minutes, price_credits, voice_price_credits, status, verified from public.commentators where ${kind} = any(specialties) order by (status = 'online') desc, rating desc, reading_count desc`
       : await sql`select id, display_name, title, bio, avatar_url, specialties, commentator_type, rating, reading_count, avg_minutes, price_credits, voice_price_credits, status, verified from public.commentators order by (status = 'online') desc, rating desc, reading_count desc`;
