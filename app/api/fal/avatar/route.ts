@@ -3,12 +3,12 @@ import { NextResponse } from "next/server";
 export const runtime = "edge";
 
 const palettes = [
-  { scarf: "#b91c45", shirt: "#8b1638", hair: "#17151d", bg: "#261735" },
-  { scarf: "#7c3aed", shirt: "#4c1d95", hair: "#16151c", bg: "#171b3a" },
-  { scarf: "#be123c", shirt: "#9f1239", hair: "#25151a", bg: "#351727" },
-  { scarf: "#c2410c", shirt: "#9a3412", hair: "#1c1513", bg: "#352019" },
-  { scarf: "#0f766e", shirt: "#115e59", hair: "#111827", bg: "#142d32" },
-  { scarf: "#a21caf", shirt: "#701a75", hair: "#211525", bg: "#2b1732" },
+  { scarf: "#8f2348", dress: "#5b1736", hair: "#20161b", bg: "#26172d", skin: "#e7b9a8", lip: "#a83255" },
+  { scarf: "#65408d", dress: "#39224f", hair: "#17141d", bg: "#1d1930", skin: "#c99078", lip: "#8f3e57" },
+  { scarf: "#a84a23", dress: "#632719", hair: "#211713", bg: "#302019", skin: "#d7a184", lip: "#9e3d3f" },
+  { scarf: "#276d72", dress: "#183f49", hair: "#171b20", bg: "#172b31", skin: "#e1b49a", lip: "#8f4054" },
+  { scarf: "#a06a28", dress: "#4c321d", hair: "#2a1a16", bg: "#302519", skin: "#b9795e", lip: "#813747" },
+  { scarf: "#873a8f", dress: "#48214f", hair: "#17131d", bg: "#28172d", skin: "#f0c6b4", lip: "#a23d60" },
 ] as const;
 
 function hash(value: string) {
@@ -21,38 +21,60 @@ export async function GET(request: Request) {
   const id = new URL(request.url).searchParams.get("id") || "esmeralya";
   const h = hash(id);
   const p = palettes[h % palettes.length];
-  const hairOffset = h % 3;
-  const eyeOffset = h % 2;
-  const smile = eyeOffset ? "M82 139 Q110 156 138 139" : "M84 140 Q110 151 136 140";
-  const hairPath = hairOffset === 0
-    ? "M50 103 Q46 45 110 36 Q174 45 170 103 Q151 79 126 79 Q91 79 50 103Z"
-    : hairOffset === 1
-      ? "M48 108 Q39 46 108 34 Q174 42 172 106 Q153 76 126 82 Q84 72 48 108Z"
-      : "M52 105 Q50 48 112 38 Q171 45 168 105 Q145 78 122 84 Q85 76 52 105Z";
+  const older = h % 5 === 0;
+  const glasses = h % 7 === 0;
+  const hair = h % 3;
+  const cup = h % 2 === 0;
+  const hairPath = hair === 0
+    ? "M49 104 Q43 49 74 32 Q109 12 145 34 Q177 53 170 105 Q153 79 129 75 Q91 71 49 104Z"
+    : hair === 1
+      ? "M53 106 Q46 61 66 39 Q91 12 128 25 Q168 39 169 91 Q160 113 151 121 L143 82 Q116 61 79 76 Q67 87 53 106Z"
+      : "M51 107 Q49 52 86 31 Q123 10 155 40 Q174 59 168 106 Q148 79 124 79 Q85 73 51 107Z";
+  const faceRx = older ? 49 : 51;
+  const faceRy = older ? 55 : 58;
+  const eyeSize = older ? 5.5 : 6.2;
 
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 250" role="img" aria-label="Sanal fal karakteri">
-  <rect width="220" height="250" rx="34" fill="${p.bg}"/>
-  <circle cx="110" cy="96" r="67" fill="${p.scarf}" opacity=".18"/>
-  <path d="M31 224 Q40 164 110 160 Q180 164 189 224Z" fill="${p.shirt}"/>
-  <path d="M47 91 Q36 72 49 54 Q69 36 110 37 Q153 37 171 57 Q184 74 171 96 Q156 72 132 70 Q94 67 47 91Z" fill="${p.scarf}"/>
-  <path d="M49 62 Q54 37 79 28 Q108 17 139 29 Q164 38 171 62 Q145 49 121 51 Q88 48 49 62Z" fill="${p.scarf}"/>
-  <path d="M82 37 Q99 22 111 25 Q123 22 139 37 L131 53 L111 43 L91 53Z" fill="${p.scarf}"/>
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 420" role="img" aria-label="Sanal fal karakteri">
+  <defs>
+    <radialGradient id="bg" cx="50%" cy="25%" r="80%"><stop offset="0" stop-color="${p.bg}"/><stop offset="1" stop-color="#090810"/></radialGradient>
+    <linearGradient id="cloth" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${p.scarf}"/><stop offset="1" stop-color="${p.dress}"/></linearGradient>
+    <radialGradient id="skin" cx="45%" cy="35%" r="70%"><stop offset="0" stop-color="#f5d3c5"/><stop offset="1" stop-color="${p.skin}"/></radialGradient>
+    <filter id="shadow"><feGaussianBlur stdDeviation="7"/></filter>
+  </defs>
+  <rect width="360" height="420" rx="54" fill="url(#bg)"/>
+  <circle cx="180" cy="144" r="126" fill="${p.scarf}" opacity=".12"/>
+  <ellipse cx="180" cy="390" rx="126" ry="28" fill="#000" opacity=".42" filter="url(#shadow)"/>
+
+  <path d="M54 414 Q62 291 180 278 Q298 291 306 414Z" fill="url(#cloth)"/>
+  <path d="M119 302 Q180 260 241 302 L254 356 Q180 382 106 356Z" fill="${p.scarf}" opacity=".9"/>
+
+  <path d="M49 111 Q38 67 70 38 Q103 8 150 25 Q180 12 211 28 Q256 50 260 111 Q240 89 214 79 Q175 61 126 76 Q86 84 49 111Z" fill="${p.scarf}"/>
   <path d="${hairPath}" fill="${p.hair}"/>
-  <ellipse cx="110" cy="107" rx="51" ry="57" fill="#f7d8cf"/>
-  <path d="M58 104 Q57 77 78 61 Q93 52 110 54 Q128 52 145 63 Q163 79 162 104 Q149 82 128 80 Q92 76 58 104Z" fill="${p.hair}"/>
-  <ellipse cx="76" cy="111" rx="10" ry="14" fill="#f5c6bd"/><ellipse cx="144" cy="111" rx="10" ry="14" fill="#f5c6bd"/>
-  <circle cx="54" cy="113" r="14" fill="none" stroke="#eab308" stroke-width="5"/><circle cx="166" cy="113" r="14" fill="none" stroke="#eab308" stroke-width="5"/>
-  <ellipse cx="88" cy="109" rx="6" ry="8" fill="#20151d"/><ellipse cx="132" cy="109" rx="6" ry="8" fill="#20151d"/>
-  <circle cx="90" cy="107" r="2" fill="white"/><circle cx="134" cy="107" r="2" fill="white"/>
-  <path d="M72 97 Q87 87 101 96" fill="none" stroke="#251822" stroke-width="4" stroke-linecap="round"/><path d="M119 96 Q133 87 148 97" fill="none" stroke="#251822" stroke-width="4" stroke-linecap="round"/>
-  <path d="M108 111 Q103 125 110 129 Q117 125 112 111" fill="none" stroke="#b56b67" stroke-width="3" stroke-linecap="round"/>
-  <path d="${smile}" fill="none" stroke="#b51d45" stroke-width="5" stroke-linecap="round"/>
-  <path d="M78 174 Q110 153 142 174 L150 211 Q110 230 70 211Z" fill="${p.scarf}"/>
-  <path d="M88 188 Q110 171 132 188" fill="none" stroke="#f3c5bc" stroke-width="7" stroke-linecap="round"/>
-  <ellipse cx="110" cy="198" rx="20" ry="11" fill="#f8fafc"/>
-  <path d="M126 196 Q148 192 148 208 Q146 219 132 218" fill="none" stroke="#f8fafc" stroke-width="6"/>
-  <circle cx="33" cy="31" r="4" fill="#facc15"/><circle cx="188" cy="46" r="3" fill="#c084fc"/><path d="M190 25 l3 6 6 3-6 3-3 6-3-6-6-3 6-3Z" fill="#facc15"/>
-</svg>`;
 
-  return new NextResponse(svg, { headers: { "Content-Type": "image/svg+xml; charset=utf-8", "Cache-Control": "public, max-age=86400" } });
+  <ellipse cx="180" cy="158" rx="${faceRx}" ry="${faceRy}" fill="url(#skin)"/>
+  <path d="M132 137 Q133 103 158 83 Q181 69 204 82 Q226 94 232 132 Q211 111 189 110 Q159 108 132 137Z" fill="${p.hair}"/>
+  <path d="M132 157 Q119 165 125 183 Q132 193 143 183" fill="none" stroke="${p.skin}" stroke-width="10" stroke-linecap="round"/>
+  <path d="M228 157 Q241 165 235 183 Q228 193 217 183" fill="none" stroke="${p.skin}" stroke-width="10" stroke-linecap="round"/>
+
+  ${glasses ? `<rect x="135" y="141" width="34" height="28" rx="13" fill="none" stroke="#c9a55b" stroke-width="4"/><rect x="191" y="141" width="34" height="28" rx="13" fill="none" stroke="#c9a55b" stroke-width="4"/><path d="M169 151 Q180 146 191 151" fill="none" stroke="#c9a55b" stroke-width="4"/>` : ""}
+  <ellipse cx="153" cy="155" rx="${eyeSize}" ry="7" fill="#1c1720"/><ellipse cx="207" cy="155" rx="${eyeSize}" ry="7" fill="#1c1720"/>
+  <circle cx="155" cy="153" r="2" fill="#fff"/><circle cx="209" cy="153" r="2" fill="#fff"/>
+  <path d="M137 137 Q153 128 169 136" fill="none" stroke="#3a2327" stroke-width="5" stroke-linecap="round"/><path d="M191 136 Q207 128 223 137" fill="none" stroke="#3a2327" stroke-width="5" stroke-linecap="round"/>
+  <path d="M180 157 Q173 177 181 181 Q188 178 185 158" fill="none" stroke="#a56e63" stroke-width="3" stroke-linecap="round"/>
+  <path d="M157 198 Q180 ${older ? 211 : 215} 203 198" fill="none" stroke="${p.lip}" stroke-width="6" stroke-linecap="round"/>
+  ${older ? `<path d="M145 185 Q151 188 157 185 M203 185 Q209 188 215 185" fill="none" stroke="#b88476" stroke-width="2" opacity=".55"/>` : ""}
+
+  <path d="M120 268 Q180 235 240 268" fill="none" stroke="${p.scarf}" stroke-width="32" stroke-linecap="round"/>
+  <path d="M132 276 Q180 250 228 276" fill="none" stroke="#f0c8ba" stroke-width="8" stroke-linecap="round"/>
+  ${cup ? `<g transform="translate(205 302)"><ellipse cx="32" cy="47" rx="35" ry="10" fill="#000" opacity=".2"/><path d="M0 12 Q31 0 62 12 L56 51 Q31 63 6 51Z" fill="#efe7e4"/><path d="M61 21 Q82 19 80 37 Q78 51 59 49" fill="none" stroke="#efe7e4" stroke-width="9"/><ellipse cx="31" cy="12" rx="31" ry="8" fill="#b99176"/><path d="M19 4 Q24 -12 31 4 M34 4 Q41 -13 46 5" fill="none" stroke="#d7b49e" stroke-width="3" stroke-linecap="round"/></g>` : ""}
+
+  <circle cx="37" cy="44" r="5" fill="#facc15"/><circle cx="321" cy="65" r="4" fill="#c084fc"/><path d="M318 35 l4 8 8 4-8 4-4 8-4-8-8-4 8-4Z" fill="#facc15"/>
+  </svg>`;
+
+  return new NextResponse(svg, {
+    headers: {
+      "Content-Type": "image/svg+xml; charset=utf-8",
+      "Cache-Control": "public, max-age=86400, stale-while-revalidate=604800",
+    },
+  });
 }
