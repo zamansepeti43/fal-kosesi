@@ -29,7 +29,9 @@ function characterAvatar(item: Commentator) {
   if (item.id.startsWith("tarot-") && TAROT_AVATAR_BY_ID[item.id]) {
     return `/fortune/avatars/${TAROT_AVATAR_BY_ID[item.id]}?v=10`;
   }
-  return item.avatarUrl || `/api/fal/avatar?id=${encodeURIComponent(item.id)}`;
+  // Non-Tarot characters always use the project's curated renderer.
+  // Never render catalog/DB DiceBear or other stale remote avatar URLs.
+  return `/api/fal/avatar?id=${encodeURIComponent(item.id)}`;
 }
 
 function characterFallback(item: Commentator) {
@@ -46,7 +48,7 @@ function availabilityLabel(status: Commentator["availability"]) {
 }
 
 export default function CommentatorPicker({ kind, selectedId, onSelect }: Props) {
-  const [items, setItems] = useState<Commentator[]>(DIGITAL_COMMENTATORS.filter((item) => item.specialties.includes(kind)));
+  const [items, setItems] = useState<Commentator[]>([]);
   useEffect(() => {
     let cancelled = false;
     void fetch(`/api/fal/commentators?kind=${encodeURIComponent(kind)}`).then((response) => response.ok ? response.json() : null).then((data) => {
