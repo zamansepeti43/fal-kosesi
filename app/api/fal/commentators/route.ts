@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
 import { getMemberEmail } from "@/lib/member-session";
-import { requireDb } from "@/lib/neon/db";
 import { DIGITAL_COMMENTATORS, type FortuneKind } from "@/lib/fortune/catalog";
 
 export const runtime = "nodejs";
@@ -32,8 +31,9 @@ function generatedAvatar(id: string, kind: FortuneKind) {
   }
 
   const start = PORTRAIT_START[kind] ?? 1;
-  const index = Math.max(0, Math.min(4, Number(id.split("-").pop()?.length ?? 0)));
-  const portraitId = start + index;
+  const siblings = DIGITAL_COMMENTATORS.filter((item) => item.specialties.includes(kind));
+  const index = siblings.findIndex((item) => item.id === id);
+  const portraitId = start + (index >= 0 ? index : 0);
   return `https://randomuser.me/api/portraits/large/women/${portraitId}.jpg`;
 }
 
