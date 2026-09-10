@@ -32,7 +32,7 @@ function routeFor(kind: FortuneKind) {
   const routes: Partial<Record<FortuneKind, string>> = {
     coffee: "/fal/upload", tarot: "/fal/tarot", love: "/fal/ask", money: "/fal/para", career: "/fal/kariyer",
     dream: "/fal/ruya", numerology: "/fal/numeroloji", astrology: "/fal/yildizname", katina: "/fal/tarot",
-    lenormand: "/fal/tarot", angel: "/fal/tarot", future: "/fal/gelecek", daily: "/fal/gunluk", general: "/fal/sor",
+    lenormand: "/fal/tarot", angel: "/fal/tarot", future: "/fal/sor", daily: "/fal/gunluk", general: "/fal/sor",
   };
   return routes[kind] ?? "/";
 }
@@ -100,7 +100,7 @@ export default function FalcilarPage() {
               <section key={section.kind} className="overflow-hidden rounded-3xl border border-white/10 bg-[#0d0d20]/90 p-3 shadow-xl sm:p-4">
                 <div className="mb-3 flex items-center justify-between gap-3 px-1">
                   <div className="flex items-center gap-3"><span className="grid h-10 w-10 place-items-center rounded-2xl bg-violet-500/15 text-xl">{section.icon}</span><div><h2 className="font-serif text-lg font-bold sm:text-xl">{section.label}</h2><p className="text-[10px] text-slate-500">5 farklı AI karakter • {FORTUNE_PRODUCTS[section.kind].label}</p></div></div>
-                  <Link href={`${routeFor(section.kind)}`} className="hidden items-center gap-1 text-[10px] font-bold text-violet-300 sm:flex">Fal türüne git <ChevronRight className="h-3 w-3" /></Link>
+                  <Link href={routeFor(section.kind)} className="hidden items-center gap-1 text-[10px] font-bold text-violet-300 sm:flex">Fal türüne git <ChevronRight className="h-3 w-3" /></Link>
                 </div>
                 <div className="grid grid-cols-2 gap-2 sm:grid-cols-5">
                   {cards.map((item) => {
@@ -116,7 +116,7 @@ export default function FalcilarPage() {
                         <p className="mt-0.5 h-7 overflow-hidden text-[9px] leading-3.5 text-violet-200">{item.title}</p>
                         <div className="mt-1 flex items-center gap-1 text-[9px] text-amber-300"><Star className="h-2.5 w-2.5 fill-current" />{item.rating}<span className="truncate text-slate-600">• {item.readingCount.toLocaleString("tr-TR")}</span></div>
                         <p className="mt-1.5 line-clamp-2 h-7 text-[8px] leading-3.5 text-slate-500">{item.description}</p>
-                        <div className="mt-2 flex items-center justify-between gap-1 text-[8px]"><span className="inline-flex items-center gap-1 text-slate-500"><Clock3 className="h-2.5 w-2.5" />{item.etaMinutes} dk</span><span className="inline-flex items-center gap-1 font-black text-amber-200"><Coins className="h-2.5 w-2.5" />{item.priceCredits}</span></div>
+                        <div className="mt-2 flex items-center justify-between gap-1 text-[8px]"><span className="inline-flex items-center gap-1 text-slate-500"><Clock3 className="h-2.5 w-2.5" />{item.etaMinutes} dk</span><span className="inline-flex items-center gap-1 font-black text-amber-200"><Coins className="h-2.5 w-2.5" />{item.priceCredits} kredi</span></div>
                         <Link href={selectedHref} className="mt-2 flex w-full items-center justify-center rounded-xl bg-violet-500 px-2 py-2 text-[9px] font-black text-white shadow-lg shadow-violet-900/20">Seç</Link>
                       </article>
                     );
