@@ -4,8 +4,14 @@ import { generateFalResponse } from "@/lib/ai/provider";
 import { getMemberEmail } from "@/lib/member-session";
 import { requireDb } from "@/lib/neon/db";
 import { READING_COSTS } from "@/lib/credits";
+import { DIGITAL_COMMENTATORS, type FortuneKind } from "@/lib/fortune/catalog";
 
 export const runtime = "nodejs";
+
+const ALLOWED_KINDS = new Set<FortuneKind>([
+  "coffee", "love", "money", "career", "future", "daily", "dream", "astrology",
+  "numerology", "general", "tarot", "katina", "lenormand", "angel",
+]);
 
 export async function POST(request: Request) {
   let email: string | null = null;
@@ -18,8 +24,15 @@ export async function POST(request: Request) {
     if (!email) return NextResponse.json({ error: "Kredi hesabına erişilemedi." }, { status: 401 });
 
     const sql = requireDb();
-    const kind = String(body.kind ?? "coffee");
-    chargeAmount = READING_COSTS[kind as keyof typeof READING_COSTS] ?? READING_COSTS.coffee;
+    const kind = String(body.kind ?? "coffee") as FortuneKind;
+    if (!ALLOWED_KINDS.has(kind)) return NextResponse.json({ error: "Geçersiz fal türü." }, { status: 400 });
+
+    const requestedCommentatorId = typeof body.commentatorId === "string" ? body.commentatorId : null;
+    const commentator = requestedCommentatorId
+      ? DIGITAL_COMMENTATORS.find((item) => item.id === requestedCommentatorId && item.specialties.includes(kind))
+      : undefined;
+
+    chargeAmount = commentator?.priceCredits ?? READING_COSTS[kind as keyof typeof READING_COSTS] ?? READING_COSTS.coffee;
     chargeReference = `reading-${crypto.randomUUID()}`;
 
     try {
@@ -28,7 +41,7 @@ export async function POST(request: Request) {
           ${email},
           ${chargeAmount},
           ${chargeReference},
-          ${`${kind} falı`}
+          ${`${kind} falı${commentator ? ` • ${commentator.name}` : ""}`}
         ) as credits
       `;
     } catch (chargeError) {
@@ -42,7 +55,7 @@ export async function POST(request: Request) {
 
     try {
       const result = await generateFalResponse({
-        kind: kind as Parameters<typeof generateFalResponse>[0]["kind"],
+        kind,
         focus: body.focus ?? "genel",
         question: body.question ?? "",
         images: Array.isArray(body.images) ? body.images : [],
@@ -51,14 +64,28 @@ export async function POST(request: Request) {
 
       let readingId: string | null = null;
       try {
+        const input = {
+          focus: String(body.focus ?? "genel"),
+          question: String(body.question ?? ""),
+          images: Array.isArray(body.images) ? body.images.slice(0, 3) : [],
+          profile: body.profile ?? {},
+          selectedCommentatorId: commentator?.id ?? null,
+          selectedCommentatorName: commentator?.name ?? null,
+        };
         const savedRows = await sql`
-          insert into public.readings (email, kind, focus, question, result)
+          insert into public.readings (email, kind, focus, question, result, status, delivery_mode, commentator_id, commentator_name, price_credits, input)
           values (
             ${email},
             ${kind},
             ${String(body.focus ?? "genel")},
             ${String(body.question ?? "")},
-            ${JSON.stringify(result)}::jsonb
+            ${JSON.stringify(result)}::jsonb,
+            'ready',
+            'instant',
+            ${commentator?.id ?? null},
+            ${commentator?.name ?? null},
+            ${chargeAmount},
+            ${JSON.stringify(input)}::jsonb
           )
           returning id
         `;
@@ -79,7 +106,7 @@ export async function POST(request: Request) {
         console.error("Reading persistence error:", saveError);
       }
 
-      return NextResponse.json({ ...result, readingId });
+      return NextResponse.json({ ...result, readingId, commentator: commentator ? { id: commentator.id, name: commentator.name, priceCredits: commentator.priceCredits } : null });
     } catch (generationError) {
       await sql`
         select public.refund_credits(
