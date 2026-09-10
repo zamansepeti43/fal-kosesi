@@ -9,7 +9,12 @@ type Row = Record<string, unknown>;
 
 export async function GET(request: Request) {
   const url = new URL(request.url);
-  const kind = url.searchParams.get("kind") as FortuneKind | null;
+  const rawKind = url.searchParams.get("kind");
+  const validKinds = new Set<FortuneKind>([
+    "coffee", "love", "money", "career", "future", "daily", "dream", "astrology",
+    "numerology", "general", "tarot", "katina", "lenormand", "angel",
+  ]);
+  const kind = rawKind && validKinds.has(rawKind as FortuneKind) ? rawKind as FortuneKind : null;
   const email = await getMemberEmail();
 
   try {
@@ -32,8 +37,8 @@ export async function GET(request: Request) {
         const specialties = Array.isArray(row.specialties) ? row.specialties.map(String) : [];
         return {
           id: String(row.id),
-          name: String(row.display_name),
-          title: String(row.title),
+          name: String(row.display_name ?? "AI Yorumcu"),
+          title: String(row.title ?? "Sanal Falcı"),
           bio: row.bio ?? null,
           specialties,
           type: String(row.commentator_type ?? "ai"),
@@ -41,15 +46,20 @@ export async function GET(request: Request) {
           readingCount: Number(row.reading_count ?? 0),
           etaMinutes: Number(row.avg_minutes ?? 5),
           priceCredits: Number(row.price_credits ?? 10),
-          voicePriceCredits: Number(row.voice_price_credits ?? 5),
-          status: String(row.status ?? "offline"),
+          voiceCredits: Number(row.voice_price_credits ?? 5),
+          availability: String(row.status ?? "offline"),
           verified: Boolean(row.verified),
+          avatarUrl: String(row.avatar_url ?? `https://api.dicebear.com/9.x/lorelei/svg?seed=${encodeURIComponent(String(row.id))}&backgroundColor=161326`),
           favorite: favorites.has(String(row.id)),
         };
       }),
     });
   } catch (error) {
     console.error("Commentators API error:", error);
-    return NextResponse.json({ commentators: DIGITAL_COMMENTATORS.filter((item) => !kind || item.specialties.includes(kind)).map((item) => ({ ...item, type: "ai", favorite: false })) });
+    return NextResponse.json({
+      commentators: DIGITAL_COMMENTATORS
+        .filter((item) => !kind || item.specialties.includes(kind))
+        .map((item) => ({ ...item, type: "ai", favorite: false })),
+    });
   }
 }
