@@ -35,7 +35,7 @@ function generatedAvatar(id: string, kind: FortuneKind) {
   const siblings = DIGITAL_COMMENTATORS.filter((item) => item.specialties.includes(kind));
   const index = siblings.findIndex((item) => item.id === id);
   const portraitId = start + (index >= 0 ? index : 0);
-  return `https://randomuser.me/api/portraits/large/women/${portraitId}.jpg`;
+  return `https://randomuser.me/api/portraits/women/${portraitId}.jpg`;
 }
 
 export async function GET(request: Request) {
