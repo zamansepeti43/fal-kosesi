@@ -1,91 +1,35 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
-import { ArrowLeft, ChevronRight, Heart, Sparkles, WalletCards, BriefcaseBusiness, Moon, Wand2 } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { ArrowLeft, BriefcaseBusiness, ChevronRight, Heart, Moon, Sparkles, WalletCards, Wand2 } from "lucide-react";
 import type { FalKind, ReadingResult } from "@/lib/ai/provider";
 import type { DigitalCommentator } from "@/lib/fortune/catalog";
+import { DIGITAL_COMMENTATORS } from "@/lib/fortune/catalog";
 import CommentatorPicker from "./commentator-picker";
 
 type Props = { kind: FalKind; title: string; eyebrow: string; description: string; placeholder: string; accent?: "rose" | "emerald" | "violet" | "amber" | "blue" };
-
-const accents = {
-  rose: "from-rose-500 to-fuchsia-500 border-rose-300/20 text-rose-100",
-  emerald: "from-emerald-500 to-lime-400 border-emerald-300/20 text-emerald-100",
-  violet: "from-violet-500 to-fuchsia-500 border-violet-300/20 text-violet-100",
-  amber: "from-amber-400 to-orange-400 border-amber-300/20 text-amber-100",
-  blue: "from-sky-500 to-indigo-500 border-sky-300/20 text-sky-100",
+const accents = { rose:"from-rose-500 to-fuchsia-500", emerald:"from-emerald-500 to-lime-400", violet:"from-violet-500 to-fuchsia-500", amber:"from-amber-400 to-orange-400", blue:"from-sky-500 to-indigo-500" };
+const fields = [["love","Aşk",Heart],["career","İş & Kariyer",BriefcaseBusiness],["money","Para & Kısmet",WalletCards],["future","Yakın Gelecek",Moon]] as const;
+const questionSets: Partial<Record<FalKind,string[]>> = {
+ love:["Sana nasıl hitap edelim?","Şu an aşk hayatında hangi durumdasın?","Bu konuda en çok neyi merak ediyorsun?","Aklındaki kişi veya ilişkin hakkında özel sorun ne?"],
+ money:["Sana nasıl hitap edelim?","Maddi durumunda şu an en önemli konu ne?","Yaklaşan bir ödeme, iş veya fırsat var mı?","Para ve kısmet konusunda özel sorun ne?"],
+ career:["Sana nasıl hitap edelim?","Şu an iş/kariyer durumun nasıl?","Değiştirmek veya ulaşmak istediğin ne var?","Kariyerin hakkında özel sorun ne?"],
+ future:["Sana nasıl hitap edelim?","Hayatında şu an en büyük değişim ne?","Önümüzdeki dönemde hangi alanı merak ediyorsun?","Gelecekle ilgili özel sorun ne?"],
+ dream:["Sana nasıl hitap edelim?","Rüyanda en belirgin olay veya sembol neydi?","Rüya sırasında hangi duyguyu hissettin?","Bu rüyayla ilgili neyi anlamak istiyorsun?"],
+ astrology:["Sana nasıl hitap edelim?","Doğum tarihin nedir?","Doğum yerin ve biliyorsan saatin nedir?","Haritanda özellikle hangi konuyu merak ediyorsun?"],
+ numerology:["Sana nasıl hitap edelim?","Doğum tarihin nedir?","Adını veya kullanmak istediğin ismi yazabilir misin?","Sayıların hangi konuda yol göstermesini istiyorsun?"],
+ daily:["Sana nasıl hitap edelim?","Bugün ruh halin nasıl?","Bugün önceliğin hangi konu?","Bugün için en çok neyi merak ediyorsun?"],
+ general:["Sana nasıl hitap edelim?","Şu an hayatında neler oluyor?","Bu konuda seni en çok düşündüren şey ne?","Falcıya sormak istediğin asıl soru ne?"]
 };
 
-const fields = [
-  ["love", "Aşk", Heart, "Kalbinin gündemi"],
-  ["career", "İş & Kariyer", BriefcaseBusiness, "Hedeflerin"],
-  ["money", "Para & Kısmet", WalletCards, "Maddi akışın"],
-  ["future", "Yakın Gelecek", Moon, "Önündeki dönem"],
-] as const;
-
-export default function PremiumFortune({ kind, title, eyebrow, description, placeholder, accent = "violet" }: Props) {
-  const [question, setQuestion] = useState("");
-  const [focus, setFocus] = useState("genel");
-  const [reading, setReading] = useState<ReadingResult | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
-  const [commentator, setCommentator] = useState<DigitalCommentator | null>(null);
-  const gradient = accents[accent];
-
-  const runReading = async (event: React.FormEvent) => {
-    event.preventDefault();
-    if (!question.trim()) { setError("Sana özel yorum için bir soru veya merakını yaz."); return; }
-    setLoading(true); setError("");
-    try {
-      let profile: Record<string, unknown> = {};
-      try { profile = JSON.parse(localStorage.getItem("fal-kosesi-profile") || "{}"); } catch {}
-      const queued = commentator && kind === "coffee";
-      const response = await fetch(queued ? "/api/fal/queue" : "/api/fal/reading", {
-        method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ kind, focus, question: question.trim(), profile, commentatorId: commentator?.id, deliveryMode: queued ? "queued" : "instant" }),
-      });
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.error || "Yorum hazırlanamadı.");
-      if (queued && data.readingId) {
-        window.location.href = `/fal/sonuc?id=${encodeURIComponent(data.readingId)}`;
-        return;
-      }
-      setReading(data);
-    } catch (err) { setError(err instanceof Error ? err.message : "Bir hata oluştu."); }
-    finally { setLoading(false); }
-  };
-
-  if (reading) {
-    return (
-      <main className="min-h-screen bg-[radial-gradient(circle_at_top,rgba(109,40,217,.22),transparent_32%),linear-gradient(180deg,#080817,#05050d)] px-4 py-5 text-white sm:py-8">
-        <div className="mx-auto max-w-5xl">
-          <header className="mb-5 flex items-center justify-between"><button type="button" onClick={() => setReading(null)} className="text-xs text-slate-300">← Yeni yorum</button><Link href="/" className="text-xs text-slate-400">Ana Sayfa</Link></header>
-          <section className={`relative overflow-hidden rounded-[28px] border bg-gradient-to-br ${gradient} bg-opacity-10 p-6 shadow-2xl sm:p-8`}><p className="text-[9px] font-bold uppercase tracking-[.25em] opacity-80">{eyebrow} • Kişisel Okuma</p><h1 className="mt-2 font-serif text-3xl font-bold">{title}</h1><p className="mt-2 text-sm leading-6 text-slate-300">Sorun, profilin ve seçtiğin yorumcu yaklaşımı birlikte değerlendirilerek hazırlandı.</p></section>
-          <section className="mt-4 rounded-[24px] border border-white/10 bg-white/[.035] p-5 shadow-xl sm:p-7"><div className="flex items-center gap-2 text-amber-200"><Sparkles className="h-5 w-5"/><h2 className="font-serif text-xl font-bold">Sana özel genel yorum</h2></div><p className="mt-4 text-sm leading-7 text-slate-200 sm:text-base sm:leading-8">{reading.summary}</p></section>
-          <section className="mt-5"><div className="mb-3 flex items-end justify-between"><div><p className="text-[9px] uppercase tracking-[.25em] text-violet-200">Kişisel analiz</p><h2 className="mt-1 font-serif text-2xl font-bold">Hayatının dört alanı</h2></div><span className="text-xs text-slate-500">Derin okuma</span></div><div className="grid gap-3 sm:grid-cols-2">{fields.map(([key, label, Icon, subtitle]) => <article key={key} className="rounded-[22px] border border-white/[.08] bg-white/[.035] p-5 shadow-xl"><div className="flex items-center gap-3"><span className="grid h-10 w-10 place-items-center rounded-xl bg-violet-400/10 text-violet-200"><Icon className="h-5 w-5"/></span><div><h3 className="font-serif text-lg font-bold">{label}</h3><p className="text-[10px] text-slate-500">{subtitle}</p></div></div><p className="mt-4 text-sm leading-7 text-slate-200">{reading.sections[key]}</p></article>)}</div></section>
-          {reading.symbols?.length > 0 && <section className="mt-6"><h2 className="mb-3 font-serif text-2xl font-bold">Öne çıkan işaretler</h2><div className="grid gap-2.5 sm:grid-cols-2 lg:grid-cols-3">{reading.symbols.map((symbol, index) => <article key={`${symbol.name}-${index}`} className="rounded-[20px] border border-white/[.08] bg-white/[.03] p-4"><div className="flex justify-between"><span className="text-lg text-amber-200">✦</span><span className="text-[8px] uppercase tracking-widest text-slate-500">{symbol.zone}</span></div><h3 className="mt-2 font-serif font-bold">{symbol.name}</h3><p className="mt-1 text-xs leading-5 text-slate-300">{symbol.meaning}</p></article>)}</div></section>}
-          <section className="mt-5 rounded-[22px] border border-amber-300/20 bg-amber-300/[.05] p-5"><p className="text-[9px] uppercase tracking-[.25em] text-amber-200">Falcının sana sorusu</p><p className="mt-2 font-serif text-lg font-semibold">{reading.followUpQuestion}</p></section>
-        </div>
-      </main>
-    );
-  }
-
-  return (
-    <main className="min-h-screen bg-[radial-gradient(circle_at_top,rgba(109,40,217,.20),transparent_35%),linear-gradient(180deg,#080817,#05050d)] px-4 py-5 text-white sm:py-8">
-      <div className="mx-auto max-w-4xl">
-        <header className="mb-6 flex items-center gap-3"><Link href="/" className="text-xs text-slate-300 sm:text-sm"><ArrowLeft className="mr-1 inline h-4 w-4"/> Geri</Link><span className="text-slate-600">/</span><span className="text-xs text-slate-400">{eyebrow}</span></header>
-        <section className="rounded-[28px] border border-white/10 bg-white/[.035] p-6 shadow-2xl backdrop-blur-xl sm:p-9"><div className="flex items-start gap-4"><div className={`grid h-14 w-14 shrink-0 place-items-center rounded-2xl bg-gradient-to-br ${gradient} shadow-lg`}><Wand2 className="h-7 w-7 text-white"/></div><div><p className="text-[9px] font-bold uppercase tracking-[.25em] text-amber-200">{eyebrow}</p><h1 className="mt-1 font-serif text-3xl font-bold sm:text-4xl">{title}</h1><p className="mt-2 text-sm leading-6 text-slate-300">{description}</p></div></div>
-          <form onSubmit={runReading} className="mt-7 space-y-5">
-            <div><label className="mb-2 block text-sm font-semibold text-slate-200">Bugün hangi alanı derinleştirelim?</label><div className="grid grid-cols-2 gap-2 sm:grid-cols-5">{["genel","aşk","para","kariyer","gelecek"].map((item) => <button type="button" key={item} onClick={() => setFocus(item)} className={`rounded-xl border px-3 py-2.5 text-xs font-semibold capitalize transition ${focus === item ? "border-amber-300/60 bg-amber-300/10 text-amber-100" : "border-white/10 bg-white/[.03] text-slate-400"}`}>{item}</button>)}</div></div>
-            <CommentatorPicker kind={kind} selectedId={commentator?.id ?? null} onSelect={(value) => setCommentator(value ? ({ ...value } as DigitalCommentator) : null)} />
-            <div><label htmlFor="premium-question" className="mb-2 block text-sm font-semibold text-slate-200">Sana özel sorunu yaz</label><textarea id="premium-question" value={question} onChange={(e) => setQuestion(e.target.value)} rows={6} placeholder={placeholder} className="w-full rounded-2xl border border-white/10 bg-black/20 px-4 py-3 text-sm text-white outline-none transition placeholder:text-slate-600 focus:border-violet-400"/><p className="mt-2 text-[10px] text-slate-500">Profilindeki bilgiler, seçtiğin odak ve yorumcu stili kişiselleştirmeye yardımcı olur.</p></div>
-            {commentator && kind === "coffee" && <div className="rounded-xl border border-amber-300/15 bg-amber-300/[.04] p-3 text-xs text-amber-100">{commentator.name} seçildi · {commentator.priceCredits} kredi · yaklaşık {commentator.etaMinutes} dk. Kahve falı hemen açılmaz; sıraya alınır ve hazır olduğunda sonucu görürsün.</div>}
-            {error && <p className="rounded-xl border border-red-400/20 bg-red-400/5 p-3 text-xs text-red-200">{error}</p>}
-            <button disabled={loading} className="flex w-full items-center justify-center gap-2 rounded-full bg-gradient-to-r from-amber-300 via-yellow-300 to-violet-400 px-6 py-3.5 text-sm font-black text-slate-950 shadow-[0_12px_30px_rgba(251,191,36,.25)] disabled:opacity-60">{loading ? <><Sparkles className="h-4 w-4 animate-spin"/> Hazırlanıyor...</> : <><Sparkles className="h-4 w-4"/> Yorumumu Hazırla <ChevronRight className="h-4 w-4"/></>}</button>
-          </form>
-        </section>
-      </div>
-    </main>
-  );
+export default function PremiumFortune({ kind,title,eyebrow,description,placeholder,accent="violet" }: Props) {
+ const [step,setStep]=useState(0); const [answers,setAnswers]=useState(["","","",""]); const [focus,setFocus]=useState("genel"); const [reading,setReading]=useState<ReadingResult|null>(null); const [loading,setLoading]=useState(false); const [error,setError]=useState(""); const [commentator,setCommentator]=useState<DigitalCommentator|null>(null);
+ const prompts=questionSets[kind] ?? questionSets.general!; const gradient=accents[accent]; const fallback=useMemo(()=>DIGITAL_COMMENTATORS.find(x=>x.specialties.includes(kind as never)),[kind]); const price=commentator?.priceCredits ?? fallback?.priceCredits ?? 8;
+ useEffect(()=>{try{const p=JSON.parse(localStorage.getItem("fal-kosesi-profile")||"{}");if(p.name)setAnswers(a=>[String(p.name).split(" ")[0],a[1],a[2],a[3]])}catch{}},[]);
+ const setAnswer=(i:number,v:string)=>setAnswers(a=>a.map((x,n)=>n===i?v:x));
+ const next=()=>{setError("");if(step===1&&answers.some(x=>!x.trim())){setError("Lütfen 4 soruyu da cevapla; böylece yorum gerçekten sana özel olsun.");return}setStep(s=>Math.min(3,s+1))};
+ const runReading=async()=>{setLoading(true);setError("");try{let profile:Record<string,unknown>={};try{profile=JSON.parse(localStorage.getItem("fal-kosesi-profile")||"{}")}catch{}const question=prompts.map((p,i)=>`${p}: ${answers[i]}`).join("\n");const r=await fetch("/api/fal/reading",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({kind,focus,question,profile,commentatorId:commentator?.id,deliveryMode:"instant"})});const data=await r.json();if(!r.ok)throw new Error(data.error||"Yorum hazırlanamadı.");setReading(data)}catch(e){setError(e instanceof Error?e.message:"Bir hata oluştu.")}finally{setLoading(false)}};
+ if(reading)return <main className="min-h-screen bg-[radial-gradient(circle_at_top,rgba(109,40,217,.22),transparent_32%),linear-gradient(180deg,#080817,#05050d)] px-4 py-5 text-white"><div className="mx-auto max-w-5xl"><header className="mb-5 flex justify-between"><button onClick={()=>setReading(null)} className="text-xs text-slate-300">← Yeni yorum</button><Link href="/" className="text-xs text-slate-400">Ana Sayfa</Link></header><section className={`rounded-[28px] border border-white/10 bg-gradient-to-br ${gradient} p-6 shadow-2xl sm:p-8`}><p className="text-[9px] font-bold uppercase tracking-[.25em]">{eyebrow} • Kişisel Okuma</p><h1 className="mt-2 font-serif text-3xl font-bold">{title}</h1></section><section className="mt-4 rounded-[24px] border border-white/10 bg-white/[.035] p-5"><div className="flex gap-2 text-amber-200"><Sparkles/><h2 className="font-serif text-xl font-bold">Sana özel genel yorum</h2></div><p className="mt-4 text-sm leading-7 text-slate-200">{reading.summary}</p></section><section className="mt-5 grid gap-3 sm:grid-cols-2">{fields.map(([key,label,Icon])=><article key={key} className="rounded-[22px] border border-white/[.08] bg-white/[.035] p-5"><div className="flex items-center gap-3"><Icon className="h-5 w-5 text-violet-200"/><h3 className="font-serif text-lg font-bold">{label}</h3></div><p className="mt-4 text-sm leading-7 text-slate-200">{reading.sections[key]}</p></article>)}</section>{reading.symbols?.length>0&&<section className="mt-6"><h2 className="font-serif text-2xl font-bold">Öne çıkan işaretler</h2><div className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">{reading.symbols.map((s,i)=><article key={`${s.name}-${i}`} className="rounded-2xl border border-white/10 bg-white/[.03] p-4"><p className="font-bold">✦ {s.name}</p><p className="mt-1 text-xs text-slate-400">{s.meaning}</p></article>)}</div></section>}</div></main>;
+ return <main className="min-h-screen bg-[radial-gradient(circle_at_top,rgba(244,63,94,.18),transparent_35%),linear-gradient(180deg,#080817,#05050d)] px-4 pb-12 pt-4 text-white"><div className="mx-auto max-w-2xl"><header className="mb-5 flex items-center justify-between"><button onClick={()=>step===0?window.history.back():setStep(s=>Math.max(0,s-1))} className="flex items-center gap-1 text-xs text-slate-300"><ArrowLeft className="h-4 w-4"/>{step===0?"Geri":"Geri"}</button><span className="rounded-full border border-violet-300/15 bg-violet-300/5 px-3 py-1 text-[9px] font-bold uppercase tracking-[.2em] text-violet-200">Fal Köşesi</span></header><section className="overflow-hidden rounded-[30px] border border-white/10 bg-[#0d0b18]/95 shadow-2xl"><div className="relative px-5 pb-6 pt-8 text-center"><div className="mx-auto grid h-24 w-24 place-items-center rounded-full border border-rose-300/25 bg-gradient-to-br from-rose-500/20 to-violet-500/20"><Wand2 className="h-10 w-10 text-rose-200"/></div><p className="mt-5 text-[9px] font-black uppercase tracking-[.3em] text-amber-200">{eyebrow}</p><h1 className="mt-1 font-serif text-3xl font-black">{title}</h1><p className="mx-auto mt-2 max-w-lg text-xs leading-6 text-slate-400">{description}</p></div><div className="border-t border-white/5 px-5 py-5 sm:px-8"><div className="mb-6 flex justify-center gap-2">{[0,1,2,3].map(i=><span key={i} className={`h-2 w-9 rounded-full ${i<=step?"bg-rose-400":"bg-white/10"}`}/>)}</div>{step===0&&<div className="space-y-4"><div className="rounded-2xl border border-rose-300/15 bg-rose-300/[.04] p-4"><p className="font-serif text-lg font-bold">Falına başlamadan önce seni tanıyalım ✨</p><p className="mt-1 text-xs leading-5 text-slate-400">4 kısa soru → sana uygun karakter → krediyle falı başlat.</p></div><div className="grid grid-cols-3 gap-2 text-center text-[10px] text-slate-500"><div className="rounded-xl bg-white/[.025] p-3">① Sorular</div><div className="rounded-xl bg-white/[.025] p-3">② Karakter</div><div className="rounded-xl bg-white/[.025] p-3">③ Başlat</div></div><button onClick={next} className="flex w-full items-center justify-center gap-2 rounded-full bg-gradient-to-r from-rose-500 to-violet-500 px-6 py-4 text-sm font-black">Sorulara Başla <ChevronRight className="h-4 w-4"/></button></div>}{step===1&&<div className="space-y-4"><div><p className="text-[9px] font-bold uppercase tracking-[.25em] text-rose-200">Kişisel sorular</p><h2 className="mt-1 font-serif text-2xl font-bold">Seni biraz tanıyalım</h2></div>{prompts.map((label,i)=><label key={label} className="block"><span className="mb-1.5 block text-xs font-semibold text-slate-200">{i+1}. {label}</span>{i===0?<input value={answers[i]} onChange={e=>setAnswer(i,e.target.value)} placeholder="İsmin veya hitap" className="w-full rounded-2xl border border-white/10 bg-black/20 px-4 py-3 text-sm text-white outline-none focus:border-rose-400"/>:<textarea value={answers[i]} onChange={e=>setAnswer(i,e.target.value)} rows={i===3?3:2} placeholder={i===3?placeholder:"Kısaca anlatabilirsin..."} className="w-full resize-none rounded-2xl border border-white/10 bg-black/20 px-4 py-3 text-sm text-white outline-none focus:border-rose-400"/>}</label>)}{error&&<p className="rounded-xl border border-red-400/20 bg-red-400/5 p-3 text-xs text-red-200">{error}</p>}<button onClick={next} className="flex w-full items-center justify-center gap-2 rounded-full bg-gradient-to-r from-rose-500 to-violet-500 px-6 py-4 text-sm font-black">Devam Et <ChevronRight/></button></div>}{step===2&&<div><div className="mb-4"><p className="text-[9px] font-bold uppercase tracking-[.25em] text-rose-200">Karakter seçimi</p><h2 className="mt-1 font-serif text-2xl font-bold">Falını kim yorumlasın?</h2></div><div className="grid grid-cols-2 gap-2">{[["genel","Genel"],["aşk","Aşk"],["para","Para & Kısmet"],["kariyer","İş & Kariyer"],["gelecek","Yakın Gelecek"]].map(([v,l])=><button key={v} onClick={()=>setFocus(v)} className={`rounded-2xl border p-3 text-left text-xs font-bold ${focus===v?"border-rose-400 bg-rose-400/10":"border-white/10 bg-white/[.025] text-slate-400"}`}>{l}</button>)}</div><div className="mt-4"><CommentatorPicker kind={kind} selectedId={commentator?.id??null} onSelect={v=>setCommentator(v?({...v} as DigitalCommentator):null)}/></div><button onClick={next} className="mt-4 flex w-full items-center justify-center gap-2 rounded-full bg-gradient-to-r from-rose-500 to-violet-500 px-6 py-4 text-sm font-black">Karakterimi Seçtim <ChevronRight/></button></div>}{step===3&&<div><div className="mb-5 text-center"><p className="text-[9px] font-bold uppercase tracking-[.25em] text-amber-200">Son adım</p><h2 className="mt-1 font-serif text-2xl font-bold">Falını satın al ve başlat</h2><p className="mt-1 text-xs text-slate-500">Kredin butona bastığında kullanılır.</p></div><div className="flex items-center gap-3 rounded-[24px] border border-rose-300/15 bg-rose-300/[.04] p-4"><img src={`/api/fal/avatar?id=${encodeURIComponent(commentator?.id??fallback?.id??"coffee-esmeralya")}`} alt="Seçilen sanal karakter" className="h-16 w-16 rounded-2xl object-cover"/><div className="min-w-0"><p className="font-serif text-lg font-bold">{commentator?.name??fallback?.name??"Esmeralya"}</p><p className="text-xs text-violet-200">{commentator?.title??fallback?.title??"Sanal Yorumcu"}</p><p className="mt-1 text-[10px] text-slate-500">AI karakter • gerçek kişi değildir</p></div><strong className="ml-auto text-lg text-amber-200">{price} kredi</strong></div><div className="mt-4 space-y-2 rounded-2xl border border-white/5 bg-white/[.02] p-4 text-xs text-slate-400"><p>✓ 4 kişisel soru ve seçtiğin odak</p><p>✓ Seçtiğin karakterin yorum tarzı</p><p>✓ Kişiselleştirilmiş sembolik yorum</p></div>{error&&<p className="mt-3 rounded-xl border border-red-400/20 bg-red-400/5 p-3 text-xs text-red-200">{error}</p>}<button disabled={loading} onClick={runReading} className="mt-4 flex w-full items-center justify-center gap-2 rounded-full bg-gradient-to-r from-rose-500 to-violet-500 px-6 py-4 text-sm font-black disabled:opacity-60">{loading?<><Sparkles className="animate-spin"/> Falın hazırlanıyor...</>:<><Sparkles/>{price} Krediyle Falımı Başlat</>}</button><p className="mt-3 text-center text-[9px] text-slate-600">Eğlence ve kişisel farkındalık amaçlı sembolik yorum.</p></div>}</div></section></div></main>;
 }
