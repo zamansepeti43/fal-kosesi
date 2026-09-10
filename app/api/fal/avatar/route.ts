@@ -9,7 +9,7 @@ function hash(value: string) {
 }
 
 // Curated human-looking 3D character renders hosted by three.ws.
-// We use the rendered PNG endpoint rather than shipping the raw GLB assets.
+// The picker can pass an explicit slot so the five visible characters are always unique.
 const HUMAN_3D_CHARACTERS = [
   { id: "68c2e4b0-1ad6-4e53-b67d-161b8f4ccfbf", name: "Louise" },
   { id: "d13cd86b-a90f-4c8a-81c9-18fc490b40ba", name: "James" },
@@ -19,8 +19,13 @@ const HUMAN_3D_CHARACTERS = [
 ] as const;
 
 export async function GET(request: Request) {
-  const id = new URL(request.url).searchParams.get("id") || "tarotella";
-  const character = HUMAN_3D_CHARACTERS[hash(id) % HUMAN_3D_CHARACTERS.length];
+  const url = new URL(request.url);
+  const id = url.searchParams.get("id") || "tarotella";
+  const requestedSlot = Number.parseInt(url.searchParams.get("slot") || "", 10);
+  const slot = Number.isInteger(requestedSlot) && requestedSlot >= 0 && requestedSlot < HUMAN_3D_CHARACTERS.length
+    ? requestedSlot
+    : hash(id) % HUMAN_3D_CHARACTERS.length;
+  const character = HUMAN_3D_CHARACTERS[slot];
   const renderUrl = new URL("https://three.ws/api/avatar/render");
   renderUrl.searchParams.set("avatar", character.id);
   renderUrl.searchParams.set("scene", "portrait");
