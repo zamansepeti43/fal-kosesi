@@ -7,7 +7,7 @@ export const runtime = "nodejs";
 
 type Row = Record<string, unknown>;
 
-// All non-Tarot AI characters use the same first-party avatar endpoint.
+// Non-Tarot characters use the same curated project renderer everywhere.
 // Tarot keeps its existing local artwork and is intentionally excluded here.
 function generatedAvatar(id: string, kind: FortuneKind) {
   if (kind === "tarot") {
