@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { encodeMemberSession, memberCookieOptions } from "@/lib/member-session";
 import { requireDb } from "@/lib/neon/db";
+import { WELCOME_CREDITS } from "@/lib/credits";
 import { hashPassword, verifyPassword } from "@/lib/password";
 
 export const runtime = "nodejs";
@@ -28,7 +29,12 @@ export async function POST(request: Request) {
       const passwordHash = await hashPassword(password);
       await sql`
         insert into public.profiles (email, full_name, phone, password_hash, credits, plan, status, member_since)
-        values (${email}, ${body?.name?.trim() || null}, ${body?.phone?.trim() || null}, ${passwordHash}, 50, 'Normal Üye', 'Üye', to_char(now(), 'DD Mon YYYY'))
+        values (${email}, ${body?.name?.trim() || null}, ${body?.phone?.trim() || null}, ${passwordHash}, ${WELCOME_CREDITS}, 'Normal Üye', 'Üye', to_char(now(), 'DD Mon YYYY'))
+      `;
+      await sql`
+        insert into public.credit_transactions (email, amount, balance_after, type, reference_id, description)
+        values (${email}, ${WELCOME_CREDITS}, ${WELCOME_CREDITS}, 'welcome', ${`welcome:${email}`}, ${`${WELCOME_CREDITS} hoş geldin kredisi`})
+        on conflict do nothing
       `;
     } else {
       if (!existing?.password_hash || !(await verifyPassword(password, String(existing.password_hash)))) {
