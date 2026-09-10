@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getMemberEmail } from "@/lib/member-session";
+import { requireDb } from "@/lib/neon/db";
 import { DIGITAL_COMMENTATORS, type FortuneKind } from "@/lib/fortune/catalog";
 
 export const runtime = "nodejs";
@@ -72,13 +73,13 @@ export async function GET(request: Request) {
     if (email) {
       try {
         const favoriteRows = await sql`select commentator_id from public.commentator_favorites where email = ${email}`;
-        favorites = new Set(favoriteRows.map((row) => String((row as Row).commentator_id)));
+        favorites = new Set(favoriteRows.map((row: Row) => String(row.commentator_id)));
       } catch { /* optional migration */ }
     }
 
     return NextResponse.json({
-      commentators: rows.map((raw) => {
-        const row = raw as Row;
+      commentators: rows.map((raw: Row) => {
+        const row = raw;
         const id = String(row.id);
         const specialties = Array.isArray(row.specialties) ? row.specialties.map(String) : [];
         const commentatorType = String(row.commentator_type ?? "ai");
