@@ -1,98 +1,20 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
-import { BriefcaseBusiness, ChevronRight, Heart, Moon, Sparkles, WalletCards, HelpCircle } from "lucide-react";
+import { useEffect, useState } from "react";
+import { ArrowLeft, ChevronRight, Heart, Sparkles, WalletCards, BriefcaseBusiness, Moon } from "lucide-react";
+import CommentatorPicker from "../components/commentator-picker";
+import type { DigitalCommentator } from "@/lib/fortune/catalog";
 
-const focusOptions = [
-  { value: "genel", label: "Genel", icon: HelpCircle },
-  { value: "ask", label: "Aşk", icon: Heart },
-  { value: "para", label: "Para & Kısmet", icon: WalletCards },
-  { value: "is", label: "İş & Kariyer", icon: BriefcaseBusiness },
-  { value: "gelecek", label: "Gelecek", icon: Moon },
-] as const;
+const prompts = ["Sana nasıl hitap edelim?","Şu an hayatında en çok hangi konu gündemde?","Fincanında özellikle hangi alana bakmamızı istiyorsun?","Falcının mutlaka cevaplamasını istediğin özel soru ne?"];
+const focusOptions = [["genel","Genel",Sparkles],["aşk","Aşk",Heart],["para","Para & Kısmet",WalletCards],["kariyer","İş & Kariyer",BriefcaseBusiness],["gelecek","Yakın Gelecek",Moon]] as const;
 
 export default function FocusClient() {
-  const [selectedFocus, setSelectedFocus] = useState<(typeof focusOptions)[number]["value"]>("genel");
-  const [customQuestion, setCustomQuestion] = useState("");
-
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    sessionStorage.setItem(
-      "falFocus",
-      JSON.stringify({ focus: selectedFocus, question: customQuestion.trim() })
-    );
-    window.location.href = "/fal/analyze";
-  };
-
-  return (
-    <main className="min-h-screen px-4 py-8">
-      <div className="mx-auto max-w-5xl">
-        <header className="mb-8 flex items-center gap-3">
-          <Link href="/fal/preview" className="text-sm text-slate-300">← Geri</Link>
-          <h1 className="text-2xl font-bold text-white">Falın odak noktasını seç</h1>
-        </header>
-
-        <section className="rounded-[2rem] border border-white/10 bg-slate-950/60 p-6 shadow-2xl backdrop-blur-xl md:p-8">
-          <p className="mb-6 text-center text-slate-300">
-            Hangi konuda derinleşmesini istediğini seç; istersen kendi sorunu da yaz.
-          </p>
-
-          <form id="focus-form" onSubmit={handleSubmit} className="space-y-8">
-            <div>
-              <p className="mb-3 text-sm font-semibold uppercase tracking-[0.2em] text-amber-200">Odak alanı</p>
-              <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
-                {focusOptions.map(({ value, label, icon: Icon }) => (
-                  <label
-                    key={value}
-                    className={`flex cursor-pointer items-center justify-center gap-3 rounded-2xl border p-4 transition ${
-                      selectedFocus === value
-                        ? "border-amber-400/80 bg-amber-400/10"
-                        : "border-white/10 bg-white/5 hover:border-white/20"
-                    }`}
-                  >
-                    <input
-                      type="radio"
-                      name="focus"
-                      value={value}
-                      checked={selectedFocus === value}
-                      onChange={(e) => setSelectedFocus(e.target.value as (typeof focusOptions)[number]["value"])}
-                      className="h-4 w-4 accent-amber-400"
-                    />
-                    <div className="flex items-center gap-2 text-sm font-medium text-white">
-                      <Icon size={18} className="text-amber-200" />
-                      {label}
-                    </div>
-                  </label>
-                ))}
-              </div>
-            </div>
-
-            <div>
-              <label htmlFor="custom-question" className="mb-2 block text-sm font-medium text-slate-200">
-                Merak ettiğin bir şey var mı?
-              </label>
-              <textarea
-                id="custom-question"
-                rows={5}
-                value={customQuestion}
-                onChange={(e) => setCustomQuestion(e.target.value)}
-                placeholder="Örn: Yakın zamanda aşk hayatımda bir gelişme olacak mı?"
-                className="w-full rounded-2xl border border-white/10 bg-slate-900/80 px-4 py-3 text-white outline-none transition focus:border-amber-400/80"
-              />
-            </div>
-
-            <button
-              type="submit"
-              className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-gradient-to-r from-amber-300 via-yellow-400 to-orange-300 px-6 py-3.5 text-base font-bold text-slate-950 shadow-[0_10px_30px_rgba(251,191,36,0.35)]"
-            >
-              <Sparkles size={18} />
-              Falımı Hazırla
-              <ChevronRight size={18} />
-            </button>
-          </form>
-        </section>
-      </div>
-    </main>
-  );
+  const [step,setStep]=useState(0); const [answers,setAnswers]=useState(["","","",""]); const [focus,setFocus]=useState("genel"); const [commentator,setCommentator]=useState<DigitalCommentator|null>(null); const [error,setError]=useState("");
+  useEffect(()=>{try{const p=JSON.parse(localStorage.getItem("fal-kosesi-profile")||"{}");if(p.name)setAnswers(a=>[String(p.name).split(" ")[0],a[1],a[2],a[3]])}catch{}},[]);
+  const setAnswer=(i:number,v:string)=>setAnswers(a=>a.map((x,n)=>n===i?v:x));
+  const next=()=>{setError("");if(step===1&&answers.some(x=>!x.trim())){setError("Lütfen 4 soruyu da cevapla.");return}setStep(s=>Math.min(3,s+1))};
+  const finish=()=>{sessionStorage.setItem("falFocus",JSON.stringify({focus,question:answers.map((a,i)=>`${prompts[i]}: ${a}`).join("\n"),answers,commentatorId:commentator?.id??null}));sessionStorage.setItem("falPurchaseConfirmed","1");window.location.href="/fal/analyze"};
+  const price=commentator?.priceCredits??10;
+  return <main className="min-h-screen bg-[radial-gradient(circle_at_top,rgba(244,63,94,.18),transparent_35%),linear-gradient(180deg,#080817,#05050d)] px-4 pb-12 pt-4 text-white"><div className="mx-auto max-w-2xl"><header className="mb-5 flex items-center justify-between"><Link href="/fal/preview" className="flex items-center gap-1 text-xs text-slate-300"><ArrowLeft className="h-4 w-4"/> Geri</Link><span className="rounded-full border border-violet-300/15 bg-violet-300/5 px-3 py-1 text-[9px] font-bold uppercase tracking-[.2em] text-violet-200">Kahve Falı</span></header><section className="overflow-hidden rounded-[30px] border border-white/10 bg-[#0d0b18]/95 shadow-2xl"><div className="px-5 pb-6 pt-8 text-center sm:px-8"><div className="mx-auto grid h-20 w-20 place-items-center rounded-full border border-rose-300/25 bg-gradient-to-br from-rose-500/20 to-violet-500/20"><Sparkles className="h-9 w-9 text-rose-200"/></div><p className="mt-4 text-[9px] font-black uppercase tracking-[.3em] text-amber-200">Esmeralya ve arkadaşları</p><h1 className="mt-1 font-serif text-3xl font-black">Fincanı sana özel okuyalım</h1><p className="mx-auto mt-2 max-w-lg text-xs leading-6 text-slate-400">Önce birkaç soru soracağız, sonra sana uygun sanal karakteri seçip falını krediyle başlatacağız.</p></div><div className="border-t border-white/5 px-5 py-5 sm:px-8"><div className="mb-6 flex justify-center gap-2">{[0,1,2,3].map(i=><span key={i} className={`h-2 w-9 rounded-full ${i<=step?"bg-rose-400":"bg-white/10"}`}/>)}</div>{step===0&&<div className="space-y-4"><div className="grid grid-cols-3 gap-2 text-center text-[10px] text-slate-500"><div className="rounded-xl border border-white/5 bg-white/[.025] p-3">☕ Fincan</div><div className="rounded-xl border border-white/5 bg-white/[.025] p-3">✨ Sorular</div><div className="rounded-xl border border-white/5 bg-white/[.025] p-3">🔮 Yorum</div></div><div className="rounded-2xl border border-rose-300/15 bg-rose-300/[.04] p-4"><p className="font-serif text-lg font-bold">Fincanın hazır. Seni biraz tanıyalım.</p><p className="mt-1 text-xs leading-5 text-slate-400">4 kısa cevap, yapay zekânın yorumunu daha kişisel hale getirir.</p></div><button onClick={next} className="flex w-full items-center justify-center gap-2 rounded-full bg-gradient-to-r from-rose-500 to-violet-500 px-6 py-4 text-sm font-black">Sorulara Başla <ChevronRight/></button></div>}{step===1&&<div className="space-y-4"><div><p className="text-[9px] font-bold uppercase tracking-[.25em] text-rose-200">Kişisel sorular</p><h2 className="mt-1 font-serif text-2xl font-bold">Falcına ne anlatalım?</h2></div>{prompts.map((label,i)=><label key={label} className="block"><span className="mb-1.5 block text-xs font-semibold text-slate-200">{i+1}. {label}</span>{i===0?<input value={answers[i]} onChange={e=>setAnswer(i,e.target.value)} placeholder="İsmin veya hitap" className="w-full rounded-2xl border border-white/10 bg-black/20 px-4 py-3 text-sm text-white outline-none focus:border-rose-400"/>:<textarea value={answers[i]} onChange={e=>setAnswer(i,e.target.value)} rows={2} placeholder="Kısaca anlatabilirsin..." className="w-full resize-none rounded-2xl border border-white/10 bg-black/20 px-4 py-3 text-sm text-white outline-none focus:border-rose-400"/>}</label>)}{error&&<p className="rounded-xl border border-red-400/20 bg-red-400/5 p-3 text-xs text-red-200">{error}</p>}<button onClick={next} className="flex w-full items-center justify-center gap-2 rounded-full bg-gradient-to-r from-rose-500 to-violet-500 px-6 py-4 text-sm font-black">Devam Et <ChevronRight/></button></div>}{step===2&&<div><div className="mb-4"><p className="text-[9px] font-bold uppercase tracking-[.25em] text-rose-200">Odak + karakter</p><h2 className="mt-1 font-serif text-2xl font-bold">Falını kim yorumlasın?</h2></div><div className="grid grid-cols-2 gap-2">{focusOptions.map(([v,l,Icon])=><button key={v} onClick={()=>setFocus(v)} className={`flex items-center gap-2 rounded-2xl border p-3 text-left text-xs font-bold ${focus===v?"border-rose-400 bg-rose-400/10":"border-white/10 bg-white/[.025] text-slate-400"}`}><Icon className="h-4 w-4"/>{l}</button>)}</div><div className="mt-4"><CommentatorPicker kind="coffee" selectedId={commentator?.id??null} onSelect={v=>setCommentator(v?({...v} as DigitalCommentator):null)}/></div><button onClick={next} className="mt-4 flex w-full items-center justify-center gap-2 rounded-full bg-gradient-to-r from-rose-500 to-violet-500 px-6 py-4 text-sm font-black">Karakterimi Seçtim <ChevronRight/></button></div>}{step===3&&<div><div className="mb-5 text-center"><p className="text-[9px] font-bold uppercase tracking-[.25em] text-amber-200">Son adım</p><h2 className="mt-1 font-serif text-2xl font-bold">Falını satın al ve sıraya gir</h2><p className="mt-1 text-xs text-slate-500">Kredi yalnızca aşağıdaki butona bastığında kullanılır.</p></div><div className="flex items-center gap-3 rounded-[24px] border border-rose-300/15 bg-rose-300/[.04] p-4"><img src={`/api/fal/avatar?id=${encodeURIComponent(commentator?.id??"coffee-esmeralya")}`} alt="Seçilen sanal karakter" className="h-16 w-16 rounded-2xl object-cover"/><div><p className="font-serif text-lg font-bold">{commentator?.name??"Esmeralya"}</p><p className="text-xs text-violet-200">{commentator?.title??"Telve & Sembol Ustası"}</p><p className="mt-1 text-[10px] text-slate-500">AI karakter • gerçek kişi değildir</p></div><strong className="ml-auto text-lg text-amber-200">{price} kredi</strong></div><div className="mt-4 space-y-2 rounded-2xl border border-white/5 bg-white/[.02] p-4 text-xs text-slate-400"><p>✓ 3 fincan fotoğrafına kadar analiz</p><p>✓ 4 kişisel cevap ve seçtiğin odak</p><p>✓ Yaklaşık 3 dakika içinde sonuç</p></div>{error&&<p className="mt-3 rounded-xl border border-red-400/20 bg-red-400/5 p-3 text-xs text-red-200">{error}</p>}<button onClick={finish} className="mt-4 flex w-full items-center justify-center gap-2 rounded-full bg-gradient-to-r from-rose-500 to-violet-500 px-6 py-4 text-sm font-black shadow-[0_14px_35px_rgba(244,63,94,.20)]"><Sparkles/>{price} Krediyle Falımı Başlat</button><p className="mt-3 text-center text-[9px] text-slate-600">Fal eğlence ve kişisel farkındalık amaçlı sembolik yorumdur.</p></div>}</div></section></div></main>;
 }
