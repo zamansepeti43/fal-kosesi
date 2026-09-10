@@ -7,6 +7,12 @@ export type CreditPackage = {
   popular?: boolean;
 };
 
+/**
+ * Public credit catalog. `credits` is the total balance granted after purchase;
+ * `bonus` is shown separately only as the promotional portion of that total.
+ * Prices are integer TRY amounts so the same catalog is used by the UI and
+ * the server-side checkout/order creation code.
+ */
 export const CREDIT_PACKAGES: readonly CreditPackage[] = [
   { id: "credits-50", credits: 50, priceTry: 50, bonus: 0, label: "Başlangıç" },
   { id: "credits-120", credits: 120, priceTry: 100, bonus: 20, label: "En çok tercih edilen", popular: true },
@@ -39,10 +45,23 @@ export function getCreditPackage(id: string) {
   return CREDIT_PACKAGES.find((item) => item.id === id) ?? null;
 }
 
+export function getEffectiveCreditPrice(pack: CreditPackage) {
+  return pack.priceTry / pack.credits;
+}
+
 export function formatTry(amount: number) {
   return new Intl.NumberFormat("tr-TR", {
     style: "currency",
     currency: "TRY",
     maximumFractionDigits: 0,
   }).format(amount);
+}
+
+export function formatCreditUnitPrice(pack: CreditPackage) {
+  return new Intl.NumberFormat("tr-TR", {
+    style: "currency",
+    currency: "TRY",
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(getEffectiveCreditPrice(pack));
 }
