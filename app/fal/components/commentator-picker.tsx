@@ -8,16 +8,17 @@ import { DIGITAL_COMMENTATORS } from "@/lib/fortune/catalog";
 type Commentator = (typeof DIGITAL_COMMENTATORS)[number] & { favorite?: boolean; type?: string; bio?: string | null };
 type Props = { kind: FortuneKind; selectedId?: string | null; onSelect: (commentator: Commentator | null) => void };
 
-const AVATAR_BY_ID: Record<string, string> = {
-  "tarot-tarotella": "tarotella.svg",
-  "tarot-arcanessa": "arcanessa.svg",
-  "tarot-noctara": "noctara.svg",
-  "tarot-elowena": "elowena.svg",
-  "tarot-zoryelle": "zoryelle.svg",
+const AVATAR_INDEX: Record<string, number> = {
+  "tarot-tarotella": 0,
+  "tarot-arcanessa": 1,
+  "tarot-noctara": 2,
+  "tarot-elowena": 3,
+  "tarot-zoryelle": 4,
 };
 
-function characterAvatar(id: string) {
-  return `/fortune/avatars/${AVATAR_BY_ID[id] ?? "tarotella.svg"}`;
+function avatarPosition(id: string) {
+  const index = AVATAR_INDEX[id] ?? 0;
+  return `${index * 25}% center`;
 }
 
 function availabilityLabel(status: Commentator["availability"]) {
@@ -70,7 +71,7 @@ export default function CommentatorPicker({ kind, selectedId, onSelect }: Props)
             <button key={item.id} type="button" onClick={() => onSelect(item)} aria-pressed={isSelected} className={`group relative ${centeredLast} rounded-[24px] border p-2.5 text-left transition duration-300 sm:p-3 ${isSelected ? "-translate-y-0.5 border-amber-300/70 bg-amber-300/[.08] shadow-[0_0_30px_rgba(251,191,36,.12)]" : "border-white/8 bg-white/[.025] hover:-translate-y-1 hover:border-amber-200/30 hover:bg-white/[.045]"}`}>
               {isRecommended && <span className="absolute left-3 top-3 z-10 rounded-full border border-amber-200/25 bg-[#17111e]/90 px-2.5 py-1 text-[7px] font-black uppercase tracking-wider text-amber-200">Önerilen</span>}
               <div className="relative aspect-[.88] overflow-hidden rounded-[19px] border border-white/10 bg-[#100d18] shadow-inner">
-                <img src={characterAvatar(item.id)} alt={`${item.name} sanal karakteri`} loading="eager" className="h-full w-full object-cover transition duration-500 group-hover:scale-[1.025]" />
+                <div role="img" aria-label={`${item.name} sanal karakteri`} className="h-full w-full bg-cover bg-center transition duration-500 group-hover:scale-[1.025]" style={{ backgroundImage: "url('/fortune/avatars/tarot-avatars-sprite.jpg')", backgroundPosition: avatarPosition(item.id) }} />
                 <div className="pointer-events-none absolute inset-x-0 bottom-0 h-14 bg-gradient-to-t from-black/55 to-transparent" />
                 <span className="absolute bottom-2 right-2 rounded-full border border-white/10 bg-black/75 px-2 py-1 text-[7px] font-black tracking-wider text-white">AI</span>
                 {isSelected && <span className="absolute right-2 top-2 rounded-full bg-amber-300 px-2 py-1 text-[7px] font-black uppercase text-slate-950">Seçildi</span>}
