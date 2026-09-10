@@ -39,15 +39,14 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Bu tarot açılımı bulunamadı, daha önce tamamlanmış olabilir veya satın alma kaydı geçersiz." }, { status: 409 });
     }
 
-    const answers = Array.isArray(body.answers)
-      ? body.answers.map((x: unknown) => String(x ?? "").trim()).filter(Boolean)
-      : [];
+    const rawAnswers: unknown[] = Array.isArray(body.answers) ? body.answers : [];
+    const answers = rawAnswers.map((x: unknown) => String(x ?? "").trim()).filter(Boolean);
     const profile = body.profile && typeof body.profile === "object" ? body.profile : {};
     const spreadId = String(body.spreadId ?? "three");
     const spreadLabel = String(body.spreadLabel ?? "3 Kart");
     const personalContext = [
       question ? `Kullanıcının özellikle sorduğu konu: ${question}` : "Kullanıcı özel bir soru bırakmadı; kartların genel hikâyesini kişisel bağlam üzerinden yorumla.",
-      answers.length ? `Sohbette gönüllü olarak paylaştığı cevaplar:\n${answers.map((x, i) => `${i + 1}. ${x}`).join("\n")}` : "Kullanıcı sohbet sorularını cevaplamayı tercih etmedi.",
+      answers.length ? `Sohbette gönüllü olarak paylaştığı cevaplar:\n${answers.map((x: string, i: number) => `${i + 1}. ${x}`).join("\n")}` : "Kullanıcı sohbet sorularını cevaplamayı tercih etmedi.",
       profile && typeof profile === "object" && "name" in profile ? `Profil adı: ${String((profile as { name?: unknown }).name ?? "")}` : "",
     ].filter(Boolean).join("\n\n");
 
@@ -67,7 +66,7 @@ export async function POST(request: Request) {
         `Açılım: ${spreadLabel}`,
         personalContext,
         `Seçilen kartlar ve pozisyonları:\n${cards}`,
-        "YAZIM KURALI: Sonucu dışarıdan bir sistem anlatıyormuş gibi yazma. Falı doğrudan karakterin ağzından, sıcak ve samimi bir falcı üslubuyla anlat. Kullanıcıya adıyla veya doğal bir hitapla seslen. 'Kartların bana şunu söylüyor', 'burada özellikle dikkatimi çeken' gibi birinci tekil şahıs ifadeleri kullan. Kullanıcının verdiği cevapları kartlarla ilişkilendir ama cevaplarda olmayan olayları uydurma. Kesin gelecek, kader garantisi, sağlık/finans/hukuk konusunda kesin hüküm verme. Eğlence ve kişisel farkındalık çerçevesini koru. Her kartı tek başına açıklamak yerine önce bütün hikâyeyi kur; ardından pozisyon, düz/ters yön, kart kombinasyonları ve tekrar eden temaları birbirine bağla. Ters kartı kötü haber olarak değil; gecikme, içe dönüş, blokaj veya aşırılık olarak ele al. Aynı kart anlamını tekrar tekrar kullanma. Sonunda karakterin kullanıcıya söylemek istediği en net mesajı ve küçük, uygulanabilir bir düşünce/eylem önerisini yine kendi ağzından ver.",
+        "YAZIM KURALI: Sonucu dışarıdan bir sistem anlatıyormuş gibi yazma. Falı doğrudan karakterin ağzından, sıcak ve samimi bir falcı üslubuyla anlat. Kullanıcıya doğal biçimde seslen; profil adı mevcutsa adını kullan. 'Kartların bana şunu söylüyor', 'burada özellikle dikkatimi çeken' gibi birinci tekil şahıs ifadeleri kullan. Kullanıcının verdiği cevapları kartlarla ilişkilendir ama cevaplarda olmayan olayları uydurma. Kesin gelecek, kader garantisi, sağlık/finans/hukuk konusunda kesin hüküm verme. Eğlence ve kişisel farkındalık çerçevesini koru. Her kartı tek başına açıklamak yerine önce bütün hikâyeyi kur; ardından pozisyon, düz/ters yön, kart kombinasyonları ve tekrar eden temaları birbirine bağla. Ters kartı kötü haber olarak değil; gecikme, içe dönüş, blokaj veya aşırılık olarak ele al. Aynı kart anlamını tekrar tekrar kullanma. Sonunda karakterin kullanıcıya söylemek istediği en net mesajı ve küçük, uygulanabilir bir düşünce/eylem önerisini yine kendi ağzından ver.",
       ].join("\n\n"),
       images: [],
       profile,
@@ -79,15 +78,7 @@ export async function POST(request: Request) {
           result = ${JSON.stringify(result)}::jsonb,
           status = 'ready',
           completed_at = now(),
-          input = ${JSON.stringify({
-            commentatorId: commentator.id,
-            commentatorName: commentator.name,
-            spreadId,
-            spreadLabel,
-            cards,
-            answers: Array.isArray(body.answers) ? body.answers : [],
-            profile,
-          })}::jsonb
+          input = ${JSON.stringify({ commentatorId: commentator.id, commentatorName: commentator.name, spreadId, spreadLabel, cards, answers: rawAnswers, profile })}::jsonb
       where id = ${readingId}
         and email = ${email}
         and status = 'pending_completion'
