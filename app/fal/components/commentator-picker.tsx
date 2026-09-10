@@ -46,15 +46,15 @@ export default function CommentatorPicker({ kind, selectedId, onSelect }: Props)
               key={item.id}
               type="button"
               onClick={() => onSelect(item)}
-              className={`group col-span-2 ${centeredStart} rounded-[22px] border p-2.5 text-left transition duration-300 sm:p-3 ${
+              className={`group col-span-2 ${centeredStart} rounded-[22px] border p-2 text-left transition duration-300 sm:p-3 ${
                 isSelected
                   ? "border-amber-300/70 bg-amber-300/[.08] shadow-[0_0_28px_rgba(251,191,36,.10)]"
                   : "border-white/8 bg-white/[.025] hover:-translate-y-1 hover:border-amber-200/30 hover:bg-white/[.045]"
               }`}
             >
-              <div className="relative aspect-[.88] overflow-hidden rounded-[18px] border border-white/10 bg-[#17111e]">
-                <img src={characterAvatar(item.id)} alt={`${item.name} sanal tarot karakteri`} loading="lazy" className="h-full w-full object-cover transition duration-500 group-hover:scale-[1.03]" />
-                <span className="absolute bottom-1.5 right-1.5 rounded-full border border-white/10 bg-black/70 px-1.5 py-0.5 text-[7px] font-black tracking-wider text-white">AI</span>
+              <div className="relative aspect-[.78] overflow-hidden rounded-[18px] border border-white/10 bg-[radial-gradient(circle_at_50%_30%,rgba(139,92,246,.14),transparent_65%),#100d18]">
+                <img src={characterAvatar(item.id)} alt={`${item.name} 3D sanal tarot karakteri`} loading="eager" className="h-full w-full object-contain px-1 pt-1 transition duration-500 group-hover:scale-[1.035]" />
+                <span className="absolute bottom-1.5 right-1.5 rounded-full border border-white/10 bg-black/75 px-1.5 py-0.5 text-[7px] font-black tracking-wider text-white">AI</span>
                 {isSelected && <span className="absolute left-1.5 top-1.5 rounded-full bg-amber-300 px-2 py-1 text-[7px] font-black uppercase text-slate-950">Seçildi</span>}
               </div>
               <div className="px-0.5 pb-0.5 pt-2">
@@ -68,9 +68,7 @@ export default function CommentatorPicker({ kind, selectedId, onSelect }: Props)
                 <div className="mt-1.5 flex items-center justify-between gap-1 text-[8px] text-slate-500">
                   <span className="inline-flex items-center gap-1"><Star className="h-2.5 w-2.5 fill-current text-amber-300" />{item.rating}</span>
                   <span>{item.etaMinutes} dk</span>
-                  <span className={item.availability === "online" ? "text-emerald-200" : item.availability === "busy" ? "text-amber-200" : "text-slate-600"}>
-                    {item.availability === "online" ? "●" : item.availability === "busy" ? "●" : "●"}
-                  </span>
+                  <span className={item.availability === "online" ? "text-emerald-200" : item.availability === "busy" ? "text-amber-200" : "text-slate-600"}>●</span>
                 </div>
               </div>
             </button>
