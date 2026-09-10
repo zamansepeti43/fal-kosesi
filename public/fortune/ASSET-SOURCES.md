@@ -9,7 +9,8 @@ These visual assets are downloaded by `scripts/download-fortune-assets.mjs`. Git
 ## Tarot imagery
 - Pexels — Gabriela Hughes, “Tarot Cards and Crystals”: https://www.pexels.com/photo/tarot-cards-and-crystals-14190187/
 - Rider-Waite-Smith Major Arcana scans — Wikimedia Commons, public domain: https://commons.wikimedia.org/wiki/Category:Major_Arcana
-- Individual card source pattern: `RWS Tarot NN Name.jpg` on Wikimedia Commons. The original Rider-Waite-Smith artwork is public domain.
+- Complete 78-card Rider-Waite image API used for minor-arcana card faces: `https://petaloverflow.github.io/tarot-api/cards/` (repository states the 1909 Rider-Waite images are public domain): https://github.com/sixseeds/tarot-api
+- Full card index and exact image codes are documented by the upstream API's `cards.json`.
 
 ## Homepage fortune-card imagery
 - Pexels — viresh studio, “Romantic Candlelit Proposal with Couple Holding Hands”: https://www.pexels.com/photo/romantic-candlelit-proposal-with-couple-holding-hands-35315663/
