@@ -7,12 +7,7 @@ export type CreditPackage = {
   popular?: boolean;
 };
 
-/**
- * Public credit catalog. `credits` is the total balance granted after purchase;
- * `bonus` is shown separately only as the promotional portion of that total.
- * Prices are integer TRY amounts so the same catalog is used by the UI and
- * the server-side checkout/order creation code.
- */
+/** Public credit catalog shared by UI and server-side checkout. */
 export const CREDIT_PACKAGES: readonly CreditPackage[] = [
   { id: "credits-50", credits: 50, priceTry: 50, bonus: 0, label: "Başlangıç" },
   { id: "credits-120", credits: 120, priceTry: 100, bonus: 20, label: "En çok tercih edilen", popular: true },
@@ -34,6 +29,7 @@ export const READING_COSTS: Record<string, number> = {
   numerology: 8,
   daily: 3,
   focus: 8,
+  general: 8,
   tarot_single: 5,
   tarot_three: 12,
   tarot_love: 15,
@@ -50,18 +46,9 @@ export function getEffectiveCreditPrice(pack: CreditPackage) {
 }
 
 export function formatTry(amount: number) {
-  return new Intl.NumberFormat("tr-TR", {
-    style: "currency",
-    currency: "TRY",
-    maximumFractionDigits: 0,
-  }).format(amount);
+  return new Intl.NumberFormat("tr-TR", { style: "currency", currency: "TRY", maximumFractionDigits: 0 }).format(amount);
 }
 
 export function formatCreditUnitPrice(pack: CreditPackage) {
-  return new Intl.NumberFormat("tr-TR", {
-    style: "currency",
-    currency: "TRY",
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  }).format(getEffectiveCreditPrice(pack));
+  return new Intl.NumberFormat("tr-TR", { style: "currency", currency: "TRY", minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(getEffectiveCreditPrice(pack));
 }
