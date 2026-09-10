@@ -25,11 +25,11 @@ const AVATAR_FALLBACK_BY_ID: Record<string, string> = {
 };
 
 function characterAvatar(id: string) {
-  return `/fortune/avatars/${AVATAR_BY_ID[id] ?? "tarotella.webp"}?v=6`;
+  return `/fortune/avatars/${AVATAR_BY_ID[id] ?? "tarotella.webp"}?v=7`;
 }
 
 function characterFallback(id: string) {
-  return `/fortune/avatars/${AVATAR_FALLBACK_BY_ID[id] ?? "tarotella.svg"}?v=6`;
+  return `/fortune/avatars/${AVATAR_FALLBACK_BY_ID[id] ?? "tarotella.svg"}?v=7`;
 }
 
 function availabilityLabel(status: Commentator["availability"]) {
@@ -73,7 +73,7 @@ export default function CommentatorPicker({ kind, selectedId, onSelect }: Props)
         <span className="shrink-0 rounded-full border border-amber-200/20 px-2.5 py-1 text-[8px] font-black uppercase tracking-wider text-amber-200">ÖNERİLEN</span>
       </button>
 
-      <div className="-mx-1 grid grid-cols-2 gap-4 sm:mx-0 sm:grid-cols-3 sm:gap-5">
+      <div className="-mx-1 grid grid-cols-2 items-start gap-4 sm:mx-0 sm:gap-5">
         {visible.map((item, index) => {
           const isSelected = selectedId === item.id;
           const isRecommended = item.id === recommended?.id;
@@ -81,7 +81,10 @@ export default function CommentatorPicker({ kind, selectedId, onSelect }: Props)
           return (
             <button key={item.id} type="button" onClick={() => onSelect(item)} aria-pressed={isSelected} className={`group relative ${centeredLast} rounded-[24px] border p-2.5 text-left transition duration-300 sm:p-3 ${isSelected ? "-translate-y-0.5 border-amber-300/70 bg-amber-300/[.08] shadow-[0_0_30px_rgba(251,191,36,.12)]" : "border-white/8 bg-white/[.025] hover:-translate-y-1 hover:border-amber-200/30 hover:bg-white/[.045]"}`}>
               {isRecommended && <span className="absolute left-3 top-3 z-10 rounded-full border border-amber-200/25 bg-[#17111e]/90 px-2.5 py-1 text-[7px] font-black uppercase tracking-wider text-amber-200">ÖNERİLEN</span>}
-              <div className="relative flex aspect-square items-center justify-center overflow-hidden rounded-[20px] border border-white/10 bg-[#100d18] shadow-inner">
+
+              {/* The frame is 16:9, while the image itself uses contain. This is deliberate:
+                  the complete source artwork remains visible; nothing is zoomed or cropped. */}
+              <div className="relative aspect-[16/9] w-full overflow-hidden rounded-[20px] border border-white/10 bg-[#100d18] shadow-inner">
                 <img
                   src={characterAvatar(item.id)}
                   alt={`${item.name} sanal karakteri`}
@@ -91,7 +94,7 @@ export default function CommentatorPicker({ kind, selectedId, onSelect }: Props)
                     event.currentTarget.onerror = null;
                     event.currentTarget.src = characterFallback(item.id);
                   }}
-                  className="block h-full w-full object-contain"
+                  className="absolute inset-0 block h-full w-full object-contain object-center"
                 />
                 <div className="pointer-events-none absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-black/35 to-transparent" />
                 <span className="absolute bottom-2 right-2 rounded-full border border-white/10 bg-black/75 px-2 py-1 text-[7px] font-black tracking-wider text-white">AI</span>
