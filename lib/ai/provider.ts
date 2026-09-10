@@ -7,6 +7,13 @@ export type ReadingResult = { summary: string; symbols: Array<{ name: string; zo
 export type FalRequest = { kind: FalKind; focus?: string; question?: string; images?: string[]; profile?: UserProfile };
 export interface FortuneProvider { analyzeCoffee(input: VisionInput): Promise<ReadingResult> }
 
+export class AIProviderError extends Error {
+  constructor(message = "Yapay zekâ servisi şu anda kullanılamıyor.") {
+    super(message);
+    this.name = "AIProviderError";
+  }
+}
+
 function profileText(profile?: UserProfile) {
   if (!profile) return "Kullanıcı profili paylaşılmadı.";
   const interests = profile.interests?.length ? profile.interests.join(", ") : "belirtilmedi";
@@ -51,15 +58,15 @@ function parseReadingFromText(text: string, input: FalRequest): ReadingResult {
         followUpQuestion: parsed.followUpQuestion ?? "Bu yorumda hangi alanı daha derin incelemek istersin?",
       };
     }
-  } catch { /* deterministic fallback below */ }
-  return makeFallbackReading(input);
+  } catch { /* invalid model output */ }
+  throw new AIProviderError("Yapay zekâ geçerli bir fal yorumu üretemedi.");
 }
 
 function isImageData(value: string) { return /^data:image\/(png|jpe?g|webp|gif);base64,/i.test(value); }
 
 export async function generateFalResponse(input: FalRequest): Promise<ReadingResult> {
   const apiKey = process.env.HF_TOKEN || process.env.AI_API_KEY;
-  if (!apiKey) return makeFallbackReading(input);
+  if (!apiKey) throw new AIProviderError("Yapay zekâ anahtarı yapılandırılmamış.");
   try {
     const client = new OpenAI({ apiKey, baseURL: "https://router.huggingface.co/v1" });
     const systemPrompt = `Sen Fal Köşesi'nin premium dijital fal yorumcususun. Türkçe yaz. Bu içerik eğlence ve kişisel farkındalık amaçlıdır; kesin gelecek vaadi, tıbbi/hukuki/finansal kesinlik veya kaderin değişmez olduğu iddiası kullanma. Kullanıcıya doğrudan adıyla hitap et ve ikinci tekil şahıs kullan. Verilen profil, soru, odak ve özellikle kahve falında gerçek görselleri inceleyerek kişisel bir okuma üret. Kahve görsellerindeki telve şekillerini, fincanın iç yüzeyindeki konumları, yoğunlukları ve belirgin siluetleri gözlemle; görselde seçemediğin şeyi uydurma. Görsel yoksa bunu varsayım gibi sunma. Tekrarlayan klişelerden kaçın. JSON dışında hiçbir şey döndürme. summary 3-5 cümle; symbols 6-8 öğe ve her meaning en az 2 cümle; sections love/career/money/future her biri 4-6 cümle; followUpQuestion tek kişisel soru olsun.`;
@@ -76,8 +83,9 @@ export async function generateFalResponse(input: FalRequest): Promise<ReadingRes
     });
     return parseReadingFromText(completion.choices[0]?.message?.content ?? "", input);
   } catch (error) {
-    console.error("AI provider failed, using premium fallback response:", error);
-    return makeFallbackReading(input);
+    console.error("AI provider failed:", error);
+    if (error instanceof AIProviderError) throw error;
+    throw new AIProviderError();
   }
 }
 
