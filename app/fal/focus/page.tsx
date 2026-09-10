@@ -1,14 +1,5 @@
-import type { Metadata } from "next";
-import Link from "next/link";
-import FocusClient from "./focus-client";
+import { redirect } from "next/navigation";
 
-export const metadata: Metadata = {
-  title: "Fal Köşesi - Odak Seçin",
-  description: "Falınızın odaklanacağı alanları seçin veya kendi sorununuzu yazın.",
-};
-
-export default function Focus() {
-  return (
-    <FocusClient />
-  );
+export default function FocusRedirect() {
+  redirect("/fal/numeroloji");
 }
