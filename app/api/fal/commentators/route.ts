@@ -7,35 +7,14 @@ export const runtime = "nodejs";
 
 type Row = Record<string, unknown>;
 
-// Non-Tarot AI characters use stable portrait photos instead of DiceBear cartoons.
+// All non-Tarot AI characters use the same first-party avatar endpoint.
 // Tarot keeps its existing local artwork and is intentionally excluded here.
-const PORTRAIT_START: Record<Exclude<FortuneKind, "tarot">, number> = {
-  coffee: 1,
-  love: 6,
-  money: 11,
-  career: 16,
-  future: 21,
-  daily: 26,
-  dream: 31,
-  astrology: 36,
-  numerology: 41,
-  general: 46,
-  katina: 51,
-  lenormand: 56,
-  angel: 61,
-};
-
 function generatedAvatar(id: string, kind: FortuneKind) {
   if (kind === "tarot") {
     const tarot = DIGITAL_COMMENTATORS.find((item) => item.id === id && item.specialties.includes("tarot"));
     return tarot?.avatarUrl ?? "";
   }
-
-  const start = PORTRAIT_START[kind] ?? 1;
-  const siblings = DIGITAL_COMMENTATORS.filter((item) => item.specialties.includes(kind));
-  const index = siblings.findIndex((item) => item.id === id);
-  const portraitId = start + (index >= 0 ? index : 0);
-  return `https://randomuser.me/api/portraits/women/${portraitId}.jpg`;
+  return `/api/fal/avatar?id=${encodeURIComponent(id)}`;
 }
 
 export async function GET(request: Request) {
