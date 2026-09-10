@@ -162,7 +162,9 @@ function makeCommentator(kind: FortuneKind, seed: Seed, index: number): DigitalC
     availability: statuses[index],
     description: `${description} ${specialties}.`,
     verified: true,
-    avatarUrl: `https://api.dicebear.com/9.x/lorelei/svg?seed=${encodeURIComponent(id)}&backgroundColor=161326`,
+    // Non-Tarot characters use the same first-party avatar endpoint everywhere.
+    // Tarot avatars are overridden by the Tarot picker and remain untouched.
+    avatarUrl: kind === "tarot" ? `https://api.dicebear.com/9.x/lorelei/svg?seed=${encodeURIComponent(id)}&backgroundColor=161326` : `/api/fal/avatar?id=${encodeURIComponent(id)}`,
   };
 }
 
