@@ -61,6 +61,10 @@ create unique index if not exists credit_transactions_refund_reference_idx
   on public.credit_transactions (reference_id)
   where type = 'refund' and reference_id is not null;
 
+create unique index if not exists credit_transactions_welcome_reference_idx
+  on public.credit_transactions (reference_id)
+  where type = 'welcome' and reference_id is not null;
+
 create index if not exists credit_orders_email_idx on public.credit_orders (email);
 create index if not exists credit_transactions_email_idx on public.credit_transactions (email);
 
