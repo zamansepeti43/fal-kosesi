@@ -29,6 +29,7 @@ export async function POST(request: Request) {
     const spreadId = kind === "tarot" ? String(body.spreadId ?? "three") : null;
     const spreadCredits = spreadId ? TAROT_SPREAD_CREDITS[spreadId] ?? TAROT_SPREAD_CREDITS.three : READING_COSTS[kind as keyof typeof READING_COSTS] ?? 0;
     const credits = Math.max(commentator.priceCredits, spreadCredits);
+    const question = typeof body.question === "string" ? body.question.trim() : "";
     const reference = `purchase-${kind}-${crypto.randomUUID()}`;
     const readingId = crypto.randomUUID();
     const sql = requireDb();
@@ -38,7 +39,7 @@ export async function POST(request: Request) {
     try {
       await sql`
         insert into public.readings (id, email, kind, focus, question, result, status, queued_at, delivery_mode, commentator_id, commentator_name, price_credits, input)
-        values (${readingId}, ${email}, ${kind}, ${spreadId ?? "genel"}, '', ${JSON.stringify({ status: "pending_completion" })}::jsonb, 'pending_completion', now(), 'instant', ${commentator.id}, ${commentator.name}, ${credits}, ${JSON.stringify({ purchase_reference: reference, purchased_credits: credits, spread_id: spreadId })}::jsonb)
+        values (${readingId}, ${email}, ${kind}, ${spreadId ?? "genel"}, ${question}, ${JSON.stringify({ status: "pending_completion" })}::jsonb, 'pending_completion', now(), 'instant', ${commentator.id}, ${commentator.name}, ${credits}, ${JSON.stringify({ purchase_reference: reference, purchased_credits: credits, spread_id: spreadId })}::jsonb)
       `;
     } catch (saveError) {
       await sql`select public.refund_credits(${email}, ${credits}, ${`refund-${reference}`}, ${`${kind} falı satın alma kaydı oluşturulamadığı için iade`}) as credits`;
