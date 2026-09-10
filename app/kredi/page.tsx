@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { ArrowLeft, Check, Coins, Crown, Loader2, ShieldCheck, Sparkles } from "lucide-react";
-import { CREDIT_PACKAGES, formatTry, type CreditPackage } from "@/lib/credits";
+import { CREDIT_PACKAGES, formatCreditUnitPrice, formatTry, type CreditPackage } from "@/lib/credits";
 import { getStoredMember } from "@/lib/membership";
 
 export default function KrediPage() {
@@ -74,7 +74,7 @@ export default function KrediPage() {
             <div>
               <div className="inline-flex items-center gap-2 rounded-full border border-amber-300/20 bg-amber-300/10 px-3 py-1.5 text-[10px] font-bold uppercase tracking-[.22em] text-amber-200"><Sparkles className="h-3.5 w-3.5" /> Fal Köşesi</div>
               <h1 className="mt-4 text-3xl font-black sm:text-5xl">Kredi Mağazası</h1>
-              <p className="mt-3 max-w-xl text-sm leading-6 text-slate-300 sm:text-base">Fallara, açılımlara ve özel yorumlara kredilerinle devam et. Kredilerin hesabında saklanır.</p>
+              <p className="mt-3 max-w-xl text-sm leading-6 text-slate-300 sm:text-base">Fallara, açılımlara ve özel yorumlara kredilerinle devam et. Satın aldığın toplam kredi miktarı ve varsa hediye kredi paketin ödeme öncesinde açıkça gösterilir.</p>
             </div>
             <div className="rounded-3xl border border-amber-300/20 bg-amber-300/10 px-5 py-4 text-center sm:min-w-[170px]">
               <p className="text-[10px] font-bold uppercase tracking-[.2em] text-amber-200">Bakiyen</p>
@@ -94,9 +94,10 @@ export default function KrediPage() {
               {pack.popular ? <div className="absolute right-4 top-4 rounded-full bg-amber-300 px-2.5 py-1 text-[9px] font-black uppercase tracking-[.12em] text-slate-950">En çok tercih edilen</div> : null}
               <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-amber-300/10 text-amber-200"><Coins className="h-6 w-6" /></div>
               <p className="mt-5 text-3xl font-black">{pack.credits}</p>
-              <p className="text-sm font-semibold text-amber-200">Kredi</p>
+              <p className="text-sm font-semibold text-amber-200">Toplam kredi</p>
+              {pack.bonus ? <p className="mt-1 text-xs font-bold text-emerald-300">{pack.credits - pack.bonus} satın al + {pack.bonus} hediye</p> : <p className="mt-1 text-xs text-slate-400">Hediye kredi yok</p>}
               <p className="mt-4 text-2xl font-black">{formatTry(pack.priceTry)}</p>
-              {pack.bonus ? <p className="mt-1 text-xs font-bold text-emerald-300">+{pack.bonus} kredi hediye</p> : <p className="mt-1 text-xs text-slate-500">1 kredi = 1 TL</p>}
+              <p className="mt-1 text-xs text-slate-400">Etkin kredi maliyeti: {formatCreditUnitPrice(pack)}</p>
               <button disabled={loadingPackage !== null} onClick={() => buy(pack)} className="mt-5 inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-amber-300 via-yellow-400 to-orange-300 px-4 py-3.5 font-black text-slate-950 transition hover:brightness-110 disabled:cursor-wait disabled:opacity-60">
                 {loadingPackage === pack.id ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
                 {loadingPackage === pack.id ? "Ödeme hazırlanıyor" : `${formatTry(pack.priceTry)} ile al`}
@@ -107,8 +108,8 @@ export default function KrediPage() {
 
         <section className="mt-6 grid gap-3 sm:grid-cols-3">
           <div className="rounded-2xl border border-white/10 bg-white/[.03] p-4"><ShieldCheck className="h-5 w-5 text-emerald-300" /><p className="mt-3 text-sm font-bold">Güvenli ödeme</p><p className="mt-1 text-xs text-slate-500">Kart bilgileri Fal Köşesi sunucusunda tutulmaz.</p></div>
-          <div className="rounded-2xl border border-white/10 bg-white/[.03] p-4"><Coins className="h-5 w-5 text-amber-300" /><p className="mt-3 text-sm font-bold">Kredi hesabında</p><p className="mt-1 text-xs text-slate-500">Satın aldığın kredi bakiyene eklenir.</p></div>
-          <div className="rounded-2xl border border-white/10 bg-white/[.03] p-4"><Crown className="h-5 w-5 text-violet-300" /><p className="mt-3 text-sm font-bold">Premium alternatifi</p><p className="mt-1 text-xs text-slate-500">İstersen Premium üyelikle özel avantajlardan yararlan.</p></div>
+          <div className="rounded-2xl border border-white/10 bg-white/[.03] p-4"><Coins className="h-5 w-5 text-amber-300" /><p className="mt-3 text-sm font-bold">Kredi hesabında</p><p className="mt-1 text-xs text-slate-500">Satın aldığın toplam kredi bakiyene eklenir.</p></div>
+          <div className="rounded-2xl border border-white/10 bg-white/[.03] p-4"><Crown className="h-5 w-5 text-violet-300" /><p className="mt-3 text-sm font-bold">Premium alternatifi</p><p className="mt-1 text-xs text-slate-500">Premium planları gerçek ödeme entegrasyonu tamamlandığında ayrıca aktive edilecek.</p></div>
         </section>
       </div>
     </main>
