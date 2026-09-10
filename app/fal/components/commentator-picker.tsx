@@ -9,7 +9,7 @@ type Commentator = (typeof DIGITAL_COMMENTATORS)[number] & { favorite?: boolean;
 type Props = { kind: FortuneKind; selectedId?: string | null; onSelect: (commentator: Commentator | null) => void };
 
 function characterAvatar(id: string) {
-  return `/api/fal/avatar?id=${encodeURIComponent(id)}`;
+  return `/api/fal/avatar?id=${encodeURIComponent(id)}&v=3d-human-2`;
 }
 
 export default function CommentatorPicker({ kind, selectedId, onSelect }: Props) {
