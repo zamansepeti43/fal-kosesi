@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
+import type { CSSProperties } from "react";
 import { ArrowLeft, BriefcaseBusiness, ChevronRight, Heart, Moon, Sparkles, WalletCards, Wand2 } from "lucide-react";
 import type { FalKind, ReadingResult } from "@/lib/ai/provider";
 import type { DigitalCommentator } from "@/lib/fortune/catalog";
@@ -23,13 +24,11 @@ const questionSets: Partial<Record<FalKind, [string, string]>> = {
   numerology: ["Doğum tarihin ve kullanmak istediğin isim nedir?", "Sayılarının özellikle hangi konuda yol göstermesini istiyorsun?"],
   general: ["Şu an hayatında hangi konu öne çıkıyor?", "Falcıya soracağın asıl soru nedir?"]
 };
-const HUMAN_3D_AVATAR_IDS = [
-  "68c2e4b0-1ad6-4e53-b67d-161b8f4ccfbf",
-  "d13cd86b-a90f-4c8a-81c9-18fc490b40ba",
-  "f7b85d05-5f1c-47d8-9770-9a1a054bd6f6",
-  "d0496a75-08b9-4f4e-9f1d-f65820323cc2",
-  "e89ec3c3-47b4-4d55-87f5-83d91e537136",
-] as const;
+const NON_TAROT_AVATAR_SPRITE = "/fortune/avatars/non-tarot-characters.svg?v=1";
+
+function spriteStyle(slot: number): CSSProperties {
+  return { backgroundImage: `url(${NON_TAROT_AVATAR_SPRITE})`, backgroundSize: "500% 100%", backgroundPosition: `${slot * 25}% center` };
+}
 
 export default function PremiumFortune({ kind, title, eyebrow, description, placeholder, accent = "violet" }: Props) {
   const [step, setStep] = useState<0 | 1 | 2>(0);
@@ -58,12 +57,12 @@ export default function PremiumFortune({ kind, title, eyebrow, description, plac
 
   useEffect(() => {
     try {
-      const p = JSON.parse(localStorage.getItem("fal-kosesi-profile") || "{}");
-      if (p.relationshipStatus && kind === "love") setAnswers((a) => [String(p.relationshipStatus), a[1]]);
+      const profile = JSON.parse(localStorage.getItem("fal-kosesi-profile") || "{}");
+      if (profile.relationshipStatus && kind === "love") setAnswers((a) => [String(profile.relationshipStatus), a[1]]);
     } catch {}
   }, [kind]);
 
-  const setAnswer = (i: number, value: string) => setAnswers((a) => a.map((x, n) => (n === i ? value : x)));
+  const setAnswer = (i: number, value: string) => setAnswers((a) => a.map((x, n) => n === i ? value : x));
   const next = () => { setError(""); setStep((s) => Math.min(2, s + 1) as 0 | 1 | 2); };
   const runReading = async () => {
     if (!commentator) { setError("Önce yorum yapacak sanal karakteri seç."); return; }
@@ -104,7 +103,7 @@ export default function PremiumFortune({ kind, title, eyebrow, description, plac
           <div className="border-t border-white/5 px-5 py-5 sm:px-8"><div className="mb-6 flex justify-center gap-2">{[0,1,2].map((i) => <span key={i} className={`h-2 w-10 rounded-full ${i <= step ? "bg-rose-400" : "bg-white/10"}`} />)}</div>
             {step === 0 && <div className="space-y-4"><div><p className="text-[9px] font-bold uppercase tracking-[.25em] text-rose-200">1 · Yorumcunu seç</p><h2 className="mt-1 font-serif text-2xl font-bold">Bu falı kim yorumlasın?</h2><p className="mt-1 text-xs leading-5 text-slate-500">Önce karakterini seçiyoruz; gereksiz uzun soru zinciri yok.</p></div><CommentatorPicker kind={kind} selectedId={commentator?.id ?? null} onSelect={setCommentator} />{error && <p className="rounded-xl border border-red-400/20 bg-red-400/5 p-3 text-xs text-red-200">{error}</p>}<button onClick={next} disabled={!commentator} className="flex w-full items-center justify-center gap-2 rounded-full bg-gradient-to-r from-rose-500 to-violet-500 px-6 py-4 text-sm font-black disabled:opacity-50">Devam Et <ChevronRight className="h-4 w-4" /></button></div>}
             {step === 1 && <div className="space-y-4"><div><p className="text-[9px] font-bold uppercase tracking-[.25em] text-rose-200">2 · Kısa kişisel bağlam</p><h2 className="mt-1 font-serif text-2xl font-bold">Bana konuyu anlat</h2><p className="mt-1 text-xs leading-5 text-slate-500">İki kısa cevap yeterli. İstersen boş bırakıp devam edebilirsin.</p></div>{prompts.map((label, i) => <label key={label} className="block"><span className="mb-1.5 block text-xs font-semibold text-slate-200">{i + 1}. {label}</span><textarea value={answers[i]} onChange={(e) => setAnswer(i, e.target.value)} rows={i === 1 ? 4 : 3} placeholder={i === 1 ? placeholder : "Kısaca anlatabilirsin…"} className="w-full resize-none rounded-2xl border border-white/10 bg-black/20 px-4 py-3 text-sm text-white outline-none focus:border-rose-400" /></label>)}<button onClick={next} className="flex w-full items-center justify-center gap-2 rounded-full bg-gradient-to-r from-rose-500 to-violet-500 px-6 py-4 text-sm font-black">Devam Et <ChevronRight /></button></div>}
-            {step === 2 && <div className="space-y-4"><div className="text-center"><p className="text-[9px] font-bold uppercase tracking-[.25em] text-amber-200">3 · Son adım</p><h2 className="mt-1 font-serif text-2xl font-bold">Falını başlat</h2><p className="mt-1 text-xs text-slate-500">Sadece seçtiğin fal türüne özel yorum hazırlanacak.</p></div><div className="flex items-center gap-3 rounded-[24px] border border-rose-300/15 bg-rose-300/[.04] p-4"><img src={`https://three.ws/api/avatar/render?avatar=${HUMAN_3D_AVATAR_IDS[commentatorSlot]}&scene=portrait&size=720&bg=transparent`} alt="Seçilen sanal karakter" referrerPolicy="no-referrer" className="h-16 w-16 rounded-2xl object-cover" /><div className="min-w-0"><p className="font-serif text-lg font-bold">{commentator?.name ?? fallback?.name ?? "Sanal Yorumcu"}</p><p className="text-xs text-violet-200">{commentator?.title ?? fallback?.title ?? "Sanal Yorumcu"}</p><p className="mt-1 text-[10px] text-slate-500">AI karakter • gerçek kişi değildir</p></div><strong className="ml-auto text-lg text-amber-200">{price} kredi</strong></div><div className="rounded-2xl border border-white/5 bg-white/[.02] p-4 text-xs text-slate-400"><p>✓ Fal türüne özel yöntem</p><p>✓ Seçtiğin karakterin yorum tarzı</p><p>✓ Soruna göre kişiselleştirilmiş sonuç</p></div>{error && <div className="rounded-xl border border-amber-300/20 bg-amber-300/[.05] p-3 text-xs text-amber-100"><p>{error}</p><div className="mt-2 flex gap-2"><Link href="/kredi" className="rounded-full bg-amber-300 px-3 py-2 font-black text-slate-950">Kredi yükle</Link><Link href="/fal/premium" className="rounded-full border border-amber-200/20 px-3 py-2 font-bold">Premium hizmet</Link></div></div>}<button disabled={loading} onClick={runReading} className="flex w-full items-center justify-center gap-2 rounded-full bg-gradient-to-r from-rose-500 to-violet-500 px-6 py-4 text-sm font-black disabled:opacity-60">{loading ? <><Sparkles className="animate-spin" /> Falın hazırlanıyor…</> : <><Sparkles /> {price} krediyle falımı başlat</>}</button><p className="text-center text-[9px] text-slate-600">Eğlence ve kişisel farkındalık amaçlı sembolik yorum.</p></div>}
+            {step === 2 && <div className="space-y-4"><div className="text-center"><p className="text-[9px] font-bold uppercase tracking-[.25em] text-amber-200">3 · Son adım</p><h2 className="mt-1 font-serif text-2xl font-bold">Falını başlat</h2><p className="mt-1 text-xs text-slate-500">Sadece seçtiğin fal türüne özel yorum hazırlanacak.</p></div><div className="flex items-center gap-3 rounded-[24px] border border-rose-300/15 bg-rose-300/[.04] p-4"><div role="img" aria-label="Seçilen sanal karakter" className="h-16 w-16 shrink-0 rounded-2xl bg-center bg-no-repeat" style={spriteStyle(commentatorSlot)} /><div className="min-w-0"><p className="font-serif text-lg font-bold">{commentator?.name ?? fallback?.name ?? "Sanal Yorumcu"}</p><p className="text-xs text-violet-200">{commentator?.title ?? fallback?.title ?? "Sanal Yorumcu"}</p><p className="mt-1 text-[10px] text-slate-500">AI karakter • gerçek kişi değildir</p></div><strong className="ml-auto text-lg text-amber-200">{price} kredi</strong></div><div className="rounded-2xl border border-white/5 bg-white/[.02] p-4 text-xs text-slate-400"><p>✓ Fal türüne özel yöntem</p><p>✓ Seçtiğin karakterin yorum tarzı</p><p>✓ Soruna göre kişiselleştirilmiş sonuç</p></div>{error && <div className="rounded-xl border border-amber-300/20 bg-amber-300/[.05] p-3 text-xs text-amber-100"><p>{error}</p><div className="mt-2 flex gap-2"><Link href="/kredi" className="rounded-full bg-amber-300 px-3 py-2 font-black text-slate-950">Kredi yükle</Link><Link href="/fal/premium" className="rounded-full border border-amber-200/20 px-3 py-2 font-bold">Premium hizmet</Link></div></div>}<button disabled={loading} onClick={runReading} className="flex w-full items-center justify-center gap-2 rounded-full bg-gradient-to-r from-rose-500 to-violet-500 px-6 py-4 text-sm font-black disabled:opacity-60">{loading ? <><Sparkles className="animate-spin" /> Falın hazırlanıyor…</> : <><Sparkles /> {price} krediyle falımı başlat</>}</button><p className="text-center text-[9px] text-slate-600">Eğlence ve kişisel farkındalık amaçlı sembolik yorum.</p></div>}
           </div>
         </section>
       </div>
