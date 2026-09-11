@@ -18,27 +18,79 @@ const coffeeQuestions = [
 
 function compressImage(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
-    if (!file.type.startsWith("image/") || file.size > MAX_BYTES) return reject(new Error("Fotoğraf 8 MB'dan küçük olmalı."));
+    if (!file.type.startsWith("image/")) return reject(new Error("Lütfen JPG, PNG veya WEBP bir fotoğraf seç."));
+    if (file.size > MAX_BYTES) return reject(new Error("Fotoğraf 8 MB'dan küçük olmalı."));
+
     const image = new Image();
     const url = URL.createObjectURL(file);
-    image.onload = () => {
+    let settled = false;
+
+    const fail = (message = "Görüntü işlenemedi. Lütfen fotoğrafı yeniden seç.") => {
+      if (settled) return;
+      settled = true;
       URL.revokeObjectURL(url);
-      const scale = Math.min(1, 1600 / Math.max(image.naturalWidth, image.naturalHeight));
-      const canvas = document.createElement("canvas");
-      canvas.width = Math.max(1, Math.round(image.naturalWidth * scale));
-      canvas.height = Math.max(1, Math.round(image.naturalHeight * scale));
-      const ctx = canvas.getContext("2d");
-      if (!ctx) return reject(new Error("Görüntü işlenemedi."));
-      ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
-      resolve(canvas.toDataURL("image/jpeg", 0.82));
+      reject(new Error(message));
     };
-    image.onerror = () => { URL.revokeObjectURL(url); reject(new Error("Geçersiz görüntü.")); };
+
+    const finish = () => {
+      if (settled) return;
+      try {
+        const width = image.naturalWidth;
+        const height = image.naturalHeight;
+        if (!width || !height) return fail("Geçersiz görüntü. Lütfen JPG, PNG veya WEBP bir fotoğraf seç.");
+        const scale = Math.min(1, 1600 / Math.max(width, height));
+        const canvas = document.createElement("canvas");
+        canvas.width = Math.max(1, Math.round(width * scale));
+        canvas.height = Math.max(1, Math.round(height * scale));
+        const ctx = canvas.getContext("2d");
+        if (!ctx) return fail("Görüntü işlenemedi. Lütfen tekrar dene.");
+        ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
+        const dataUrl = canvas.toDataURL("image/jpeg", 0.82);
+        settled = true;
+        URL.revokeObjectURL(url);
+        resolve(dataUrl);
+      } catch {
+        fail("Görüntü işlenemedi. Lütfen fotoğrafı yeniden seç.");
+      }
+    };
+
+    image.onload = finish;
+    image.onerror = () => {
+      const reader = new FileReader();
+      reader.onload = () => {
+        const fallbackImage = new Image();
+        fallbackImage.onload = () => {
+          if (settled) return;
+          try {
+            const width = fallbackImage.naturalWidth;
+            const height = fallbackImage.naturalHeight;
+            if (!width || !height) return fail("Geçersiz görüntü. Lütfen fotoğrafı yeniden seç.");
+            const scale = Math.min(1, 1600 / Math.max(width, height));
+            const canvas = document.createElement("canvas");
+            canvas.width = Math.max(1, Math.round(width * scale));
+            canvas.height = Math.max(1, Math.round(height * scale));
+            const ctx = canvas.getContext("2d");
+            if (!ctx) return fail("Görüntü işlenemedi. Lütfen tekrar dene.");
+            ctx.drawImage(fallbackImage, 0, 0, canvas.width, canvas.height);
+            const dataUrl = canvas.toDataURL("image/jpeg", 0.82);
+            settled = true;
+            URL.revokeObjectURL(url);
+            resolve(dataUrl);
+          } catch {
+            fail("Görüntü işlenemedi. Lütfen fotoğrafı yeniden seç.");
+          }
+        };
+        fallbackImage.onerror = () => fail("Geçersiz görüntü. Lütfen JPG, PNG veya WEBP bir fotoğraf seç.");
+        fallbackImage.src = String(reader.result || "");
+      };
+      reader.onerror = () => fail("Fotoğraf okunamadı. Lütfen tekrar seç.");
+      reader.readAsDataURL(file);
+    };
     image.src = url;
   });
 }
 
 type Step = 0 | 1 | 2 | 3;
-
 type Commentator = DigitalCommentator & { favorite?: boolean; type?: string };
 
 export default function UploadClient() {
@@ -73,25 +125,13 @@ export default function UploadClient() {
 
   const next = () => {
     setError("");
-    if (step === 0 && !commentator) {
-      setError("Önce sana yorum yapacak sanal karakteri seç.");
-      return;
-    }
-    if (step === 1 && answers.some((item) => !item.trim())) {
-      setError("Lütfen 4 sorunun tamamını cevapla.");
-      return;
-    }
-    if (step === 2 && files.length === 0) {
-      setError("Fal için en az 1 fincan fotoğrafı yükle.");
-      return;
-    }
+    if (step === 0 && !commentator) return setError("Önce sana yorum yapacak sanal karakteri seç.");
+    if (step === 1 && answers.some((item) => !item.trim())) return setError("Lütfen 4 sorunun tamamını cevapla.");
+    if (step === 2 && files.length === 0) return setError("Fal için en az 1 fincan fotoğrafı yükle.");
     setStep((value) => Math.min(3, value + 1) as Step);
   };
 
-  const back = () => {
-    setError("");
-    setStep((value) => Math.max(0, value - 1) as Step);
-  };
+  const back = () => { setError(""); setStep((value) => Math.max(0, value - 1) as Step); };
 
   const addFiles = (selected: File[]) => {
     setError("");
@@ -126,7 +166,6 @@ export default function UploadClient() {
           <button type="button" onClick={step === 0 ? () => { window.location.href = "/"; } : back} className="flex items-center gap-1 text-xs text-slate-300"><ArrowLeft className="h-4 w-4"/>{step === 0 ? "Ana sayfa" : "Geri"}</button>
           <span className="rounded-full border border-violet-300/15 bg-violet-300/5 px-3 py-1 text-[9px] font-bold uppercase tracking-[.2em] text-violet-200">Kahve Falı</span>
         </header>
-
         <section className="overflow-hidden rounded-[30px] border border-white/10 bg-[#0d0b18]/95 shadow-2xl">
           <div className="relative overflow-hidden px-5 pb-6 pt-8 text-center sm:px-8">
             <div className="absolute inset-x-0 top-0 h-40 bg-[radial-gradient(circle,rgba(244,63,94,.20),transparent_65%)]"/>
@@ -135,24 +174,20 @@ export default function UploadClient() {
             <h1 className="relative mt-1 font-serif text-3xl font-black">Kahve Falı</h1>
             <p className="relative mx-auto mt-2 max-w-lg text-xs leading-6 text-slate-400">Önce falcını seç. Sonra seçtiğin sanal karakter sana birkaç soru soracak; fotoğraflarını aldıktan sonra falın krediyle başlatılacak.</p>
           </div>
-
           <div className="border-t border-white/5 px-5 py-5 sm:px-8">
             <div className="mb-6 flex items-center justify-center gap-2">{[0,1,2,3].map((item) => <span key={item} className={`h-2 w-10 rounded-full transition ${item <= step ? "bg-rose-400" : "bg-white/10"}`}/>)}</div>
-
             {step === 0 && <div className="space-y-4">
               <div className="rounded-2xl border border-rose-300/15 bg-rose-300/[.04] p-4"><p className="font-serif text-xl font-bold">İlk olarak falcını seç ✨</p><p className="mt-1 text-xs leading-5 text-slate-400">Bunlar gerçek kişiler değildir. Her biri farklı yorum tonu ve uzmanlıkla hazırlanmış sanal karakterdir.</p></div>
               <CommentatorPicker kind="coffee" selectedId={commentator?.id ?? null} onSelect={(value) => setCommentator(value as Commentator | null)} />
               {error && <p className="rounded-xl border border-red-400/20 bg-red-400/5 p-3 text-xs text-red-200">{error}</p>}
               <button type="button" onClick={next} className="flex w-full items-center justify-center gap-2 rounded-full bg-gradient-to-r from-rose-500 to-violet-500 px-6 py-4 text-sm font-black">Bu falcıyla devam et <ChevronRight className="h-4 w-4"/></button>
             </div>}
-
             {step === 1 && <div className="space-y-4">
               <div className="mb-3 rounded-2xl border border-rose-300/15 bg-rose-300/[.04] p-4"><p className="text-[9px] font-bold uppercase tracking-[.25em] text-rose-200">{commentator?.name} soruyor</p><h2 className="mt-1 font-serif text-2xl font-bold">Önce seni biraz tanıyalım</h2><p className="mt-1 text-xs leading-5 text-slate-500">Cevapların yorumun kişiselleştirilmesi için kullanılacak.</p></div>
               {coffeeQuestions.map((label, index) => <label key={label} className="block"><span className="mb-1.5 block text-xs font-semibold text-slate-200">{index + 1}. {label}</span>{index === 0 ? <input value={answers[index]} onChange={(e) => setAnswer(index, e.target.value)} placeholder="İsmin veya hitap şeklin" className="w-full rounded-2xl border border-white/10 bg-black/20 px-4 py-3 text-sm text-white outline-none focus:border-rose-400"/> : <textarea value={answers[index]} onChange={(e) => setAnswer(index, e.target.value)} rows={index === 3 ? 3 : 2} placeholder="Kısaca anlatabilirsin..." className="w-full resize-none rounded-2xl border border-white/10 bg-black/20 px-4 py-3 text-sm text-white outline-none focus:border-rose-400"/>}</label>)}
               {error && <p className="rounded-xl border border-red-400/20 bg-red-400/5 p-3 text-xs text-red-200">{error}</p>}
               <button type="button" onClick={next} className="flex w-full items-center justify-center gap-2 rounded-full bg-gradient-to-r from-rose-500 to-violet-500 px-6 py-4 text-sm font-black">Sorularımı gönderdim <ChevronRight className="h-4 w-4"/></button>
             </div>}
-
             {step === 2 && <div className="space-y-4">
               <div className="rounded-2xl border border-amber-300/15 bg-amber-300/[.04] p-4"><p className="text-[9px] font-bold uppercase tracking-[.25em] text-amber-200">{commentator?.name} senden fincanı istiyor</p><h2 className="mt-1 font-serif text-2xl font-bold">Fincan fotoğraflarını yükle</h2><p className="mt-1 text-xs leading-5 text-slate-500">En iyi yorum için fincan içini, mümkünse tabağı ve farklı açılardan net görüntüleri gönder.</p></div>
               <label htmlFor="file-input" className="flex cursor-pointer flex-col items-center justify-center rounded-[24px] border border-dashed border-rose-300/25 bg-rose-300/[.025] p-8"><span className="grid h-14 w-14 place-items-center rounded-2xl bg-white/[.04]"><ImagePlus className="h-6 w-6 text-rose-200"/></span><span className="mt-3 text-sm font-bold">Fotoğraf seç veya sürükle</span><p className="mt-1 text-[10px] text-slate-500">1-3 fotoğraf • JPG, PNG veya WEBP • 8 MB</p><input id="file-input" ref={inputRef} type="file" accept="image/jpeg,image/png,image/webp" multiple className="sr-only" onChange={(e) => addFiles(Array.from(e.target.files ?? []))}/></label>
@@ -162,7 +197,6 @@ export default function UploadClient() {
               {error && <p className="rounded-xl border border-red-400/20 bg-red-400/5 p-3 text-xs text-red-200">{error}</p>}
               <button type="button" onClick={next} className="flex w-full items-center justify-center gap-2 rounded-full bg-gradient-to-r from-rose-500 to-violet-500 px-6 py-4 text-sm font-black">Fincanı gönderdim <ChevronRight className="h-4 w-4"/></button>
             </div>}
-
             {step === 3 && <div className="space-y-4">
               <div className="text-center"><p className="text-[9px] font-bold uppercase tracking-[.25em] text-amber-200">Son kontrol</p><h2 className="mt-1 font-serif text-2xl font-bold">Falını başlatalım mı?</h2><p className="mt-1 text-xs text-slate-500">Kredi yalnızca aşağıdaki butona bastığında kullanılır.</p></div>
               <div className="rounded-[24px] border border-rose-300/15 bg-rose-300/[.04] p-4"><div className="flex items-center gap-3"><img src={`/api/fal/avatar?id=${encodeURIComponent(commentator?.id ?? fallback?.id ?? "coffee-esmeralya")}`} alt="Seçilen sanal karakter" className="h-16 w-16 rounded-2xl bg-[#21152d] object-cover"/><div><p className="font-serif text-lg font-bold">{commentator?.name}</p><p className="text-xs text-violet-200">{commentator?.title}</p><p className="mt-1 text-[10px] text-slate-500">AI karakter • gerçek kişi değildir</p></div><strong className="ml-auto text-lg text-amber-200">{price} kredi</strong></div><div className="mt-4 space-y-2 border-t border-white/5 pt-3 text-xs text-slate-400"><p>✓ {answers.length} kişisel soru yanıtlandı</p><p>✓ {files.length} fincan fotoğrafı hazır</p><p>✓ {commentator?.name} yorum tarzı seçildi</p><p>✓ Fal hazırlandığında bildirim oluşturulacak</p></div></div>
